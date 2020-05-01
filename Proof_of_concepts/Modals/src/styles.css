@@ -1,0 +1,15 @@
+.test-button {
+    background: red;
+}
+
+.main-container {
+    height: 100vh;
+    width: 100vw;
+    background: blue;
+}
+
+.modal-container {
+    width: 100px;
+    height: 100px;
+    background: violet;
+}

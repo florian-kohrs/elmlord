@@ -29,13 +29,17 @@ edgeDistance : Float
 edgeDistance =
     55
 
+
 hexHeight : Int
 hexHeight =
     6
 
+
 hexRange : Float
 hexRange =
     6
+
+
 
 -- temp-Factions
 
