@@ -42,7 +42,7 @@ hexRange =
 
 
 -- temp-Factions
-
+-- Cleanup Hexagon -> zu einem Punkt -> Add Surfacetype
 
 type Faction
     = Empty
