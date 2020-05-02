@@ -1,11 +1,11 @@
-module MapGenerator exposing (..)
+module MapGenerator exposing (createMap, getXPosForIndex, getYPosForIndex, hexRadius)
 
 import Faction exposing (Faction(..))
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Lists exposing (indexedMap, repeat)
-import MapModel exposing (Hexagon(..))
+import MapModel exposing (MapTile, rad)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Vector exposing (..)
@@ -13,17 +13,12 @@ import Vector exposing (..)
 
 hexRadius : Float
 hexRadius =
-    10
+    15
 
 
 spaceBetweenHexes : Float
 spaceBetweenHexes =
-    5
-
-
-totalIndices : Float -> Float
-totalIndices f =
-    2 * f + 1
+    3
 
 
 hexHeight : Int
@@ -31,9 +26,9 @@ hexHeight =
     6
 
 
-tileHeightOffset : Int
-tileHeightOffset =
-    hexRadius + round (spaceBetweenHexes / 2)
+tileRowXOffset : Int
+tileRowXOffset =
+    round (hexRadius + (spaceBetweenHexes / 2))
 
 
 hexWidth : Int
@@ -46,64 +41,69 @@ mapScale =
     1
 
 
-getXPosForIndex : Int -> Int
+getXPosForIndex : Int -> Float
 getXPosForIndex i =
     let
         absI =
             i + hexWidth
     in
-    (absI + 0.5)
+    (toFloat absI + 1)
         * hexRadius
         * 2
-        + (spaceBetweenHexes * (absI - 1))
+        + (spaceBetweenHexes * toFloat (absI - 1))
 
 
-getYPosForIndex : Int -> Int
+getYPosForIndex : Int -> Float
 getYPosForIndex i =
     let
         absI =
             i + hexHeight
     in
-    (absI + 0.5)
-        * hexRadius
+    (toFloat absI + 1)
+        * Vector.y (Vector.pointOnCircle hexRadius rad)
         * 2
-        + (spaceBetweenHexes * (absI - 1))
+        + (spaceBetweenHexes * toFloat (absI - 1))
 
 
 createMap : List MapTile
 createMap =
-    createMap (hexHeight * 2 + 1)
+    createMap_ (hexHeight * 2)
 
 
 createMap_ : Int -> List MapTile
 createMap_ i =
-    if i > 0 then
-        buildHexagonColumn (i - hexHeight) ++ createMap_ (i - 1)
+    if i >= 0 then
+        buildHexagonRow Vector.zero (i - hexHeight) ++ createMap_ (i - 1)
 
     else
         []
 
 
-buildHexagonColumn : Vector -> Int -> {- Noise -> -} List MapTile
-buildHexagonColumn offset i =
-    buildHexagons offset i (hexRange * 2 - abs i)
+buildHexagonRow : Vector -> Int -> {- Noise -> -} List MapTile
+buildHexagonRow offset i =
+    buildHexagons offset
+        i
+        (hexWidth * 2 - abs i)
 
 
-buildHexagons : Vector -> Int -> Int {- Noise -> -} -> List MapTile
+buildHexagons : Vector -> Int -> Int -> {- Noise -> -} List MapTile
 buildHexagons offset height i =
     let
+        indexOffset =
+            hexHeight - (abs height // 2)
+
         rowXOffset =
-            Vector.Vector (modBy (tileHeightOffset * 2) (tileHeightOffset * i)) 0
+            Vector.Vector (toFloat (modBy 2 height * tileRowXOffset)) 0
     in
     if i >= 0 then
-        buildHexagon (Vector.add offset rowXOffset) height (i - hexWidth)
-            :: buildHexagons height (i - 1)
+        buildHexagon (Vector.add offset rowXOffset) height (i - indexOffset)
+            :: buildHexagons offset height (i - 1)
 
     else
         []
 
 
-buildHexagon : Vector -> Int -> Int -> MapTile
+buildHexagon : Vector -> Int -> Int -> {- Noise -> -} MapTile
 buildHexagon offset h w =
     MapTile
         (Point h w)

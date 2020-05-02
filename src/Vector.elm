@@ -33,10 +33,10 @@ pointOnCircle : Float -> Float -> Vector
 pointOnCircle radius radiant =
     let
         deltaX =
-            sin (pi * radiant) * radius
+            cos (pi * radiant) * radius
 
         deltaY =
-            cos (pi * radiant) * radius
+            sin (pi * radiant) * radius
     in
     Vector deltaX deltaY
 
@@ -49,6 +49,16 @@ rotate90Degree v =
 flipOnX : Vector -> Vector
 flipOnX v =
     { v | xF = -v.xF }
+
+
+y : Vector -> Float
+y v =
+    v.yF
+
+
+zero : Vector
+zero =
+    Vector 0 0
 
 
 flipOnY : Vector -> Vector

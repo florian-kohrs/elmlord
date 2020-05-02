@@ -31,6 +31,21 @@ type Terrain
     | Forest
 
 
+rad : Float
+rad =
+    0.35
+
+
+
+{-
+   terrainToColor : Terrain -> String
+   terrainToColor t =
+       case t of
+           Grass ->
+               "Green"
+-}
+
+
 terrainToName : Terrain -> String
 terrainToName t =
     case t of
@@ -69,7 +84,7 @@ generateHexagonPoints : Vector -> Float -> List Vector.Vector
 generateHexagonPoints v r =
     let
         topLeft =
-            Vector.pointOnCircle r 0.25
+            Vector.pointOnCircle r rad
 
         middleLeft =
             Vector.pointOnCircle r 0
