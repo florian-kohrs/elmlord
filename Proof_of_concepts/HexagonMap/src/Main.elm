@@ -183,18 +183,18 @@ view model =
             gameTemplate model
 
         Login ->
-            startMenuTemplate model
+            startMenuTemplate
 
         Saves -> 
-            loadSavesTemplate model
+            loadSavesTemplate 
 
 
 
-startMenuTemplate : Model -> Html Msg
-startMenuTemplate model =
+startMenuTemplate : Html Msg
+startMenuTemplate  =
     div [ HtmlAttr.class "main-container" ]
-    [ stylesheet
-    , font
+    [ addStylesheet "link" "styles.css"
+    , addStylesheet "link" "//fonts.googleapis.com/css?family=MedievalSharp"
     , div [ HtmlAttr.class "start-logo-container" ] [ span [] [ Html.text "Logo" ] ]
     , div [ HtmlAttr.class "start-container" ]
         [ div [ HtmlAttr.class "start-header" ]
@@ -208,11 +208,11 @@ startMenuTemplate model =
     ]
 
 
-loadSavesTemplate : Model -> Html Msg
-loadSavesTemplate model =
+loadSavesTemplate : Html Msg
+loadSavesTemplate =
     div [ HtmlAttr.class "main-container" ]
-    [ stylesheet
-    , font
+    [ addStylesheet "link" "styles.css"
+    , addStylesheet "link" "//fonts.googleapis.com/css?family=MedievalSharp"
     , div [ HtmlAttr.class "start-logo-container" ] [ span [] [ Html.text "Logo" ] ]
     , div [ HtmlAttr.class "save-loads-container" ]
         [ div [ HtmlAttr.class "start-header" ]
@@ -261,37 +261,7 @@ gameTemplate model =
         ]
 
 
-stylesheet : Html Msg
-stylesheet =
-    let
-        tag =
-            "link"
+addStylesheet : String -> String -> Html Msg 
+addStylesheet tag href = 
+    Html.node tag [ HtmlAttr.attribute "Rel" "stylesheet", HtmlAttr.attribute "property" "stylesheet", HtmlAttr.attribute "href" href] []
 
-        attrs =
-            [ HtmlAttr.attribute "Rel" "stylesheet"
-            , HtmlAttr.attribute "property" "stylesheet"
-            , HtmlAttr.attribute "href" "styles.css"
-            ]
-
-        children =
-            []
-    in
-    Html.node tag attrs children
-
-
-font : Html Msg
-font =
-    let
-        tag =
-            "link"
-
-        font1 =
-            [ HtmlAttr.attribute "Rel" "stylesheet"
-            , HtmlAttr.attribute "type" "text/css"
-            , HtmlAttr.attribute "href" "//fonts.googleapis.com/css?family=MedievalSharp"
-            ]
-
-        children =
-            []
-    in
-    Html.node tag font1 children
