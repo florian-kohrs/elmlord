@@ -55,11 +55,11 @@ view : Model -> Html Msg
 view model =
     div
         []
-        ([ div [ Html.Attributes.style "height" "600px", Html.Attributes.style "width" "600px" ]
+        ([ div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
             [ Svg.svg
-                [ Svg.Attributes.viewBox "0 0 1000 800"
-                , Svg.Attributes.width "600"
-                , Svg.Attributes.height "600"
+                [ Svg.Attributes.viewBox "0 0 2000 1800"
+                , Svg.Attributes.width "2000"
+                , Svg.Attributes.height "1800"
                 , Svg.Attributes.fill "none"
                 ]
                 (MapModel.mapToSvg model.map MapGenerator.hexRadius Click)

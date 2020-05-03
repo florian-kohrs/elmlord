@@ -5,7 +5,9 @@ import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Lists exposing (indexedMap, repeat)
-import MapModel exposing (MapTile, rad)
+import MapModel exposing (MapTile, heighProgressToTerrain, rad)
+import Noise exposing (noise2d, permutationTable)
+import Random exposing (initialSeed)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Vector exposing (..)
@@ -21,9 +23,14 @@ spaceBetweenHexes =
     3
 
 
-hexHeight : Int
-hexHeight =
-    6
+mapHeight : Int
+mapHeight =
+    mapSize
+
+
+mapWidth : Int
+mapWidth =
+    mapSize
 
 
 tileRowXOffset : Int
@@ -31,9 +38,9 @@ tileRowXOffset =
     round (hexRadius + (spaceBetweenHexes / 2))
 
 
-hexWidth : Int
-hexWidth =
-    6
+mapSize : Int
+mapSize =
+    20
 
 
 mapScale : Float
@@ -41,11 +48,16 @@ mapScale =
     1
 
 
+seed : Int
+seed =
+    5
+
+
 getXPosForIndex : Int -> Float
 getXPosForIndex i =
     let
         absI =
-            i + hexWidth
+            i + mapWidth
     in
     (toFloat absI + 1)
         * hexRadius
@@ -57,7 +69,7 @@ getYPosForIndex : Int -> Float
 getYPosForIndex i =
     let
         absI =
-            i + hexHeight
+            i + mapHeight
     in
     (toFloat absI + 1)
         * Vector.y (Vector.pointOnCircle hexRadius rad)
@@ -67,48 +79,69 @@ getYPosForIndex i =
 
 createMap : List MapTile
 createMap =
-    createMap_ (hexHeight * 2)
+    let
+        perm =
+            Tuple.first (Noise.permutationTable (Random.initialSeed seed))
+    in
+    createMap_ (mapHeight * 2) perm
 
 
-createMap_ : Int -> List MapTile
-createMap_ i =
+createMap_ : Int -> Noise.PermutationTable -> List MapTile
+createMap_ i n =
     if i >= 0 then
-        buildHexagonRow Vector.zero (i - hexHeight) ++ createMap_ (i - 1)
+        buildHexagonRow Vector.zero (i - mapHeight) n ++ createMap_ (i - 1) n
 
     else
         []
 
 
-buildHexagonRow : Vector -> Int -> {- Noise -> -} List MapTile
+buildHexagonRow : Vector -> Int -> Noise.PermutationTable -> List MapTile
 buildHexagonRow offset i =
     buildHexagons offset
         i
-        (hexWidth * 2 - abs i)
+        (mapWidth * 2 - abs i)
 
 
-buildHexagons : Vector -> Int -> Int -> {- Noise -> -} List MapTile
-buildHexagons offset height i =
+buildHexagons : Vector -> Int -> Int -> Noise.PermutationTable -> List MapTile
+buildHexagons offset height i n =
     let
         indexOffset =
-            hexHeight - (abs height // 2)
+            mapHeight - (abs height // 2)
 
         rowXOffset =
             Vector.Vector (toFloat (modBy 2 height * tileRowXOffset)) 0
     in
     if i >= 0 then
-        buildHexagon (Vector.add offset rowXOffset) height (i - indexOffset)
-            :: buildHexagons offset height (i - 1)
+        buildHexagon (Vector.add offset rowXOffset) height (i - indexOffset) n
+            :: buildHexagons offset height (i - 1) n
 
     else
         []
 
 
-buildHexagon : Vector -> Int -> Int -> {- Noise -> -} MapTile
-buildHexagon offset h w =
+buildHexagon : Vector -> Int -> Int -> Noise.PermutationTable -> MapTile
+buildHexagon offset h w n =
     MapTile
         (Point h w)
         (Vector (getXPosForIndex w + offset.xF) (getYPosForIndex h + offset.yF))
-        MapModel.Grass
+        (getTerrainFor (Point h w) n)
         Nothing
         []
         Faction.Faction1
+
+
+getTerrainFor : Vector.Point -> Noise.PermutationTable -> MapModel.Terrain
+getTerrainFor p n =
+    let
+        noiseP =
+            Vector.scale (Vector.toVector p) noiseScale
+
+        height =
+            (Noise.noise2d n noiseP.xF noiseP.yF + 1) / 2
+    in
+    MapModel.heighProgressToTerrain height
+
+
+noiseScale : Float
+noiseScale =
+    0.1

@@ -15,6 +15,16 @@ add v1 v2 =
     Vector (v1.xF + v2.xF) (v1.yF + v2.yF)
 
 
+toVector : Point -> Vector
+toVector p =
+    Vector (toFloat p.x) (toFloat p.y)
+
+
+scale : Vector -> Float -> Vector
+scale v f =
+    Vector (v.xF * f) (v.yF * f)
+
+
 type alias Point =
     { x : Int, y : Int }
 

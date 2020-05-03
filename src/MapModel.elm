@@ -25,10 +25,26 @@ type alias MapTile =
     }
 
 
+heighProgressToTerrain : Float -> Terrain
+heighProgressToTerrain f =
+    if f < 0.15 then
+        Water
+
+    else if f < 0.5 then
+        Grass
+
+    else if f < 0.85 then
+        Forest
+
+    else
+        Mountain
+
+
 type Terrain
     = Grass
     | Water
     | Forest
+    | Mountain
 
 
 rad : Float
@@ -36,14 +52,20 @@ rad =
     0.35
 
 
+terrainToColor : Terrain -> String
+terrainToColor t =
+    case t of
+        Grass ->
+            "Green"
 
-{-
-   terrainToColor : Terrain -> String
-   terrainToColor t =
-       case t of
-           Grass ->
-               "Green"
--}
+        Water ->
+            "Blue"
+
+        Forest ->
+            "DarkGreen"
+
+        Mountain ->
+            "DarkKhaki"
 
 
 terrainToName : Terrain -> String
@@ -58,6 +80,9 @@ terrainToName t =
         Forest ->
             "Forest"
 
+        Mountain ->
+            "Mountain"
+
 
 mapToSvg : Map -> Float -> (Point -> a) -> List (Svg a)
 mapToSvg m r f =
@@ -68,7 +93,7 @@ showMapTile : Float -> (Point -> a) -> MapTile -> Svg a
 showMapTile tileRadius f tile =
     polygon
         [ onClick (f tile.indices)
-        , fill "green"
+        , fill (terrainToColor tile.terrain)
         , stroke "black"
         , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
         ]
