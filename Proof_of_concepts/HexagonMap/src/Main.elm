@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Debug exposing (log)
 import Html exposing (Html, button, div, span, text)
-import Html.Attributes exposing (..)
+import Html.Attributes as HtmlAttr
 import Html.Events exposing (onClick)
 import List exposing (..)
 import String exposing (..)
@@ -44,6 +44,7 @@ hexRange =
 -- temp-Factions
 -- Cleanup Hexagon -> zu einem Punkt -> Add Surfacetype
 
+
 type Faction
     = Empty
     | Player String
@@ -58,6 +59,7 @@ type Faction
 type alias Model =
     { map : List Hexagon
     , chosen : String
+    , state : State
     }
 
 
@@ -67,13 +69,23 @@ type Hexagon
 
 type Msg
     = None
-    | Click String
+    | ShowSaves
+    | ShowLogin
+    | ShowMap
+    | ShowIndex String
+
+
+type State
+    = Login
+    | Normal
+    | Saves
 
 
 init : Model
 init =
     { map = pointToHexagons ( 400, 300 ) hexRange hexRange hexHeight
     , chosen = ""
+    , state = Login
     }
 
 
@@ -136,7 +148,16 @@ update dir model =
         None ->
             init
 
-        Click text ->
+        ShowMap ->
+            { model | state = Normal }
+
+        ShowLogin -> 
+            { model | state = Login }
+
+        ShowSaves -> 
+            { model | state = Saves }
+
+        ShowIndex text ->
             { model | chosen = text }
 
 
@@ -147,7 +168,7 @@ hexagonMapToSvg model =
 
 generateHexagon : Hexagon -> Svg.Svg Msg
 generateHexagon (Hexagon p1 p2 p3 p4 p5 p6 ( l, r ) _) =
-    polygon [ onClick (Click ("Chosen-Hexagon: (" ++ String.fromFloat l ++ "," ++ String.fromFloat r ++ ")")), fill "green", stroke "black", points (tTS p1 ++ tTS p2 ++ tTS p3 ++ tTS p4 ++ tTS p5 ++ tTS p6) ] []
+    polygon [ onClick (ShowIndex ("Chosen-Hexagon: (" ++ String.fromFloat l ++ "," ++ String.fromFloat r ++ ")")), fill "green", stroke "black", points (tTS p1 ++ tTS p2 ++ tTS p3 ++ tTS p4 ++ tTS p5 ++ tTS p6) ] []
 
 
 tTS : ( Float, Float ) -> String
@@ -157,9 +178,77 @@ tTS ( x, y ) =
 
 view : Model -> Html Msg
 view model =
+    case model.state of
+        Normal ->
+            gameTemplate model
+
+        Login ->
+            startMenuTemplate model
+
+        Saves -> 
+            loadSavesTemplate model
+
+
+
+startMenuTemplate : Model -> Html Msg
+startMenuTemplate model =
+    div [ HtmlAttr.class "main-container" ]
+    [ stylesheet
+    , font
+    , div [ HtmlAttr.class "start-logo-container" ] [ span [] [ Html.text "Logo" ] ]
+    , div [ HtmlAttr.class "start-container" ]
+        [ div [ HtmlAttr.class "start-header" ]
+            [ span [ HtmlAttr.class "start-header-text" ] [ Html.text "Welcome mylord, what is your decision?" ] ]
+        , div [ HtmlAttr.class "start-actions" ]
+            [ div [] [ button [ onClick ShowMap, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Start Campaign" ] ] ]
+            , div [] [ button [ onClick ShowSaves, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Load Campaign" ] ] ]
+            , div [] [ button [ onClick ShowSaves, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Documentation" ] ] ]
+            ]
+        ]
+    ]
+
+
+loadSavesTemplate : Model -> Html Msg
+loadSavesTemplate model =
+    div [ HtmlAttr.class "main-container" ]
+    [ stylesheet
+    , font
+    , div [ HtmlAttr.class "start-logo-container" ] [ span [] [ Html.text "Logo" ] ]
+    , div [ HtmlAttr.class "save-loads-container" ]
+        [ div [ HtmlAttr.class "start-header" ]
+            [ span [ HtmlAttr.class "start-header-text" ] [ Html.text "Mylord, choose your save" ] ]
+        , div [ HtmlAttr.class "save-loads" ]
+            [ div [ HtmlAttr.class "save-load" ]
+                [ div [ HtmlAttr.class "save-load-name" ] [ span [] [ Html.text "The greatest campain of all time" ] ]
+                , div [ HtmlAttr.class "save-load-created" ] [ span [] [ Html.text "Created: 01.05.2020 14:34" ] ]
+                , div [ HtmlAttr.class "save-load-updated" ] [ span [] [ Html.text "Last updated: 03.05.2020 13:51" ] ]
+                ]
+            , div [ HtmlAttr.class "save-load" ]
+                [ div [ HtmlAttr.class "save-load-name" ] [ span [] [ Html.text "Destroy all herectis" ] ]
+                , div [ HtmlAttr.class "save-load-created" ] [ span [] [ Html.text "Created: 30.04.2020 14:34" ] ]
+                , div [ HtmlAttr.class "save-load-updated" ] [ span [] [ Html.text "Last updated: 30.04.2020 18:51" ] ]
+                ]
+            , div [ HtmlAttr.class "save-load" ]
+                [ div [ HtmlAttr.class "save-load-name" ] [ span [] [ Html.text "Be the trader not the traded :)" ] ]
+                , div [ HtmlAttr.class "save-load-created" ] [ span [] [ Html.text "Created: 27.05.2020 10:14" ] ]
+                , div [ HtmlAttr.class "save-load-updated" ] [ span [] [ Html.text "Last updated: 30.04.2020 16:51" ] ]
+                ]
+            , div [ HtmlAttr.class "save-load" ]
+                [ div [ HtmlAttr.class "save-load-name" ] [ span [] [ Html.text "TestTestTest" ] ]
+                , div [ HtmlAttr.class "save-load-created" ] [ span [] [ Html.text "Created: 22.04.2020 12:11" ] ]
+                , div [ HtmlAttr.class "save-load-updated" ] [ span [] [ Html.text "Last updated: 22.04.2020 12:12" ] ]
+                ]
+            ]
+        , div [] [ button [ onClick ShowLogin, HtmlAttr.class "back-btn" ] [ span [] [ Html.text "Back" ] ] ]
+        ]
+    ]
+
+
+gameTemplate : Model -> Html Msg
+gameTemplate model =
     div
         []
-        [ div [ Html.Attributes.style "height" "600px", Html.Attributes.style "width" "600px" ]
+        [ div [ HtmlAttr.style "height" "600px", HtmlAttr.style "width" "600px" ]
             [ Svg.svg
                 [ Svg.Attributes.viewBox "0 0 1000 800"
                 , Svg.Attributes.width "600"
@@ -170,3 +259,39 @@ view model =
             ]
         , span [] [ Html.text model.chosen ]
         ]
+
+
+stylesheet : Html Msg
+stylesheet =
+    let
+        tag =
+            "link"
+
+        attrs =
+            [ HtmlAttr.attribute "Rel" "stylesheet"
+            , HtmlAttr.attribute "property" "stylesheet"
+            , HtmlAttr.attribute "href" "styles.css"
+            ]
+
+        children =
+            []
+    in
+    Html.node tag attrs children
+
+
+font : Html Msg
+font =
+    let
+        tag =
+            "link"
+
+        font1 =
+            [ HtmlAttr.attribute "Rel" "stylesheet"
+            , HtmlAttr.attribute "type" "text/css"
+            , HtmlAttr.attribute "href" "//fonts.googleapis.com/css?family=MedievalSharp"
+            ]
+
+        children =
+            []
+    in
+    Html.node tag font1 children
