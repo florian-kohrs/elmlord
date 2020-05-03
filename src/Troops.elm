@@ -25,7 +25,7 @@ troopCost t =
 
 
 troopName : TroopType -> String
-troopName troopType =
+troopName t =
     case t of
         Archer ->
             "Archer"
