@@ -5,6 +5,7 @@ import Entities exposing (Lord, Settlement)
 import Faction exposing (Faction(..))
 import Html.Events exposing (onClick)
 import List exposing (..)
+import Pathfinder exposing (NavigatableMap)
 import String exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -23,6 +24,11 @@ type alias MapTile =
     , lords : List Entities.Lord
     , faction : Faction
     }
+
+
+setSettlement : MapTile -> Maybe Settlement -> MapTile
+setSettlement t s =
+    { t | settlement = s }
 
 
 heighProgressToTerrain : Float -> Terrain
@@ -103,6 +109,11 @@ showMapTile tileRadius f tile =
 pointsToHexagonPoints : List Vector.Vector -> String
 pointsToHexagonPoints =
     List.foldl (\v r -> r ++ String.fromFloat v.xF ++ "," ++ String.fromFloat v.yF ++ " ") ""
+
+
+intialSettlementMapSetup : List Entities.Settlement -> Map -> Map
+intialSettlementMapSetup settlements =
+    List.map (\tile -> setSettlement tile (List.head (List.filter (\s -> Vector.pointEqual tile.indices s.entity.position) settlements)))
 
 
 generateHexagonPoints : Vector -> Float -> List Vector.Vector

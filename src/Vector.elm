@@ -5,6 +5,10 @@ type alias Vector =
     { xF : Float, yF : Float }
 
 
+type alias Point =
+    { x : Int, y : Int }
+
+
 showVector : Vector -> String
 showVector v =
     "(" ++ String.fromFloat v.xF ++ ", " ++ String.fromFloat v.yF ++ ")"
@@ -13,6 +17,11 @@ showVector v =
 add : Vector -> Vector -> Vector
 add v1 v2 =
     Vector (v1.xF + v2.xF) (v1.yF + v2.yF)
+
+
+toPoint : Vector -> Point
+toPoint v =
+    { x = round v.xF, y = round v.yF }
 
 
 toVector : Point -> Vector
@@ -25,8 +34,9 @@ scale v f =
     Vector (v.xF * f) (v.yF * f)
 
 
-type alias Point =
-    { x : Int, y : Int }
+pointEqual : Point -> Point -> Bool
+pointEqual p1 p2 =
+    p1.x == p2.x && p1.y == p2.y
 
 
 showPoint : Point -> String

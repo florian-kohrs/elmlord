@@ -1,4 +1,4 @@
-module MapGenerator exposing (createMap, getXPosForIndex, getYPosForIndex, hexRadius)
+module MapGenerator exposing (createMap, getNav, getXPosForIndex, getYPosForIndex, hexRadius, mapSize)
 
 import Faction exposing (Faction(..))
 import Html exposing (Html, button, div, span, text)
@@ -7,6 +7,7 @@ import Html.Events exposing (onClick)
 import Lists exposing (indexedMap, repeat)
 import MapModel exposing (MapTile, heighProgressToTerrain, rad)
 import Noise exposing (noise2d, permutationTable)
+import Pathfinder exposing (NavigatableMap)
 import Random exposing (initialSeed)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -51,6 +52,17 @@ mapScale =
 seed : Int
 seed =
     5
+
+
+getNav : NavigatableMap
+getNav =
+    { getCircumjacentFields =
+        \p -> [ Point 1 1 ]
+
+    --List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize)
+    --List.foldl (\c r -> List.foldl (\c2 r2 -> Point (p.x + c) (p.y + c2) :: r2) r (List.range -1 1)) [] (List.range -1 1)
+    , getMinDistanceBetween = \p1 p2 -> abs (p1.x - p2.x) + abs (p1.y - p2.y)
+    }
 
 
 getXPosForIndex : Int -> Float
@@ -99,15 +111,18 @@ buildHexagonRow : Vector -> Int -> Noise.PermutationTable -> List MapTile
 buildHexagonRow offset i =
     buildHexagons offset
         i
-        (mapWidth * 2 - abs i)
+        (mapWidth * 2
+         {--abs i-}
+        )
 
 
 buildHexagons : Vector -> Int -> Int -> Noise.PermutationTable -> List MapTile
 buildHexagons offset height i n =
     let
         indexOffset =
-            mapHeight - (abs height // 2)
+            mapHeight
 
+        -- - (abs height // 2)
         rowXOffset =
             Vector.Vector (toFloat (modBy 2 height * tileRowXOffset)) 0
     in
