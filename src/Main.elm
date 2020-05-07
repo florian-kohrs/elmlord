@@ -79,13 +79,13 @@ update msg model =
                     { model | selectedIndex = Just p }
 
                 Just _ ->
-                    { model | selectedIndex2 = Just p }
+                    { model | selectedIndex2 = model.selectedIndex, selectedIndex = Just p }
 
 
 view : Model -> Html Msg
 view model =
     let
-        body =
+        body f =
             [ div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
                 [ Svg.svg
                     [ Svg.Attributes.viewBox "0 0 2000 1800"
@@ -93,7 +93,7 @@ view model =
                     , Svg.Attributes.height "1800"
                     , Svg.Attributes.fill "none"
                     ]
-                    (MapModel.mapToSvg model.map MapGenerator.hexRadius Click)
+                    (f model.map MapGenerator.hexRadius Click)
                 ]
             ]
                 ++ Maybe.withDefault
@@ -107,25 +107,30 @@ view model =
         Nothing ->
             div
                 []
-                body
+                (body MapModel.mapToSvg)
 
         Just s1 ->
             case model.selectedIndex2 of
                 Nothing ->
                     div
                         []
-                        body
+                        (body MapModel.mapToSvg)
 
                 Just s2 ->
+                    let
+                        path =
+                            Pathfinder.getPath s1 (Pathfinder.PathInfo (MapGenerator.getNav model.map) s2)
+                    in
                     div
                         []
-                        (body
-                            ++ [ span []
+                        (body (MapModel.mapWithPathToSvg path)
+                            ++ [ span [] [ Html.text (Vector.showPoint s2) ]
+                               , span []
                                     [ Html.text
                                         (List.foldl
                                             (\c r -> r ++ Vector.showPoint c)
                                             "Path: "
-                                            (Pathfinder.getPath s1 (Pathfinder.PathInfo MapGenerator.getNav s2))
+                                            path
                                         )
                                     ]
                                ]

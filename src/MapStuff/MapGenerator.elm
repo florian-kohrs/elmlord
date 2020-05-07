@@ -1,11 +1,12 @@
 module MapGenerator exposing (createMap, getNav, getXPosForIndex, getYPosForIndex, hexRadius, mapSize)
 
+import Dict
 import Faction exposing (Faction(..))
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Lists exposing (indexedMap, repeat)
-import MapModel exposing (MapTile, heighProgressToTerrain, rad)
+import MapModel exposing (Map, MapTile, heighProgressToTerrain, rad)
 import Noise exposing (noise2d, permutationTable)
 import Pathfinder exposing (NavigatableMap)
 import Random exposing (initialSeed)
@@ -54,14 +55,68 @@ seed =
     5
 
 
-getNav : NavigatableMap
-getNav =
-    { getCircumjacentFields =
-        \p -> [ Point 1 1 ]
+getNav : MapModel.Map -> NavigatableMap
+getNav map =
+    { timeToCrossField =
+        \p ->
+            case Dict.get (Vector.showPoint p) map of
+                Nothing ->
+                    9000
 
-    --List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize)
-    --List.foldl (\c r -> List.foldl (\c2 r2 -> Point (p.x + c) (p.y + c2) :: r2) r (List.range -1 1)) [] (List.range -1 1)
-    , getMinDistanceBetween = \p1 p2 -> abs (p1.x - p2.x) + abs (p1.y - p2.y)
+                Just t ->
+                    case MapModel.terrainToMove t.terrain of
+                        MapModel.CantWalkOn ->
+                            9000
+
+                        MapModel.CanWalkOn speedFactor ->
+                            1 / speedFactor
+    , getCircumjacentFields =
+        \p ->
+            let
+                sign =
+                    if modBy 2 p.y == 0 then
+                        -1
+
+                    else
+                        1
+            in
+            List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize)
+                [ Vector.Point p.x (p.y + 1)
+                , Vector.Point p.x (p.y - 1)
+                , Vector.Point (p.x + sign) (p.y + 1)
+                , Vector.Point (p.x + sign) (p.y - 1)
+
+                --, { p | x = p.x - 1, y = p.y + 1 }
+                --, { p | x = p.x - 1, y = p.y - 1 }
+                , Vector.Point (p.x + 1) p.y
+                , Vector.Point (p.x - 1) p.y
+                ]
+
+    {- List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize)
+       (List.foldl
+           (\c r -> List.foldl (\c2 r2 -> Point (p.x + c) (p.y + c2) :: r2) r (List.range -1 1))
+           []
+           (List.range -1 1)
+       )
+    -}
+    , getMinDistanceBetween =
+        \p1 p2 ->
+            let
+                distanceReduction =
+                    if modBy 2 p1.x == 1 && modBy 2 p1.y == 1 then
+                        if p2.x > p1.x then
+                            1
+
+                        else
+                            0
+
+                    else if p2.x < p1.x then
+                        1
+
+                    else
+                        0
+            in
+            toFloat (abs (p1.x - p2.x) + abs (p1.y - p2.y) - distanceReduction)
     }
 
 
@@ -89,7 +144,7 @@ getYPosForIndex i =
         + (spaceBetweenHexes * toFloat (absI - 1))
 
 
-createMap : List MapTile
+createMap : MapModel.Map
 createMap =
     let
         perm =
@@ -98,16 +153,16 @@ createMap =
     createMap_ (mapHeight * 2) perm
 
 
-createMap_ : Int -> Noise.PermutationTable -> List MapTile
+createMap_ : Int -> Noise.PermutationTable -> MapModel.Map
 createMap_ i n =
     if i >= 0 then
-        buildHexagonRow Vector.zero (i - mapHeight) n ++ createMap_ (i - 1) n
+        Dict.union (buildHexagonRow Vector.zero (i - mapHeight) n) (createMap_ (i - 1) n)
 
     else
-        []
+        Dict.empty
 
 
-buildHexagonRow : Vector -> Int -> Noise.PermutationTable -> List MapTile
+buildHexagonRow : Vector -> Int -> Noise.PermutationTable -> MapModel.Map
 buildHexagonRow offset i =
     buildHexagons offset
         i
@@ -116,7 +171,7 @@ buildHexagonRow offset i =
         )
 
 
-buildHexagons : Vector -> Int -> Int -> Noise.PermutationTable -> List MapTile
+buildHexagons : Vector -> Int -> Int -> Noise.PermutationTable -> MapModel.Map
 buildHexagons offset height i n =
     let
         indexOffset =
@@ -127,19 +182,24 @@ buildHexagons offset height i n =
             Vector.Vector (toFloat (modBy 2 height * tileRowXOffset)) 0
     in
     if i >= 0 then
-        buildHexagon (Vector.add offset rowXOffset) height (i - indexOffset) n
-            :: buildHexagons offset height (i - 1) n
+        let
+            point =
+                Vector.Point (i - indexOffset) height
+        in
+        Dict.insert (Vector.showPoint point)
+            (buildHexagon (Vector.add offset rowXOffset) point n)
+            (buildHexagons offset height (i - 1) n)
 
     else
-        []
+        Dict.empty
 
 
-buildHexagon : Vector -> Int -> Int -> Noise.PermutationTable -> MapTile
-buildHexagon offset h w n =
+buildHexagon : Vector.Vector -> Vector.Point -> Noise.PermutationTable -> MapTile
+buildHexagon offset p n =
     MapTile
-        (Point h w)
-        (Vector (getXPosForIndex w + offset.xF) (getYPosForIndex h + offset.yF))
-        (getTerrainFor (Point h w) n)
+        p
+        (Vector (getXPosForIndex p.x + offset.xF) (getYPosForIndex p.y + offset.yF))
+        (getTerrainFor p n)
         Nothing
         []
         Faction.Faction1

@@ -4,11 +4,15 @@ import Dict exposing (Dict)
 import Vector
 
 
+
+--negative x going up is bugged , psitive x giong down is bugged -> cant move on x axis
+
+
 type PathPart
     = PathPart
         { parent : Maybe PathPart
-        , minDistanceToTarget : Int
-        , previousDistance : Int
+        , minDistanceToTarget : Float
+        , previousDistance : Float
         , position : Vector.Point
         }
 
@@ -18,7 +22,7 @@ type alias PathInfo =
 
 
 type alias NavigatableMap =
-    { getCircumjacentFields : Vector.Point -> List Vector.Point, getMinDistanceBetween : Vector.Point -> Vector.Point -> Int }
+    { timeToCrossField : Vector.Point -> Float, getCircumjacentFields : Vector.Point -> List Vector.Point, getMinDistanceBetween : Vector.Point -> Vector.Point -> Float }
 
 
 createPathPart : Vector.Point -> Maybe PathPart -> PathInfo -> PathPart
@@ -29,10 +33,10 @@ createPathPart p parent info =
         , previousDistance =
             Maybe.withDefault 0
                 (Maybe.andThen
-                    (\(PathPart part) -> Just (part.previousDistance + 1))
+                    (\(PathPart part) -> Just (part.previousDistance + info.nav.timeToCrossField p))
                     parent
                 )
-        , position = { x = 0, y = 0 }
+        , position = p
         }
 
 
@@ -61,7 +65,7 @@ toPath2_ (PathPart p) ps =
             toPath2_ parent (p.position :: ps)
 
 
-minDistance : PathPart -> Int
+minDistance : PathPart -> Float
 minDistance (PathPart p) =
     p.previousDistance + p.minDistanceToTarget
 
@@ -78,13 +82,15 @@ buildPath tails dict info =
             []
 
         (PathPart closest) :: ts ->
+            --info.nav.getCircumjacentFields closest.position
             if Vector.pointEqual closest.position info.target then
                 toPath2 (PathPart closest)
 
             else
                 let
                     circumjacent =
-                        List.filter (\p -> not (Dict.member (Vector.showPoint p) dict)) (info.nav.getCircumjacentFields closest.position)
+                        List.filter (\p -> not (Dict.member (Vector.showPoint p) dict))
+                            (info.nav.getCircumjacentFields closest.position)
                 in
                 buildPath
                     (List.foldl (\p ts2 -> addSortedPathTail ts2 (createPathPart p (Just (PathPart closest)) info)) ts circumjacent)
@@ -107,7 +113,7 @@ addSortedPathTail tails p =
             [ p ]
 
         t :: ts ->
-            if minDistance p < minDistance t then
+            if minDistance p <= minDistance t then
                 p :: t :: ts
 
             else

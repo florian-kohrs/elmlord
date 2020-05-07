@@ -24,6 +24,11 @@ toPoint v =
     { x = round v.xF, y = round v.yF }
 
 
+pointToFloat : Point -> Float
+pointToFloat p =
+    toFloat p.x + toFloat p.y ^ -1
+
+
 toVector : Point -> Vector
 toVector p =
     Vector (toFloat p.x) (toFloat p.y)

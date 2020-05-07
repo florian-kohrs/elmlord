@@ -1,6 +1,7 @@
 module MapModel exposing (..)
 
 import Browser
+import Dict
 import Entities exposing (Lord, Settlement)
 import Faction exposing (Faction(..))
 import Html.Events exposing (onClick)
@@ -13,7 +14,7 @@ import Vector exposing (..)
 
 
 type alias Map =
-    List MapTile
+    Dict.Dict String MapTile
 
 
 type alias MapTile =
@@ -33,13 +34,13 @@ setSettlement t s =
 
 heighProgressToTerrain : Float -> Terrain
 heighProgressToTerrain f =
-    if f < 0.15 then
+    if f < 0.25 then
         Water
 
     else if f < 0.5 then
         Grass
 
-    else if f < 0.85 then
+    else if f < 0.75 then
         Forest
 
     else
@@ -51,6 +52,27 @@ type Terrain
     | Water
     | Forest
     | Mountain
+
+
+type TerrainMoveType
+    = CantWalkOn
+    | CanWalkOn Float
+
+
+terrainToMove : Terrain -> TerrainMoveType
+terrainToMove t =
+    case t of
+        Grass ->
+            CanWalkOn 1
+
+        Water ->
+            CantWalkOn
+
+        Forest ->
+            CanWalkOn 0.8
+
+        Mountain ->
+            CanWalkOn 0.5
 
 
 rad : Float
@@ -91,15 +113,28 @@ terrainToName t =
 
 
 mapToSvg : Map -> Float -> (Point -> a) -> List (Svg a)
-mapToSvg m r f =
-    List.map (showMapTile r f) m
+mapToSvg =
+    mapWithPathToSvg []
 
 
-showMapTile : Float -> (Point -> a) -> MapTile -> Svg a
-showMapTile tileRadius f tile =
+mapWithPathToSvg : List Vector.Point -> Map -> Float -> (Point -> a) -> List (Svg a)
+mapWithPathToSvg ps m r f =
+    List.map (showMapTile ps r f) (Dict.values m)
+
+
+showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> Svg a
+showMapTile ps tileRadius f tile =
+    let
+        colorString =
+            if List.any (Vector.pointEqual tile.indices) ps then
+                "Orange"
+
+            else
+                terrainToColor tile.terrain
+    in
     polygon
         [ onClick (f tile.indices)
-        , fill (terrainToColor tile.terrain)
+        , fill colorString
         , stroke "black"
         , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
         ]
@@ -111,9 +146,12 @@ pointsToHexagonPoints =
     List.foldl (\v r -> r ++ String.fromFloat v.xF ++ "," ++ String.fromFloat v.yF ++ " ") ""
 
 
-intialSettlementMapSetup : List Entities.Settlement -> Map -> Map
-intialSettlementMapSetup settlements =
-    List.map (\tile -> setSettlement tile (List.head (List.filter (\s -> Vector.pointEqual tile.indices s.entity.position) settlements)))
+
+{-
+   intialSettlementMapSetup : List Entities.Settlement -> Map -> Map
+   intialSettlementMapSetup settlements =
+       List.map (\( k, tile ) ->  setSettlement tile (List.head (List.filter (\s -> Vector.pointEqual tile.indices s.entity.position) settlements)))
+-}
 
 
 generateHexagonPoints : Vector -> Float -> List Vector.Vector
