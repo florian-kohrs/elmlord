@@ -59,6 +59,16 @@ type TerrainMoveType
     | CanWalkOn Float
 
 
+canMoveOnTile : MapTile -> Bool
+canMoveOnTile mapTile =
+    case terrainToMove mapTile.terrain of
+        CantWalkOn ->
+            False
+
+        CanWalkOn _ ->
+            True
+
+
 terrainToMove : Terrain -> TerrainMoveType
 terrainToMove t =
     case t of

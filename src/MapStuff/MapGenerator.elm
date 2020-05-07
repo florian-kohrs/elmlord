@@ -79,8 +79,16 @@ getNav map =
 
                     else
                         1
+
+                canUseTile point =
+                    case Dict.get (Vector.showPoint point) map of
+                        Nothing ->
+                            False
+
+                        Just t ->
+                            MapModel.canMoveOnTile t
             in
-            List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize)
+            List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize && canUseTile point)
                 [ Vector.Point p.x (p.y + 1)
                 , Vector.Point p.x (p.y - 1)
                 , Vector.Point (p.x + sign) (p.y + 1)
