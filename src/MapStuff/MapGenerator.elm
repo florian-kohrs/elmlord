@@ -52,7 +52,12 @@ mapScale =
 
 seed : Int
 seed =
-    5
+    9
+
+
+noiseScale : Float
+noiseScale =
+    0.1
 
 
 getNav : MapModel.Map -> NavigatableMap
@@ -110,21 +115,14 @@ getNav map =
     , getMinDistanceBetween =
         \p1 p2 ->
             let
-                distanceReduction =
-                    if modBy 2 p1.x == 1 && modBy 2 p1.y == 1 then
-                        if p2.x > p1.x then
-                            1
+                yDiff =
+                    toFloat (abs (p1.y - p2.y))
 
-                        else
-                            0
-
-                    else if p2.x < p1.x then
-                        1
-
-                    else
-                        0
+                xDiff =
+                    Basics.max 0
+                        (toFloat (abs (p1.x - p2.x)) - yDiff / 2)
             in
-            toFloat (abs (p1.x - p2.x) + abs (p1.y - p2.y) - distanceReduction)
+            xDiff + yDiff
     }
 
 
@@ -223,8 +221,3 @@ getTerrainFor p n =
             (Noise.noise2d n noiseP.xF noiseP.yF + 1) / 2
     in
     MapModel.heighProgressToTerrain height
-
-
-noiseScale : Float
-noiseScale =
-    0.1

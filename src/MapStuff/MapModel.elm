@@ -34,13 +34,13 @@ setSettlement t s =
 
 heighProgressToTerrain : Float -> Terrain
 heighProgressToTerrain f =
-    if f < 0.25 then
+    if f < 0.15 then
         Water
 
     else if f < 0.5 then
         Grass
 
-    else if f < 0.75 then
+    else if f < 0.85 then
         Forest
 
     else
@@ -136,16 +136,19 @@ showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> Svg a
 showMapTile ps tileRadius f tile =
     let
         colorString =
+            terrainToColor tile.terrain
+
+        strokeColor =
             if List.any (Vector.pointEqual tile.indices) ps then
                 "Orange"
 
             else
-                terrainToColor tile.terrain
+                "Black"
     in
     polygon
         [ onClick (f tile.indices)
         , fill colorString
-        , stroke "black"
+        , stroke strokeColor
         , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
         ]
         []
