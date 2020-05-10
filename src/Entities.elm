@@ -11,7 +11,7 @@ type alias Gold =
 
 
 type alias Lord =
-    { entity : WorldEntity, gold : Gold, occupation : Occupation, land : List Settlement, moveSpeed : Float }
+    { entity : WorldEntity, gold : Gold, action : Action, land : List Settlement, moveSpeed : Float }
 
 
 
@@ -23,10 +23,6 @@ type alias Lord =
        in
        { s | gold = s.gold + goldIncome }
 -}
-
-
-type alias Occupation =
-    { action : Action, importance : Int }
 
 
 type Action
