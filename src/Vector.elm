@@ -2,7 +2,7 @@ module Vector exposing (..)
 
 
 type alias Vector =
-    { xF : Float, yF : Float }
+    { x : Float, y : Float }
 
 
 type alias Point =
@@ -11,17 +11,17 @@ type alias Point =
 
 showVector : Vector -> String
 showVector v =
-    "(" ++ String.fromFloat v.xF ++ ", " ++ String.fromFloat v.yF ++ ")"
+    "(" ++ String.fromFloat v.x ++ ", " ++ String.fromFloat v.y ++ ")"
 
 
 add : Vector -> Vector -> Vector
 add v1 v2 =
-    Vector (v1.xF + v2.xF) (v1.yF + v2.yF)
+    Vector (v1.x + v2.x) (v1.y + v2.y)
 
 
 toPoint : Vector -> Point
 toPoint v =
-    { x = round v.xF, y = round v.yF }
+    { x = round v.x, y = round v.y }
 
 
 pointToFloat : Point -> Float
@@ -36,7 +36,7 @@ toVector p =
 
 scale : Vector -> Float -> Vector
 scale v f =
-    Vector (v.xF * f) (v.yF * f)
+    Vector (v.x * f) (v.y * f)
 
 
 pointEqual : Point -> Point -> Bool
@@ -68,17 +68,17 @@ pointOnCircle radius radiant =
 
 rotate90Degree : Vector -> Vector
 rotate90Degree v =
-    { v | xF = -v.yF, yF = v.xF }
+    { v | x = -v.y, y = v.x }
 
 
 flipOnX : Vector -> Vector
 flipOnX v =
-    { v | xF = -v.xF }
+    { v | x = -v.x }
 
 
 y : Vector -> Float
 y v =
-    v.yF
+    v.y
 
 
 zero : Vector
@@ -88,4 +88,4 @@ zero =
 
 flipOnY : Vector -> Vector
 flipOnY v =
-    { v | yF = -v.yF }
+    { v | y = -v.y }
