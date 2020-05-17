@@ -1,6 +1,7 @@
 module Pathfinder exposing (..)
 
 import Dict exposing (Dict)
+import MaybeExt
 import Vector
 
 
@@ -31,11 +32,10 @@ createPathPart p parent info =
         { parent = parent
         , minDistanceToTarget = info.nav.getMinDistanceBetween p info.target
         , previousDistance =
-            Maybe.withDefault 0
-                (Maybe.andThen
-                    (\(PathPart part) -> Just (part.previousDistance + info.nav.timeToCrossField p))
-                    parent
-                )
+            MaybeExt.foldMaybe
+                (\(PathPart part) -> part.previousDistance + info.nav.timeToCrossField p)
+                0
+                parent
         , position = p
         }
 

@@ -2,6 +2,7 @@ module Entities exposing (..)
 
 import Faction exposing (..)
 import List exposing (..)
+import RedundantDataManager
 import Troops exposing (..)
 import Vector exposing (..)
 
@@ -56,6 +57,35 @@ type alias WorldEntity =
     { army : List TroopType, faction : Faction, position : Point, name : String }
 
 
+setPosition : WorldEntity -> Vector.Point -> WorldEntity
+setPosition entity pos =
+    { entity | position = pos }
+
+
 type SettlementType
     = Village
     | Town
+
+
+createCapitalFor : WorldEntity -> Settlement
+createCapitalFor e =
+    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital`" }, settlementType = Town, isSieged = False }
+
+
+type alias SettlementInfo =
+    { sType : SettlementType, position : Vector.Point }
+
+
+getSettlementFor : Lord -> SettlementInfo -> Settlement
+getSettlementFor l info =
+    { entity = { army = [], faction = l.entity.faction, position = info.position, name = "" }, settlementType = info.sType, isSieged = False }
+
+
+settlementImageName : SettlementType -> String
+settlementImageName s =
+    case s of
+        Village ->
+            "Village.png"
+
+        Town ->
+            "Town.png"

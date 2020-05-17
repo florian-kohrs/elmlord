@@ -1,13 +1,16 @@
 module Main exposing (..)
 
 import Browser
+import Dict
 import Entities exposing (..)
 import Faction exposing (..)
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import MapGenerator exposing (createMap, getXPosForIndex, getYPosForIndex, hexRadius)
-import MapModel exposing (Map, MapTile)
+import Map exposing (Map, MapTile)
+import MapData exposing (..)
+import MapGenerator exposing (createMap)
+import MaybeExt
 import Pathfinder
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -24,9 +27,15 @@ type alias Model =
 
 
 type GameState
-    = GameSetup
+    = GameSetup UiState
     | InGame Int -- int = playerCount
     | GameOver Bool -- true = gewonnen, false = verloren
+
+
+type UiState
+    = MainMenue
+    | SaveLoad
+    | NewCampain
 
 
 
@@ -40,30 +49,122 @@ type Msg
 
 initialModel : Model
 initialModel =
-    Model [] GameSetup Nothing Nothing MapGenerator.createMap
+    Model [] (GameSetup MainMenue) Nothing Nothing MapGenerator.createMap
+
+
+startGame : Int -> Model
+startGame playerCount =
+    initMap (initPlayers initialModel playerCount)
+
+
+initPlayers : Model -> Int -> Model
+initPlayers m count =
+    let
+        lords =
+            List.map
+                (\i -> initPlayer i (2 * (toFloat i / toFloat count + 0.125)))
+                (List.range 0 (count - 1))
+    in
+    { m | lords = lords }
+
+
+initMap : Model -> Model
+initMap m =
+    initMapWithSettlements (List.concat (List.map (\l -> l.land) m.lords)) (initMapWithLords m.lords m)
+
+
+initMapWithLords : List Entities.Lord -> Model -> Model
+initMapWithLords ls m =
+    let
+        map =
+            List.foldl
+                (\l ->
+                    Dict.update (Vector.showPoint l.entity.position) (Maybe.andThen (\t -> Just { t | lords = l :: t.lords }))
+                )
+                m.map
+                ls
+    in
+    { m | map = map }
+
+
+initMapWithSettlements : List Entities.Settlement -> Model -> Model
+initMapWithSettlements setts m =
+    let
+        map =
+            List.foldl
+                (\s ->
+                    Dict.update (Vector.showPoint s.entity.position) (Maybe.andThen (\t -> Just { t | settlement = Just s }))
+                )
+                m.map
+                setts
+    in
+    { m | map = map }
+
+
+initPlayer : Int -> Float -> Lord
+initPlayer i rad =
+    let
+        entity =
+            WorldEntity
+                []
+                (Faction.getFaction i)
+                (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad))
+                ("Lord " ++ String.fromInt i)
+    in
+    Lord
+        entity
+        0
+        Wait
+        (initSettlementsFor entity)
+        0
+
+
+initSettlementsFor : Entities.WorldEntity -> List Entities.Settlement
+initSettlementsFor e =
+    Entities.createCapitalFor e :: []
+
+
+moveLord : Entities.Lord -> Vector.Point -> Model -> Model
+moveLord l newP m =
+    let
+        newLords =
+            List.map
+                (\lord ->
+                    if lord == l then
+                        { lord | entity = Entities.setPosition lord.entity newP }
+
+                    else
+                        lord
+                )
+                m.lords
+
+        newMap =
+            Map.moveLord l newP m.map
+    in
+    { m | lords = newLords, map = newMap }
 
 
 
+--generateSettlementsFor : Lord ->
 {-
-   startGame : Int -> Model
-   startGame playerCount =
-       initPlayers playerCount initialModel
+   addSettlementsTo : Entities.Lord -> List Entities.SettlementInfo -> Model -> Model
+   addSettlementsTo l sInfos m =
+       let
+           mLord =
+               List.head (List.filter ((==) l) m.lords)
+       in
+       case mLord of
+           Nothing ->
+               m
+
+           Just lord ->
+               List.map (Entities.getSettlementFor lord) sInfos
 
 
-   initPlayers : Model -> Int -> Model
-   initPlayers m count =
-       List.map
-           (\i ->
-               Lord
-                   (WorldEntity []
-                       (Faction.getFaction i)
-                       (Vector.toPoint (Vector.pointOnCircle (MapGenerator.mapSize * 0.85) (2 * m / count)))
-                       ("Lord" ++ String.fromInt i)
-                   )
-                   0
-                   Wait
-           )
-           (List.range 0 (count - 1))
+   initField : Map.MapTile -> Map.MapTile
+   initField t =
+       t
+
 -}
 
 
@@ -93,28 +194,24 @@ view model =
                     , Svg.Attributes.height "1800"
                     , Svg.Attributes.fill "none"
                     ]
-                    (f model.map MapGenerator.hexRadius Click)
+                    (f model.map MapData.hexRadius Click)
                 ]
             ]
-                ++ Maybe.withDefault
-                    []
-                    (Maybe.andThen
-                        (\p -> Just [ span [] [ Html.text (Vector.showPoint p) ] ])
-                        model.selectedIndex
-                    )
+                ++ MaybeExt.foldMaybe (\p -> [ span [] [ Html.text (Vector.showPoint p) ] ]) [] model.selectedIndex
+                ++ List.foldl (\l r -> span [] [ Html.text (Vector.showPoint l.entity.position) ] :: r) [] model.lords
     in
     case model.selectedIndex of
         Nothing ->
             div
                 []
-                (body MapModel.mapToSvg)
+                (body Map.mapToSvg)
 
         Just s1 ->
             case model.selectedIndex2 of
                 Nothing ->
                     div
                         []
-                        (body MapModel.mapToSvg)
+                        (body Map.mapToSvg)
 
                 Just s2 ->
                     let
@@ -123,7 +220,7 @@ view model =
                     in
                     div
                         []
-                        (body (MapModel.mapWithPathToSvg path)
+                        (body (Map.mapWithPathToSvg path)
                             ++ [ span [] [ Html.text (Vector.showPoint s2) ]
                                , span []
                                     [ Html.text
@@ -144,4 +241,4 @@ pointToMsg p =
 
 main : Program () Model Msg
 main =
-    Browser.sandbox { init = initialModel, view = view, update = update }
+    Browser.sandbox { init = startGame 4, view = view, update = update }

@@ -1,4 +1,4 @@
-module MapModel exposing (..)
+module Map exposing (..)
 
 import Browser
 import Dict
@@ -6,6 +6,9 @@ import Entities exposing (Lord, Settlement)
 import Faction exposing (Faction(..))
 import Html.Events exposing (onClick)
 import List exposing (..)
+import ListExt
+import MapData exposing (rad)
+import MaybeExt
 import Pathfinder exposing (NavigatableMap)
 import String exposing (..)
 import Svg exposing (..)
@@ -25,6 +28,52 @@ type alias MapTile =
     , lords : List Entities.Lord
     , faction : Faction
     }
+
+
+moveLord : Entities.Lord -> Vector.Point -> Map -> Map
+moveLord l newP m =
+    updateLordsOnTile newP l (::) (updateLordsOnTile l.entity.position l (\lord -> List.filter ((/=) lord)) m)
+
+
+updateLordsOnTile :
+    Vector.Point
+    -> Entities.Lord
+    -> (Entities.Lord -> List Entities.Lord -> List Entities.Lord)
+    -> Map
+    -> Map
+updateLordsOnTile p l update m =
+    Dict.update
+        (Vector.showPoint p)
+        (Maybe.andThen (\t -> Just { t | lords = update l t.lords }))
+        m
+
+
+type SvgItem a
+    = SvgItem Int (Svg.Svg a)
+
+
+getSvgForSettlement : Vector.Vector -> Vector.Vector -> Entities.Settlement -> SvgItem a
+getSvgForSettlement pos size s =
+    getImage (Entities.settlementImageName s.settlementType) pos size
+
+
+getImage : String -> Vector.Vector -> Vector.Vector -> SvgItem a
+getImage imgName pos size =
+    SvgItem 2
+        (Svg.image
+            [ --onClick (f tile.indices),
+              Svg.Attributes.x (String.fromFloat (pos.x - size.x / 2))
+            , Svg.Attributes.y (String.fromFloat (pos.y - size.y / 2))
+            , Svg.Attributes.width (String.fromFloat size.x)
+            , Svg.Attributes.height (String.fromFloat size.y)
+            , Svg.Attributes.xlinkHref ("../Images/" ++ imgName)
+
+            --, Svg.Attributes.src "../Images/Background.png"
+            --, Svg.Attributes.overflow "visible"
+            --, Svg.Attributes.fill "red"
+            ]
+            []
+        )
 
 
 setSettlement : MapTile -> Maybe Settlement -> MapTile
@@ -85,11 +134,6 @@ terrainToMove t =
             CanWalkOn 0.5
 
 
-rad : Float
-rad =
-    0.35
-
-
 terrainToColor : Terrain -> String
 terrainToColor t =
     case t of
@@ -129,34 +173,49 @@ mapToSvg =
 
 mapWithPathToSvg : List Vector.Point -> Map -> Float -> (Point -> a) -> List (Svg a)
 mapWithPathToSvg ps m r f =
-    List.map (showMapTile ps r f) (Dict.values m)
+    List.map getSvg (List.sortBy getZIndex (List.concat (List.map (showMapTile ps r f) (Dict.values m))))
 
 
-showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> Svg a
+getZIndex : SvgItem a -> Int
+getZIndex (SvgItem i _) =
+    i
+
+
+getSvg : SvgItem a -> Svg a
+getSvg (SvgItem _ svg) =
+    svg
+
+
+showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> List (SvgItem a)
 showMapTile ps tileRadius f tile =
     let
         colorString =
             terrainToColor tile.terrain
 
         strokeColor =
-            if List.any (Vector.pointEqual tile.indices) ps then
+            if ListExt.indexOf (Vector.pointEqual tile.indices) ps >= 0 then
                 "Orange"
 
             else
                 "Black"
     in
-    polygon
-        [ onClick (f tile.indices)
-        , fill colorString
-        , stroke strokeColor
-        , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
-        ]
-        []
+    [ SvgItem 0
+        (polygon
+            [ onClick (f tile.indices)
+            , Svg.Attributes.overflow "visible"
+            , fill colorString
+            , stroke strokeColor
+            , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
+            ]
+            []
+        )
+    ]
+        ++ MaybeExt.foldMaybe (\s -> [ getSvgForSettlement tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) s ]) [] tile.settlement
 
 
 pointsToHexagonPoints : List Vector.Vector -> String
 pointsToHexagonPoints =
-    List.foldl (\v r -> r ++ String.fromFloat v.xF ++ "," ++ String.fromFloat v.yF ++ " ") ""
+    List.foldl (\v r -> r ++ String.fromFloat v.x ++ "," ++ String.fromFloat v.y ++ " ") ""
 
 
 
