@@ -19,6 +19,11 @@ add v1 v2 =
     Vector (v1.x + v2.x) (v1.y + v2.y)
 
 
+addPoints : Point -> Point -> Point
+addPoints p1 p2 =
+    Point (p1.x + p2.x) (p1.y + p2.y)
+
+
 toPoint : Vector -> Point
 toPoint v =
     { x = round v.x, y = round v.y }

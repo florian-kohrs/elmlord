@@ -30,7 +30,7 @@ tileRowXOffset =
 
 mapSize : Int
 mapSize =
-    20
+    15
 
 
 mapScale : Float

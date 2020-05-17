@@ -172,7 +172,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            model
+            List.foldl (\l m -> moveLord l (Vector.addPoints l.entity.position (Vector.Point 1 1)) m) model model.lords
 
         Click p ->
             case model.selectedIndex of
@@ -187,7 +187,8 @@ view : Model -> Html Msg
 view model =
     let
         body f =
-            [ div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
+            [ btn EndRound "End Round"
+            , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
                 [ Svg.svg
                     [ Svg.Attributes.viewBox "0 0 2000 1800"
                     , Svg.Attributes.width "2000"
@@ -232,6 +233,11 @@ view model =
                                     ]
                                ]
                         )
+
+
+btn : Msg -> String -> Html Msg
+btn msg txt =
+    button [ onClick msg ] [ Html.text txt ]
 
 
 pointToMsg : Vector.Point -> Msg

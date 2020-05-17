@@ -32,7 +32,7 @@ type alias MapTile =
 
 moveLord : Entities.Lord -> Vector.Point -> Map -> Map
 moveLord l newP m =
-    updateLordsOnTile newP l (::) (updateLordsOnTile l.entity.position l (\lord -> List.filter ((/=) lord)) m)
+    updateLordsOnTile newP { l | entity = Entities.setPosition l.entity newP } (::) (updateLordsOnTile l.entity.position l (\lord -> List.filter ((/=) lord)) m)
 
 
 updateLordsOnTile :
@@ -48,18 +48,30 @@ updateLordsOnTile p l update m =
         m
 
 
+
+{-
+   getClosestFreeFieldAt : Vector.Point -> Map -> Vector.Point
+   getClosestFreeFieldAt p =
+-}
+
+
 type SvgItem a
     = SvgItem Int (Svg.Svg a)
 
 
 getSvgForSettlement : Vector.Vector -> Vector.Vector -> Entities.Settlement -> SvgItem a
 getSvgForSettlement pos size s =
-    getImage (Entities.settlementImageName s.settlementType) pos size
+    getImage 2 (Entities.settlementImageName s.settlementType) pos size
 
 
-getImage : String -> Vector.Vector -> Vector.Vector -> SvgItem a
-getImage imgName pos size =
-    SvgItem 2
+getSvgForLord : Vector.Vector -> Vector.Vector -> Lord -> SvgItem a
+getSvgForLord pos size l =
+    getImage 3 "Lord1.png" pos size
+
+
+getImage : Int -> String -> Vector.Vector -> Vector.Vector -> SvgItem a
+getImage z imgName pos size =
+    SvgItem z
         (Svg.image
             [ --onClick (f tile.indices),
               Svg.Attributes.x (String.fromFloat (pos.x - size.x / 2))
@@ -211,6 +223,7 @@ showMapTile ps tileRadius f tile =
         )
     ]
         ++ MaybeExt.foldMaybe (\s -> [ getSvgForSettlement tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) s ]) [] tile.settlement
+        ++ List.foldl (\l r -> getSvgForLord tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) l :: r) [] tile.lords
 
 
 pointsToHexagonPoints : List Vector.Vector -> String
