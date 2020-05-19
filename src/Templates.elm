@@ -1,4 +1,4 @@
-module Template exposing (startMenuTemplate, loadSavesTemplate)
+module Templates exposing (..)
 
 import Html exposing (Html, button, div, span, text, input, select, option, img)
 import Html.Attributes as HtmlAttr
@@ -8,7 +8,7 @@ import String exposing (..)
 
 
 -- Start menu with some menu selections
-startMenuTemplate : Html Msg
+{- startMenuTemplate : Html Msg
 startMenuTemplate  =
     div [ HtmlAttr.class "main-container" ]
     [ addStylesheet "link" ".assets/styles/template_styles.css"
@@ -90,11 +90,11 @@ loadSavesTemplate =
             ]
         , div [] [ button [ onClick ShowLogin, HtmlAttr.class "back-btn" ] [ span [] [ Html.text "Back" ] ] ]
         ]
-    ]
+    ] -}
 
 
 
 
-addStylesheet : String -> String -> Html Msg 
+addStylesheet : String -> String -> Html Msg
 addStylesheet tag href = 
     Html.node tag [ HtmlAttr.attribute "Rel" "stylesheet", HtmlAttr.attribute "property" "stylesheet", HtmlAttr.attribute "href" href] []

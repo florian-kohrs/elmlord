@@ -188,7 +188,8 @@ view model =
     let
         body f =
             [ div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
-                [ Svg.svg
+                [ addStylesheet "link" "./assets/styles/main_styles.css"
+                   , Svg.svg
                     [ Svg.Attributes.viewBox "0 0 2000 1800"
                     , Svg.Attributes.width "2000"
                     , Svg.Attributes.height "1800"
@@ -203,7 +204,7 @@ view model =
     case model.selectedIndex of
         Nothing ->
             div
-                []
+                [Html.Attributes.class "page-container"]
                 (body Map.mapToSvg)
 
         Just s1 ->
@@ -242,3 +243,9 @@ pointToMsg p =
 main : Program () Model Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
+
+
+-- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
+addStylesheet : String -> String -> Html Msg
+addStylesheet tag href = 
+    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href] []
