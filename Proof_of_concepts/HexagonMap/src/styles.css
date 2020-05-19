@@ -10,16 +10,14 @@
 
 .start-logo-container {
     height: 200px;
-    width: 200px;
-    background: blue;
-    color: white;
-    text-align: center;
+    width: 450px;
 }
 
-.start-logo-container > span {
-    font-size: 20px;
-    display: block;
-    padding-top: 80px;
+.start-logo-container > img {
+    width: 80%;
+    height: 125px;
+    margin: 40px auto;
+    margin-left: 50px;
 }
 
 .start-container {
@@ -102,7 +100,6 @@
     width: 90%;
     height: 150px;
     margin: 15px auto;
-    background: black;
     border-radius: 10px;
     border: 4px solid #c7994c;
     background: #7b0606;
@@ -154,6 +151,76 @@
     cursor: pointer;
     font-size: 18px;
 }
+
+/* -------------------------------------------------- Campaign Style -------------------------------------------------- */
+
+.campaign-container {
+    width: 40%;
+    height: 450px;
+    margin: 0 auto;
+}
+
+
+.campaign-actions {
+    height: 250px;
+    margin-top: 40px;
+    border-radius: 10px;
+    border: 4px solid #c7994c;
+    background: #DDC193;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+
+.campaign-name-container {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    text-align: center;
+}
+
+.campaign-name {
+    display: block;
+    padding-top: 30px;
+    font-size: 22px;
+}
+
+.campaign-input {
+    width: 90%;
+    height: 30px;
+    margin: 20px auto;
+}
+
+.campaign-select-container {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    text-align: center;
+}
+
+.campaign-select {
+    width: 60%;
+    height: 30px;
+    margin: 25px auto;
+}
+
+.campaign-buttons-container {}
+
+.start-campaign-button {
+    width: 150px !important;
+    margin: 15px auto;
+}
+
+
+
+
+
+
+
+
 
 /* -------------------------------------------------- Mediavel Style -------------------------------------------------- */
 
