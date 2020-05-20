@@ -187,7 +187,7 @@ view : Model -> Html Msg
 view model =
     let
         body f =
-            [ div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
+            div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
                 [ addStylesheet "link" "./assets/styles/main_styles.css"
                    , Svg.svg
                     [ Svg.Attributes.viewBox "0 0 2000 1800"
@@ -197,15 +197,16 @@ view model =
                     ]
                     (f model.map MapData.hexRadius Click)
                 ]
-            ]
-                ++ MaybeExt.foldMaybe (\p -> [ span [] [ Html.text (Vector.showPoint p) ] ]) [] model.selectedIndex
+            
+                :: MaybeExt.foldMaybe (\p -> [ span [] [ Html.text (Vector.showPoint p) ] ]) [] model.selectedIndex
                 ++ List.foldl (\l r -> span [] [ Html.text (Vector.showPoint l.entity.position) ] :: r) [] model.lords
     in
     case model.selectedIndex of
         Nothing ->
             div
                 [Html.Attributes.class "page-container"]
-                (body Map.mapToSvg)
+                (div [Html.Attributes.class "page-header"] [] :: body Map.mapToSvg)
+                
 
         Just s1 ->
             case model.selectedIndex2 of

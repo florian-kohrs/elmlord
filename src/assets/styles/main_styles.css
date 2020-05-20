@@ -3,3 +3,9 @@
     width: 100vw;
     background-image: url("../images/background_image.png");
 }
+
+.page-header {
+    width: 100%;
+    height: 50px;
+    background: #B48463;
+}
