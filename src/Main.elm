@@ -211,7 +211,7 @@ view model =
             case model.selectedIndex2 of
                 Nothing ->
                     div
-                        []
+                        [Html.Attributes.class "page-container"]
                         (body Map.mapToSvg)
 
                 Just s2 ->
@@ -220,7 +220,7 @@ view model =
                             Pathfinder.getPath s1 (Pathfinder.PathInfo (MapGenerator.getNav model.map) s2)
                     in
                     div
-                        []
+                        [Html.Attributes.class "page-container"]
                         (body (Map.mapWithPathToSvg path)
                             ++ [ span [] [ Html.text (Vector.showPoint s2) ]
                                , span []
