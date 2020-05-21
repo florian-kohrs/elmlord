@@ -37,10 +37,10 @@ getNav map =
             let
                 sign =
                     if modBy 2 p.x == 0 then
-                        -1
+                        1
 
                     else
-                        1
+                        -1
 
                 canUseTile point =
                     case Dict.get (Vector.showPoint point) map of
@@ -53,31 +53,23 @@ getNav map =
             List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize && canUseTile point)
                 [ Vector.Point p.x (p.y + 1)
                 , Vector.Point p.x (p.y - 1)
-                , Vector.Point (p.x + sign) (p.y + 1)
-                , Vector.Point (p.x + sign) (p.y - 1)
+                , Vector.Point (p.x + 1) (p.y + sign)
+                , Vector.Point (p.x - 1) (p.y + sign)
 
                 --, { p | x = p.x - 1, y = p.y + 1 }
                 --, { p | x = p.x - 1, y = p.y - 1 }
                 , Vector.Point (p.x + 1) p.y
                 , Vector.Point (p.x - 1) p.y
                 ]
-
-    {- List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize)
-       (List.foldl
-           (\c r -> List.foldl (\c2 r2 -> Point (p.x + c) (p.y + c2) :: r2) r (List.range -1 1))
-           []
-           (List.range -1 1)
-       )
-    -}
     , getMinDistanceBetween =
         \p1 p2 ->
             let
-                yDiff =
-                    toFloat (abs (p1.y - p2.y))
-
                 xDiff =
+                    toFloat (abs (p1.x - p2.x))
+
+                yDiff =
                     Basics.max 0
-                        (toFloat (abs (p1.x - p2.x)) - yDiff / 2)
+                        (toFloat (abs (p1.y - p2.y)) - xDiff / 2)
             in
             xDiff + yDiff
     }
@@ -118,7 +110,7 @@ buildHexagons offset height i n =
 
         -- - (abs height // 2)
         rowXOffset =
-            Vector.Vector -(((toFloat i) * (Vector.pointOnCircle hexRadius rad).x))  (toFloat (modBy 2 i * tileRowXOffset)) 
+            Vector.Vector -(toFloat i * (Vector.pointOnCircle hexRadius rad).x) (toFloat (modBy 2 i * tileRowXOffset))
     in
     if i >= 0 then
         let
@@ -144,13 +136,19 @@ buildHexagon offset p n =
         Faction.Faction1
 
 
-getTerrainFor : Vector.Point -> Noise.PermutationTable -> Map.Terrain 
-getTerrainFor p n = 
-    let 
-        xDiff = 1 - (toFloat (abs p.x) )/ (toFloat MapData.mapSize )
-        yDiff = 1 - (toFloat (abs p.y) )/ (toFloat MapData.mapSize )
-        noiseP = Vector.scale (Vector.toVector p) noiseScale 
-        height = ((Noise.noise2d n noiseP.x noiseP.y + 1) / 2) * sin ( Basics.min 1 (Basics.min xDiff yDiff * 2) * pi / 2)
-    
-    in 
+getTerrainFor : Vector.Point -> Noise.PermutationTable -> Map.Terrain
+getTerrainFor p n =
+    let
+        xDiff =
+            1 - toFloat (abs p.x) / toFloat MapData.mapSize
+
+        yDiff =
+            1 - toFloat (abs p.y) / toFloat MapData.mapSize
+
+        noiseP =
+            Vector.scale (Vector.toVector p) noiseScale
+
+        height =
+            ((Noise.noise2d n noiseP.x noiseP.y + 1) / 2) * sin (Basics.min 1 (Basics.min xDiff yDiff * 2) * pi / 2)
+    in
     Map.heighProgressToTerrain height
