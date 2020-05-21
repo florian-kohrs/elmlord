@@ -172,7 +172,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            List.foldl (\l m -> moveLord l (Vector.addPoints l.entity.position (Vector.Point 1 1)) m) model model.lords
+            model
 
         Click p ->
             case model.selectedIndex of
@@ -187,9 +187,9 @@ view : Model -> Html Msg
 view model =
     let
         body f =
-            [ btn EndRound "End Round"
-            , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
-                [ Svg.svg
+            div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
+                [ addStylesheet "link" "./assets/styles/main_styles.css"
+                   , Svg.svg
                     [ Svg.Attributes.viewBox "0 0 2000 1800"
                     , Svg.Attributes.width "2000"
                     , Svg.Attributes.height "1800"
@@ -197,21 +197,22 @@ view model =
                     ]
                     (f model.map MapData.hexRadius Click)
                 ]
-            ]
-                ++ MaybeExt.foldMaybe (\p -> [ span [] [ Html.text (Vector.showPoint p) ] ]) [] model.selectedIndex
+            
+                :: MaybeExt.foldMaybe (\p -> [ span [] [ Html.text (Vector.showPoint p) ] ]) [] model.selectedIndex
                 ++ List.foldl (\l r -> span [] [ Html.text (Vector.showPoint l.entity.position) ] :: r) [] model.lords
     in
     case model.selectedIndex of
         Nothing ->
             div
-                []
-                (body Map.mapToSvg)
+                [Html.Attributes.class "page-container"]
+                (div [Html.Attributes.class "page-header"] [] :: body Map.mapToSvg)
+                
 
         Just s1 ->
             case model.selectedIndex2 of
                 Nothing ->
                     div
-                        []
+                        [Html.Attributes.class "page-container"]
                         (body Map.mapToSvg)
 
                 Just s2 ->
@@ -220,7 +221,7 @@ view model =
                             Pathfinder.getPath s1 (Pathfinder.PathInfo (MapGenerator.getNav model.map) s2)
                     in
                     div
-                        []
+                        [Html.Attributes.class "page-container"]
                         (body (Map.mapWithPathToSvg path)
                             ++ [ span [] [ Html.text (Vector.showPoint s2) ]
                                , span []
@@ -235,11 +236,6 @@ view model =
                         )
 
 
-btn : Msg -> String -> Html Msg
-btn msg txt =
-    button [ onClick msg ] [ Html.text txt ]
-
-
 pointToMsg : Vector.Point -> Msg
 pointToMsg p =
     Click p
@@ -248,3 +244,9 @@ pointToMsg p =
 main : Program () Model Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
+
+
+-- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
+addStylesheet : String -> String -> Html Msg
+addStylesheet tag href = 
+    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href] []

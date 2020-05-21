@@ -36,7 +36,7 @@ getNav map =
         \p ->
             let
                 sign =
-                    if modBy 2 p.y == 0 then
+                    if modBy 2 p.x == 0 then
                         -1
 
                     else
@@ -118,7 +118,7 @@ buildHexagons offset height i n =
 
         -- - (abs height // 2)
         rowXOffset =
-            Vector.Vector (toFloat (modBy 2 height * tileRowXOffset)) 0
+            Vector.Vector -(((toFloat i) * (Vector.pointOnCircle hexRadius rad).x))  (toFloat (modBy 2 i * tileRowXOffset)) 
     in
     if i >= 0 then
         let
@@ -144,13 +144,13 @@ buildHexagon offset p n =
         Faction.Faction1
 
 
-getTerrainFor : Vector.Point -> Noise.PermutationTable -> Map.Terrain
-getTerrainFor p n =
-    let
-        noiseP =
-            Vector.scale (Vector.toVector p) noiseScale
-
-        height =
-            (Noise.noise2d n noiseP.x noiseP.y + 1) / 2
-    in
+getTerrainFor : Vector.Point -> Noise.PermutationTable -> Map.Terrain 
+getTerrainFor p n = 
+    let 
+        xDiff = 1 - (toFloat (abs p.x) )/ (toFloat MapData.mapSize )
+        yDiff = 1 - (toFloat (abs p.y) )/ (toFloat MapData.mapSize )
+        noiseP = Vector.scale (Vector.toVector p) noiseScale 
+        height = ((Noise.noise2d n noiseP.x noiseP.y + 1) / 2) * sin ( Basics.min 1 (Basics.min xDiff yDiff * 2) * pi / 2)
+    
+    in 
     Map.heighProgressToTerrain height

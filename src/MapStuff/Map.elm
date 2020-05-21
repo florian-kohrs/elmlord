@@ -30,17 +30,18 @@ type alias MapTile =
     }
 
 
+type alias MapTileDesign = 
+    { backgroundColor : String
+    , strokeColor : String
+    , strokeWidth : String
+    }
+
 moveLord : Entities.Lord -> Vector.Point -> Map -> Map
 moveLord l newP m =
     updateLordsOnTile newP { l | entity = Entities.setPosition l.entity newP } (::) (updateLordsOnTile l.entity.position l (\lord -> List.filter ((/=) lord)) m)
 
 
-updateLordsOnTile :
-    Vector.Point
-    -> Entities.Lord
-    -> (Entities.Lord -> List Entities.Lord -> List Entities.Lord)
-    -> Map
-    -> Map
+updateLordsOnTile : Vector.Point -> Entities.Lord -> (Entities.Lord -> List Entities.Lord -> List Entities.Lord) -> Map -> Map
 updateLordsOnTile p l update m =
     Dict.update
         (Vector.showPoint p)
@@ -150,16 +151,16 @@ terrainToColor : Terrain -> String
 terrainToColor t =
     case t of
         Grass ->
-            "Green"
+            "#00cd00"
 
         Water ->
-            "Blue"
+            "#4ca1d2"
 
         Forest ->
-            "DarkGreen"
+            "#008000"
 
         Mountain ->
-            "DarkKhaki"
+            "#ba8f30"
 
 
 terrainToName : Terrain -> String
@@ -198,25 +199,51 @@ getSvg (SvgItem _ svg) =
     svg
 
 
+styleMapTile : List Vector.Point -> MapTile -> MapTileDesign
+styleMapTile ps tile =
+        {
+            backgroundColor = terrainToColor tile.terrain
+            , strokeColor = getStrokeStyle ps tile "Orange" (factionToStrokeColor tile.faction)
+            , strokeWidth = getStrokeStyle ps tile "8px" "2px"
+        }
+
+
+getStrokeStyle : List Vector.Point -> MapTile -> String -> String -> String
+getStrokeStyle ps tile op1 op2 =
+    if ListExt.indexOf (Vector.pointEqual tile.indices) ps >= 0 then
+        op1
+
+    else
+        op2
+
+factionToStrokeColor : Faction -> String
+factionToStrokeColor faction =
+    case faction of 
+        Faction.Faction1 ->
+            "#ff4c4c"
+        Faction.Faction2 -> 
+            "blue" 
+        Faction.Faction3 ->
+            "green"
+        Faction.Faction4 ->
+            "yellow"
+
+
+
+
 showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> List (SvgItem a)
 showMapTile ps tileRadius f tile =
     let
-        colorString =
-            terrainToColor tile.terrain
-
-        strokeColor =
-            if ListExt.indexOf (Vector.pointEqual tile.indices) ps >= 0 then
-                "Orange"
-
-            else
-                "Black"
+        
+        tileDesign = styleMapTile ps tile
     in
     [ SvgItem 0
         (polygon
             [ onClick (f tile.indices)
             , Svg.Attributes.overflow "visible"
-            , fill colorString
-            , stroke strokeColor
+            , fill tileDesign.backgroundColor
+            , stroke tileDesign.strokeColor
+            , strokeWidth tileDesign.strokeWidth
             , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
             ]
             []

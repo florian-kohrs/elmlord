@@ -2,13 +2,15 @@ module Main exposing (main)
 
 import Browser
 import Debug exposing (log)
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, div, span, text, input, select, option, img)
 import Html.Attributes as HtmlAttr
 import Html.Events exposing (onClick)
 import List exposing (..)
 import String exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import String exposing (..)
+
 
 
 
@@ -72,12 +74,14 @@ type Msg
     | ShowSaves
     | ShowLogin
     | ShowMap
+    | ShowStart
     | ShowIndex String
 
 
 type State
     = Login
     | Normal
+    | Start
     | Saves
 
 
@@ -157,6 +161,9 @@ update dir model =
         ShowSaves -> 
             { model | state = Saves }
 
+        ShowStart -> 
+            { model | state = Start }
+
         ShowIndex text ->
             { model | chosen = text }
 
@@ -188,6 +195,9 @@ view model =
         Saves -> 
             loadSavesTemplate 
 
+        Start -> 
+            startCampaign 
+
 
 
 startMenuTemplate : Html Msg
@@ -195,12 +205,12 @@ startMenuTemplate  =
     div [ HtmlAttr.class "main-container" ]
     [ addStylesheet "link" "styles.css"
     , addStylesheet "link" "//fonts.googleapis.com/css?family=MedievalSharp"
-    , div [ HtmlAttr.class "start-logo-container" ] [ span [] [ Html.text "Logo" ] ]
+    , div [ HtmlAttr.class "start-logo-container" ] [ img [HtmlAttr.src "https://i.ibb.co/hRgjXkq/logo.png"] [] ]
     , div [ HtmlAttr.class "start-container" ]
         [ div [ HtmlAttr.class "start-header" ]
             [ span [ HtmlAttr.class "start-header-text" ] [ Html.text "Welcome mylord, what is your decision?" ] ]
         , div [ HtmlAttr.class "start-actions" ]
-            [ div [] [ button [ onClick ShowMap, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Start Campaign" ] ] ]
+            [ div [] [ button [ onClick ShowStart, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Start Campaign" ] ] ]
             , div [] [ button [ onClick ShowSaves, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Load Campaign" ] ] ]
             , div [] [ button [ onClick ShowSaves, HtmlAttr.class "start-buttons" ] [ span [] [ Html.text "Documentation" ] ] ]
             ]
@@ -208,12 +218,50 @@ startMenuTemplate  =
     ]
 
 
+startCampaign : Html Msg 
+startCampaign =
+    div [ HtmlAttr.class "main-container" ]
+    [ addStylesheet "link" "styles.css"
+    , addStylesheet "link" "//fonts.googleapis.com/css?family=MedievalSharp"
+    , div [ HtmlAttr.class "start-logo-container" ] [ img [HtmlAttr.src "https://i.ibb.co/hRgjXkq/logo.png"] [] ]
+    , div [ HtmlAttr.class "campaign-container" ]
+        [ div [ HtmlAttr.class "start-header" ]
+            [ span [ HtmlAttr.class "start-header-text" ] [ Html.text "M'lord, what are your campaign-settings?" ] ]
+        , div [ HtmlAttr.class "campaign-actions" ]
+            [ div [ HtmlAttr.class "campaign-name-container"] 
+                [
+                    span [HtmlAttr.class "campaign-name"] [Html.text "Name:"]
+                    , input [HtmlAttr.class "campaign-input"] []
+                ]
+            , div [ HtmlAttr.class "campaign-select-container"] 
+                [
+                    span [HtmlAttr.class "campaign-name"] [Html.text "Lords:"]
+                    , select [HtmlAttr.class "campaign-select"] (lordsToOption (List.range 2 4))
+                ]
+            , div [ HtmlAttr.class "campaign-buttons-container"] 
+                [
+                    div [] [ button [ onClick ShowMap, HtmlAttr.class "start-buttons start-campaign-button" ] [ span [] [ Html.text "Start Campaign" ] ] ]
+                ]
+            ]
+        , div [] [ button [ onClick ShowLogin, HtmlAttr.class "back-btn" ] [ span [] [ Html.text "Back" ] ] ]
+        ]
+    ]
+
+
+lordsToOption : List Int -> List (Html Msg) 
+lordsToOption list = 
+    case list of
+        [] -> []
+        (x :: xs) -> 
+            option [HtmlAttr.value (String.fromInt x)] [ Html.text ((String.fromInt x) ++ " Lords") ] :: lordsToOption xs     
+
+
 loadSavesTemplate : Html Msg
 loadSavesTemplate =
     div [ HtmlAttr.class "main-container" ]
     [ addStylesheet "link" "styles.css"
     , addStylesheet "link" "//fonts.googleapis.com/css?family=MedievalSharp"
-    , div [ HtmlAttr.class "start-logo-container" ] [ span [] [ Html.text "Logo" ] ]
+    , div [ HtmlAttr.class "start-logo-container" ] [ img [HtmlAttr.src "https://i.ibb.co/hRgjXkq/logo.png"] [] ]
     , div [ HtmlAttr.class "save-loads-container" ]
         [ div [ HtmlAttr.class "start-header" ]
             [ span [ HtmlAttr.class "start-header-text" ] [ Html.text "Mylord, choose your save" ] ]
