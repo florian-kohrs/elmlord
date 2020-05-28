@@ -4,7 +4,7 @@ import Browser
 import Dict
 import Entities exposing (..)
 import Faction exposing (..)
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, div, span, text, img)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Map exposing (Map, MapTile)
@@ -26,6 +26,12 @@ type alias Model =
     }
 
 
+type alias Revenue = 
+    { 
+        name: String
+        , value: Float
+    }
+
 type GameState
     = GameSetup UiState
     | InGame Int -- int = playerCount
@@ -46,6 +52,10 @@ type Msg
     = EndRound
     | Click Point
 
+
+-- STATIC TEST DATA
+testRevenueList : List Revenue
+testRevenueList = [{name = "Castles", value = 2.5}, {name = "Village", value = 1.9}, {name = "Army", value = -3.3}]
 
 initialModel : Model
 initialModel =
@@ -189,7 +199,7 @@ view model =
         body f =
             div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
                 [ addStylesheet "link" "./assets/styles/main_styles.css"
-                , Svg.svg
+                   , Svg.svg
                     [ Svg.Attributes.viewBox "0 0 2000 1800"
                     , Svg.Attributes.width "2000"
                     , Svg.Attributes.height "1800"
@@ -197,40 +207,39 @@ view model =
                     ]
                     (f model.map MapData.hexRadius Click)
                 ]
+            
                 :: MaybeExt.foldMaybe (\p -> [ span [] [ Html.text (Vector.showPoint p) ] ]) [] model.selectedIndex
                 ++ List.foldl (\l r -> span [] [ Html.text (Vector.showPoint l.entity.position) ] :: r) [] model.lords
     in
     case model.selectedIndex of
         Nothing ->
             div
-                [ Html.Attributes.class "page-container" ]
-                (div [ Html.Attributes.class "page-header" ] [] :: body Map.mapToSvg)
+                [Html.Attributes.class "page-container"]
+                (generateHeaderTemplate model :: body Map.mapToSvg)
+                
 
         Just s1 ->
             case model.selectedIndex2 of
                 Nothing ->
                     div
-                        [ Html.Attributes.class "page-container" ]
-                        (body Map.mapToSvg)
+                        [Html.Attributes.class "page-container"]
+                         (generateHeaderTemplate model :: body Map.mapToSvg)
 
                 Just s2 ->
                     let
                         path =
                             Pathfinder.getPath s1 (Pathfinder.PathInfo (MapGenerator.getNav model.map) s2)
-
-                        pathNodes =
-                            Pathfinder.pathToPoints path
                     in
                     div
-                        [ Html.Attributes.class "page-container" ]
-                        (body (Map.mapWithPathToSvg pathNodes)
+                        [Html.Attributes.class "page-container"]
+                        (generateHeaderTemplate model :: body (Map.mapWithPathToSvg path)
                             ++ [ span [] [ Html.text (Vector.showPoint s2) ]
                                , span []
                                     [ Html.text
                                         (List.foldl
                                             (\c r -> r ++ Vector.showPoint c)
                                             "Path: "
-                                            pathNodes
+                                            path
                                         )
                                     ]
                                ]
@@ -247,10 +256,90 @@ main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
 
 
+-- HEADER-TEMPLATE (ist auszulagern)
+
+generateHeaderTemplate : Model -> Html Msg
+generateHeaderTemplate model = 
+    div [Html.Attributes.class "page-header"] [
+        div [Html.Attributes.class "page-turn-header"] [
+            div [Html.Attributes.class "page-turn-handler-header"] [
+                div [Html.Attributes.class "page-turn-button"] [
+                    img [src  "./assets/images/round_icon.png"] []
+                ]
+            ]
+            , div [Html.Attributes.class "page-turn-date-header"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "January 1077 AD" ]
+            ]
+        ]
+        ,div [Html.Attributes.class "page-gold-header"] [
+            img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
+            , div [Html.Attributes.class "tooltip"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "207 Ducats" ]
+                , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
+                    span [] [Html.text "Monthly revenue" ]
+                    , div [] (revenuesToTemplate testRevenueList)
+                    , div [Html.Attributes.class "revenue-result-container"] [
+                        revenueToString (generateRevenue "Revenue" (List.foldr (+) 0 (revenueToIncomeList testRevenueList)))
+                    ]   
+                ]
+            ]
+        ]
+        , div [Html.Attributes.class "page-troop-header"] [
+            img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
+            , span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
+        ]
+        , div [Html.Attributes.class "page-settings-header"] [
+            div [Html.Attributes.class "page-settings-grid"] [
+                div [Html.Attributes.class "page-setting-container tooltip"] [
+                    img [src  "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings"] []
+                    , div [Html.Attributes.class "tooltip"] [
+                        span [Html.Attributes.class "tooltiptext settings-tooltip"] [ Html.text "Mute or unmute the gamesounds" ]
+                    ]
+                ]
+            ]
+            , div [Html.Attributes.class "page-settings-grid"] [
+                div [Html.Attributes.class "page-setting-container tooltip"] [
+                    img [src  "./assets/images/save_icon.png", Html.Attributes.class "page-image-settings"] []
+                    , div [Html.Attributes.class "tooltip"] [
+                            span [Html.Attributes.class "tooltiptext settings-tooltip"] [ Html.text "Save the game as a file" ]
+                    ]
+                ]   
+            ]
+        ]
+    ]
+
+
+-- REVENUE WIRD AUSGELAGERT
+------------------------------------------------------------------------------------------------------------------------------------
+
+revenuesToTemplate : List Revenue -> List (Html Msg)
+revenuesToTemplate list = 
+    case list of 
+        [] -> 
+            []
+        (x :: xs) -> 
+            div [Html.Attributes.class "revenue-container"] [ revenueToString x] :: revenuesToTemplate xs
+
+revenueToString : Revenue -> Html Msg
+revenueToString rev = 
+    if rev.value > 0 then
+        span [Html.Attributes.class "positive-income"] [Html.text (rev.name ++ ":  +" ++ String.fromFloat rev.value ++ " Ducats")]
+    else 
+        span [Html.Attributes.class "negative-income"] [Html.text (rev.name ++ ": " ++ String.fromFloat rev.value ++ " Ducats")]
+
+revenueToIncomeList : List Revenue -> List Float
+revenueToIncomeList rev = 
+    case rev of
+        [] -> 
+            []
+        (x :: xs) -> 
+            x.value :: revenueToIncomeList xs 
+
+generateRevenue : String -> Float -> Revenue 
+generateRevenue str value = 
+    { name = str, value = value}
 
 -- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
-
-
 addStylesheet : String -> String -> Html Msg
-addStylesheet tag href =
-    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
+addStylesheet tag href = 
+    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href] []
