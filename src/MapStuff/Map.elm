@@ -30,11 +30,12 @@ type alias MapTile =
     }
 
 
-type alias MapTileDesign = 
+type alias MapTileDesign =
     { backgroundColor : String
     , strokeColor : String
     , strokeWidth : String
     }
+
 
 moveLord : Entities.Lord -> Vector.Point -> Map -> Map
 moveLord l newP m =
@@ -201,11 +202,10 @@ getSvg (SvgItem _ svg) =
 
 styleMapTile : List Vector.Point -> MapTile -> MapTileDesign
 styleMapTile ps tile =
-        {
-            backgroundColor = terrainToColor tile.terrain
-            , strokeColor = getStrokeStyle ps tile "Orange" (factionToStrokeColor tile.faction)
-            , strokeWidth = getStrokeStyle ps tile "8px" "2px"
-        }
+    { backgroundColor = terrainToColor tile.terrain
+    , strokeColor = getStrokeStyle ps tile "Orange" (factionToStrokeColor tile.faction)
+    , strokeWidth = getStrokeStyle ps tile "8px" "2px"
+    }
 
 
 getStrokeStyle : List Vector.Point -> MapTile -> String -> String -> String
@@ -216,26 +216,28 @@ getStrokeStyle ps tile op1 op2 =
     else
         op2
 
+
 factionToStrokeColor : Faction -> String
 factionToStrokeColor faction =
-    case faction of 
+    case faction of
         Faction.Faction1 ->
             "#ff4c4c"
-        Faction.Faction2 -> 
-            "blue" 
+
+        Faction.Faction2 ->
+            "blue"
+
         Faction.Faction3 ->
             "green"
+
         Faction.Faction4 ->
             "yellow"
-
-
 
 
 showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> List (SvgItem a)
 showMapTile ps tileRadius f tile =
     let
-        
-        tileDesign = styleMapTile ps tile
+        tileDesign =
+            styleMapTile ps tile
     in
     [ SvgItem 0
         (polygon

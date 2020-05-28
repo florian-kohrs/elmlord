@@ -18,6 +18,33 @@ type PathPart
         }
 
 
+type alias Path =
+    { target : Vector.Point
+    , path : List PathTile
+    }
+
+
+type alias PathTile =
+    { indices : Vector.Point
+    , timeLoss : Float
+    }
+
+
+pathToPoints : Path -> List Vector.Point
+pathToPoints path =
+    List.map .indices path.path
+
+
+pathPartToTile : PathPart -> PathTile
+pathPartToTile (PathPart p) =
+    PathTile p.position (pathTimeLoss (PathPart p))
+
+
+pathTimeLoss : PathPart -> Float
+pathTimeLoss (PathPart p) =
+    MaybeExt.foldMaybe (\(PathPart parent) -> p.previousDistance - parent.previousDistance) 0 p.parent
+
+
 type alias PathInfo =
     { nav : NavigatableMap, target : Vector.Point }
 
@@ -40,51 +67,41 @@ createPathPart p parent info =
         }
 
 
-toPath1 : PathPart -> List Vector.Point
-toPath1 p =
-    List.reverse (toPath1_ p)
+toPath : PathPart -> List PathTile
+toPath p =
+    toPath_ p []
 
 
-toPath1_ : PathPart -> List Vector.Point
-toPath1_ (PathPart p) =
-    List.reverse (p.position :: Maybe.withDefault [] (Maybe.andThen (\(PathPart x) -> Just (toPath1 (PathPart x))) p.parent))
-
-
-toPath2 : PathPart -> List Vector.Point
-toPath2 p =
-    toPath2_ p []
-
-
-toPath2_ : PathPart -> List Vector.Point -> List Vector.Point
-toPath2_ (PathPart p) ps =
+toPath_ : PathPart -> List PathTile -> List PathTile
+toPath_ (PathPart p) ps =
     case p.parent of
         Nothing ->
-            p.position :: ps
+            pathPartToTile (PathPart p) :: ps
 
         Just parent ->
-            toPath2_ parent (p.position :: ps)
+            toPath_ parent (pathPartToTile (PathPart p) :: ps)
 
 
-minDistance : PathPart -> Float
-minDistance (PathPart p) =
+totalDistance : PathPart -> Float
+totalDistance (PathPart p) =
     p.previousDistance + p.minDistanceToTarget
 
 
-getPath : Vector.Point -> PathInfo -> List Vector.Point
+getPath : Vector.Point -> PathInfo -> Path
 getPath from info =
     buildPath [ createPathPart from Nothing info ] (Dict.singleton (Vector.showPoint from) ()) info
 
 
-buildPath : PathTails -> PathTailLookup -> PathInfo -> List Vector.Point
+buildPath : PathTails -> PathTailLookup -> PathInfo -> Path
 buildPath tails dict info =
     case tails of
         [] ->
-            []
+            Path info.target []
 
         (PathPart closest) :: ts ->
             --info.nav.getCircumjacentFields closest.position
             if Vector.pointEqual closest.position info.target then
-                toPath2 (PathPart closest)
+                Path info.target (toPath (PathPart closest))
 
             else
                 let
@@ -113,7 +130,7 @@ addSortedPathTail tails p =
             [ p ]
 
         t :: ts ->
-            if minDistance p <= minDistance t then
+            if totalDistance p <= totalDistance t then
                 p :: t :: ts
 
             else
