@@ -4,7 +4,7 @@ import Browser
 import Dict
 import Entities exposing (..)
 import Faction exposing (..)
-import Html exposing (Html, button, div, span, text)
+import Html exposing (Html, button, div, span, text, img)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Map exposing (Map, MapTile)
@@ -26,6 +26,12 @@ type alias Model =
     }
 
 
+type alias Revenue = 
+    { 
+        name: String
+        , value: Float
+    }
+
 type GameState
     = GameSetup UiState
     | InGame Int -- int = playerCount
@@ -46,6 +52,10 @@ type Msg
     = EndRound
     | Click Point
 
+
+-- STATIC TEST DATA
+testRevenueList : List Revenue
+testRevenueList = [{name = "Castles", value = 2.5}, {name = "Village", value = 1.9}, {name = "Army", value = -3.3}]
 
 initialModel : Model
 initialModel =
@@ -205,7 +215,7 @@ view model =
         Nothing ->
             div
                 [Html.Attributes.class "page-container"]
-                (div [Html.Attributes.class "page-header"] [] :: body Map.mapToSvg)
+                (generateHeaderTemplate model :: body Map.mapToSvg)
                 
 
         Just s1 ->
@@ -213,7 +223,7 @@ view model =
                 Nothing ->
                     div
                         [Html.Attributes.class "page-container"]
-                        (body Map.mapToSvg)
+                         (generateHeaderTemplate model :: body Map.mapToSvg)
 
                 Just s2 ->
                     let
@@ -222,7 +232,7 @@ view model =
                     in
                     div
                         [Html.Attributes.class "page-container"]
-                        (body (Map.mapWithPathToSvg path)
+                        (generateHeaderTemplate model :: body (Map.mapWithPathToSvg path)
                             ++ [ span [] [ Html.text (Vector.showPoint s2) ]
                                , span []
                                     [ Html.text
@@ -245,6 +255,84 @@ main : Program () Model Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
 
+
+-- HEADER-TEMPLATE (ist auszulagern)
+
+generateHeaderTemplate : Model -> Html Msg
+generateHeaderTemplate model = 
+    div [Html.Attributes.class "page-header"] [
+        div [Html.Attributes.class "page-turn-header"] [
+            div [Html.Attributes.class "page-turn-handler-header"] [
+                div [Html.Attributes.class "page-turn-button"] [
+                    img [src  "./assets/images/round_icon.png"] []
+                ]
+            ]
+            , div [Html.Attributes.class "page-turn-date-header"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "January 1077 AD" ]
+            ]
+        ]
+        ,div [Html.Attributes.class "page-gold-header"] [
+            img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
+            , div [Html.Attributes.class "tooltip"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "207 Ducats" ]
+                , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
+                    span [] [Html.text "Monthly revenue" ]
+                    , div [] (revenuesToTemplate testRevenueList)
+                    , div [Html.Attributes.class "revenue-result-container"] [
+                        revenueToString (generateRevenue "Revenue" (List.foldr (+) 0 (revenueToIncomeList testRevenueList)))
+                    ]   
+                ]
+            ]
+        ]
+        , div [Html.Attributes.class "page-troop-header"] [
+            img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
+            , span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
+        ]
+        , div [Html.Attributes.class "page-settings-header"] [
+            div [Html.Attributes.class "page-settings-grid"] [
+                div [Html.Attributes.class "page-setting-container tooltip"] [
+                    img [src  "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings"] []
+                    --, div [Html.Attributes.class "tooltip gold-tooltip"] [
+                ]
+            ]
+            , div [Html.Attributes.class "page-settings-grid"] [
+                div [Html.Attributes.class "page-setting-container"] [
+                    img [src  "./assets/images/save_icon.png", Html.Attributes.class "page-image-settings"] []
+                ]
+            ]
+        ]
+    ]
+
+
+-- REVENUE WIRD AUSGELAGERT
+------------------------------------------------------------------------------------------------------------------------------------
+
+revenuesToTemplate : List Revenue -> List (Html Msg)
+revenuesToTemplate list = 
+    case list of 
+        [] -> 
+            []
+        (x :: xs) -> 
+            div [Html.Attributes.class "revenue-container"] [ revenueToString x] :: revenuesToTemplate xs
+
+revenueToString : Revenue -> Html Msg
+revenueToString rev = 
+    if rev.value > 0 then
+        span [Html.Attributes.class "positive-income"] [Html.text (rev.name ++ ":  +" ++ String.fromFloat rev.value ++ " Ducats")]
+    else 
+        span [Html.Attributes.class "negative-income"] [Html.text (rev.name ++ ": " ++ String.fromFloat rev.value ++ " Ducats")]
+
+revenueToIncomeList : List Revenue -> List Float
+revenueToIncomeList rev = 
+    case rev of
+        [] -> 
+            []
+        (x :: xs) -> 
+            x.value :: revenueToIncomeList xs 
+
+generateRevenue : String -> Float -> Revenue 
+generateRevenue str value = 
+    { name = str, value = value}
 
 -- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
 addStylesheet : String -> String -> Html Msg
