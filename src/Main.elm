@@ -292,13 +292,18 @@ generateHeaderTemplate model =
             div [Html.Attributes.class "page-settings-grid"] [
                 div [Html.Attributes.class "page-setting-container tooltip"] [
                     img [src  "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings"] []
-                    --, div [Html.Attributes.class "tooltip gold-tooltip"] [
+                    , div [Html.Attributes.class "tooltip"] [
+                        span [Html.Attributes.class "tooltiptext settings-tooltip"] [ Html.text "Mute or unmute the gamesounds" ]
+                    ]
                 ]
             ]
             , div [Html.Attributes.class "page-settings-grid"] [
-                div [Html.Attributes.class "page-setting-container"] [
+                div [Html.Attributes.class "page-setting-container tooltip"] [
                     img [src  "./assets/images/save_icon.png", Html.Attributes.class "page-image-settings"] []
-                ]
+                    , div [Html.Attributes.class "tooltip"] [
+                            span [Html.Attributes.class "tooltiptext settings-tooltip"] [ Html.text "Save the game as a file" ]
+                    ]
+                ]   
             ]
         ]
     ]
