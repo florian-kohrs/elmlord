@@ -1,6 +1,12 @@
 module Troops exposing (..)
 
 
+type alias Troop =
+    {
+        amount: Int
+        , troopType: TroopType
+    }
+
 type TroopType
     = Archer
     | Spear

@@ -153,7 +153,6 @@ span {
 .tooltip {
     position: relative;
     display: inline-block;
-    border-bottom: 1px dotted black;
 }
 
 .tooltip .tooltiptext {
@@ -172,9 +171,41 @@ span {
     color: #fff;
     margin-top: 20px;
     margin-left: -100px;
-    opacity: 0.85;
+    opacity: 0.925;
     display: grid;
     grid-template-rows: 30px 1fr 40px;
+}
+
+.troop-tooltip {
+    width: 240px;
+    height: 200px;
+    background: #191919;
+    color: #fff;
+    margin-top: 20px;
+    margin-left: -100px;
+    opacity: 0.925;
+    display: grid;
+    grid-template-rows: 30px 1fr;
+}
+
+.troop-container {
+    width: 80%;
+    height: 40px;
+    display: grid;
+    margin: 0 auto;
+    grid-template-columns: 30% 1fr;
+}
+
+.troop-container > img {
+    height: 30px;
+    width: 30px;
+    display: block;
+    margin: 0 auto;
+}
+
+.troop-container > span {
+    display: block;
+    padding-top: 5px;
 }
 
 .settings-tooltip {

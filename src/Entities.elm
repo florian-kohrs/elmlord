@@ -12,7 +12,13 @@ type alias Gold =
 
 
 type alias Lord =
-    { entity : WorldEntity, gold : Gold, action : Action, land : List Settlement, moveSpeed : Float }
+    { 
+        entity : WorldEntity
+        , gold : Gold
+        , action : Action
+        , land : List Settlement
+        , moveSpeed : Float 
+    }
 
 
 
@@ -50,11 +56,19 @@ actionImportanceMultiplier a =
 
 
 type alias Settlement =
-    { entity : WorldEntity, settlementType : SettlementType, isSieged : Bool }
+    { 
+        entity : WorldEntity
+        , settlementType : SettlementType
+        , isSieged : Bool }
 
 
 type alias WorldEntity =
-    { army : List TroopType, faction : Faction, position : Point, name : String }
+    { 
+        army : List Troop
+        , faction : Faction
+        , position : Point
+        , name : String 
+    }
 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
@@ -73,7 +87,10 @@ createCapitalFor e =
 
 
 type alias SettlementInfo =
-    { sType : SettlementType, position : Vector.Point }
+    { 
+        sType : SettlementType
+        , position : Vector.Point 
+    }
 
 
 getSettlementFor : Lord -> SettlementInfo -> Settlement

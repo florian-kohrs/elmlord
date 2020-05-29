@@ -15,6 +15,7 @@ import Pathfinder
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Vector exposing (..)
+import Troops exposing (..)
 
 
 type alias Model =
@@ -56,6 +57,11 @@ type Msg
 -- STATIC TEST DATA
 testRevenueList : List Revenue
 testRevenueList = [{name = "Castles", value = 2.5}, {name = "Village", value = 1.9}, {name = "Army", value = -3.3}]
+
+testTroopList : List Troop 
+testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
+
+-- STATIC TEST DATA --
 
 initialModel : Model
 initialModel =
@@ -286,7 +292,13 @@ generateHeaderTemplate model =
         ]
         , div [Html.Attributes.class "page-troop-header"] [
             img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
-            , span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
+            , div [Html.Attributes.class "tooltip"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
+                , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
+                    span [] [Html.text "Current Troops" ]
+                    , div [] (troopToHtml testTroopList)
+                ]
+            ]
         ]
         , div [Html.Attributes.class "page-settings-header"] [
             div [Html.Attributes.class "page-settings-grid"] [
@@ -338,6 +350,23 @@ revenueToIncomeList rev =
 generateRevenue : String -> Float -> Revenue 
 generateRevenue str value = 
     { name = str, value = value}
+
+
+-- REVENUE WIRD AUSGELAGERT
+------------------------------------------------------------------------------------------------------------------------------------
+
+troopToHtml : List Troop -> List (Html Msg)
+troopToHtml list = 
+    case list of
+        [] -> 
+            []
+        (x :: xs) -> 
+            div [Html.Attributes.class "troop-container"] [
+                img [src  ("./assets/images/" ++ String.toLower (Troops.troopName x.troopType) ++ "_icon.png")] [],
+                span [] [Html.text (String.fromInt x.amount ++ "  " ++ Troops.troopName x.troopType) ]
+            ] :: troopToHtml xs
+
+
 
 -- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
 addStylesheet : String -> String -> Html Msg
