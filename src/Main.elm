@@ -270,7 +270,7 @@ generateHeaderTemplate model =
         div [Html.Attributes.class "page-turn-header"] [
             div [Html.Attributes.class "page-turn-handler-header"] [
                 div [Html.Attributes.class "page-turn-button"] [
-                    img [src  "./assets/images/round_icon.png"] []
+                    span [] [Html.text "End turn"]
                 ]
             ]
             , div [Html.Attributes.class "page-turn-date-header"] [

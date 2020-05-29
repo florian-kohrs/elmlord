@@ -46,19 +46,20 @@ span {
     margin: 2.5px auto;
     display: block;
     border-radius: 10px;
-    background: #49505c;
+    background: #a51c27;
     cursor: pointer;
+    text-align: center;
 }
 
-.page-turn-button > img {
-    width: 70px;
-    height: 70px;
+.page-turn-button > span {
+    color: white;
+    font-size: 16px;
     display: block;
-    margin: 0 auto;
+    padding-top: 25px;
 }
 
 .page-turn-button:hover {
-    background: #6d727c;
+    background: #ed2939;
 }
 
 .page-gold-header {
