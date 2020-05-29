@@ -283,9 +283,9 @@ generateHeaderTemplate model =
                 span [Html.Attributes.class "page-header-span"] [ Html.text "207 Ducats" ]
                 , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
                     span [] [Html.text "Monthly revenue" ]
-                    , div [] (revenuesToTemplate testRevenueList)
+                    , div [] (List.map revenuesToTemplate testRevenueList)
                     , div [Html.Attributes.class "revenue-result-container"] [
-                        revenueToString (generateRevenue "Revenue" (List.foldr (+) 0 (revenueToIncomeList testRevenueList)))
+                        revenueToString { name = "Revenue", value =  List.foldr (+) 0 (List.map revenueToIncomeList testRevenueList)}
                     ]   
                 ]
             ]
@@ -324,13 +324,9 @@ generateHeaderTemplate model =
 -- REVENUE WIRD AUSGELAGERT
 ------------------------------------------------------------------------------------------------------------------------------------
 
-revenuesToTemplate : List Revenue -> List (Html Msg)
-revenuesToTemplate list = 
-    case list of 
-        [] -> 
-            []
-        (x :: xs) -> 
-            div [Html.Attributes.class "revenue-container"] [ revenueToString x] :: revenuesToTemplate xs
+revenuesToTemplate : Revenue -> Html Msg
+revenuesToTemplate rev = 
+            div [Html.Attributes.class "revenue-container"] [ revenueToString rev]
 
 revenueToString : Revenue -> Html Msg
 revenueToString rev = 
@@ -339,27 +335,19 @@ revenueToString rev =
     else 
         span [Html.Attributes.class "negative-income"] [Html.text (rev.name ++ ": " ++ String.fromFloat rev.value ++ " Ducats")]
 
-revenueToIncomeList : List Revenue -> List Float
+revenueToIncomeList : Revenue -> Float
 revenueToIncomeList rev = 
-    case rev of
-        [] -> 
-            []
-        (x :: xs) -> 
-            x.value :: revenueToIncomeList xs 
-
-generateRevenue : String -> Float -> Revenue 
-generateRevenue str value = 
-    { name = str, value = value}
+    rev.value
 
 
--- REVENUE WIRD AUSGELAGERT
+-- Troop WIRD AUSGELAGERT (Sobald MSG ausgelagert ist)
 ------------------------------------------------------------------------------------------------------------------------------------
 
 troopToHtml : Troop -> Html Msg
-troopToHtml list = 
+troopToHtml troop = 
         div [Html.Attributes.class "troop-container"] [
-            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName x.troopType) ++ "_icon.png")] [],
-            span [] [Html.text (String.fromInt x.amount ++ "  " ++ Troops.troopName x.troopType) ]
+            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
+            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]
 
 
