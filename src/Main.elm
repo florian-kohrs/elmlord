@@ -270,7 +270,7 @@ generateHeaderTemplate model =
         div [Html.Attributes.class "page-turn-header"] [
             div [Html.Attributes.class "page-turn-handler-header"] [
                 div [Html.Attributes.class "page-turn-button"] [
-                    span [] [Html.text "End turn"]
+                    span [ onClick EndRound ] [Html.text "End turn"]
                 ]
             ]
             , div [Html.Attributes.class "page-turn-date-header"] [
@@ -296,7 +296,7 @@ generateHeaderTemplate model =
                 span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
                 , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
                     span [] [Html.text "Current Troops" ]
-                    , div [] (troopToHtml testTroopList)
+                    , div [] (List.map troopToHtml testTroopList)
                 ]
             ]
         ]
@@ -355,16 +355,12 @@ generateRevenue str value =
 -- REVENUE WIRD AUSGELAGERT
 ------------------------------------------------------------------------------------------------------------------------------------
 
-troopToHtml : List Troop -> List (Html Msg)
+troopToHtml : Troop -> Html Msg
 troopToHtml list = 
-    case list of
-        [] -> 
-            []
-        (x :: xs) -> 
-            div [Html.Attributes.class "troop-container"] [
-                img [src  ("./assets/images/" ++ String.toLower (Troops.troopName x.troopType) ++ "_icon.png")] [],
-                span [] [Html.text (String.fromInt x.amount ++ "  " ++ Troops.troopName x.troopType) ]
-            ] :: troopToHtml xs
+        div [Html.Attributes.class "troop-container"] [
+            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName x.troopType) ++ "_icon.png")] [],
+            span [] [Html.text (String.fromInt x.amount ++ "  " ++ Troops.troopName x.troopType) ]
+        ]
 
 
 
