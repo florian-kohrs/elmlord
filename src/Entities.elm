@@ -32,6 +32,25 @@ type alias Lord =
 -}
 
 
+-- https://www.fantasynamegenerators.com/town_names.php
+
+-- around 15 Castle names
+castleNames : List String
+castleNames = 
+    ["Stathford", "Wingston", "Boroughton", "Peterbrugh", "Wimborne", 
+    "Westwend", "Kingcardine", "Helmfirth", "Accrington", "Mournstead",
+    "Alcombey", "Aeberuthey", "Bradford", "Bamborourgh", "Everton"]
+
+-- around 30 Villages names
+villageNames : List String
+villageNames = 
+    ["Haran", "Hillfar", "Waekefield", "Sudbury", "Murkwell", 
+    "Caerfyrddin", "Llanybydder", "Galssop", "Farnworth", "Porthaethwy",
+    "Favorsham", "Kilead", "Kald", "Holsworthy", "Wolfwater",
+    "Southwold", "Marnmouth", "Kilmarnock", "Far Water", "Aylesbury",
+    "Dornwich", "Haran", "Murkwell", "Drumnacanvy", "Waeldestone",
+    "Bracklewhyte", "Peatsland", "Ballachulish", "Arbington", "Torrine"]
+
 type Action
     = Wait
     | GoTo Point
