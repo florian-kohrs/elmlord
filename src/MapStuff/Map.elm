@@ -67,8 +67,14 @@ getSvgForSettlement pos size s =
 
 getSvgForLord : Vector.Vector -> Vector.Vector -> Lord -> SvgItem a
 getSvgForLord pos size l =
-    getImage 3 "Lord1.png" pos size
+    getImage 3 "lord_flag.png" pos size
 
+getSvgForTree : Vector.Vector -> Vector.Vector -> Terrain -> List (SvgItem a)
+getSvgForTree pos size ter =
+    if ter == Forest then
+        [getImage 2 "tree.png" pos size]
+    else 
+        []
 
 getImage : Int -> String -> Vector.Vector -> Vector.Vector -> SvgItem a
 getImage z imgName pos size =
@@ -79,7 +85,7 @@ getImage z imgName pos size =
             , Svg.Attributes.y (String.fromFloat (pos.y - size.y / 2))
             , Svg.Attributes.width (String.fromFloat size.x)
             , Svg.Attributes.height (String.fromFloat size.y)
-            , Svg.Attributes.xlinkHref ("../Images/" ++ imgName)
+            , Svg.Attributes.xlinkHref ("./assets/images/map/" ++ imgName)
 
             --, Svg.Attributes.src "../Images/Background.png"
             --, Svg.Attributes.overflow "visible"
@@ -245,12 +251,14 @@ showMapTile ps tileRadius f tile =
             , stroke tileDesign.strokeColor
             , strokeWidth tileDesign.strokeWidth
             , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
+            --, opacity "0.6" Vielleicht bei Wasser und Gras?
             ]
             []
         )
     ]
         ++ MaybeExt.foldMaybe (\s -> [ getSvgForSettlement tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) s ]) [] tile.settlement
         ++ List.foldl (\l r -> getSvgForLord tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) l :: r) [] tile.lords
+        ++ (getSvgForTree tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) tile.terrain)
 
 
 pointsToHexagonPoints : List Vector.Vector -> String
