@@ -16,6 +16,7 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Vector exposing (..)
 import Troops exposing (..)
+import Faction exposing (..)
 
 
 type alias Model =
@@ -43,6 +44,7 @@ type UiState
     = MainMenue
     | SaveLoad
     | NewCampain
+    | SettlementView
 
 
 
@@ -60,6 +62,24 @@ testRevenueList = [{name = "Castles", value = 2.5}, {name = "Village", value = 1
 
 testTroopList : List Troop 
 testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
+
+testWorldEntity : WorldEntity
+testWorldEntity = 
+    {
+        army = testTroopList
+        , faction = Faction.Faction1
+        , position = {x = 0, y = 0}
+        , name = "Malaca"
+    }
+
+testSetelement : Settlement 
+testSetelement = 
+    {
+        entity = testWorldEntity
+        , settlementType = Entities.Village
+        , income = 3.19
+        , isSieged = False
+    }
 
 -- STATIC TEST DATA --
 
@@ -202,6 +222,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     let
+
         body f =
             div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
                 [ addStylesheet "link" "./assets/styles/main_styles.css"
@@ -221,6 +242,7 @@ view model =
         Nothing ->
             div
                 [Html.Attributes.class "page-container"]
+                --(generateSettlementModalTemplate testSetelement :: (generateHeaderTemplate model :: body Map.mapToSvg))
                 (generateHeaderTemplate model :: body Map.mapToSvg)
                 
 
@@ -261,6 +283,54 @@ main : Program () Model Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
 
+
+
+-- SETTLEMENT-TEMPLATE (ist auszulagern)
+
+generateSettlementModalTemplate : Settlement -> Html Msg
+generateSettlementModalTemplate settlement = 
+    div [Html.Attributes.class "modal-background"] [
+        div [Html.Attributes.class "settlement-modal"] [
+            div [Html.Attributes.class "settlement-modal-close-container"] [
+                div [Html.Attributes.class "settlement-modal-close-btn"] [
+                    span [] [Html.text "X"]
+                ]
+            ]
+            , div [Html.Attributes.class "settlement-modal-name"] [
+                span [] [Html.text (Entities.combineSettlementName settlement)]
+            ]
+            , div [Html.Attributes.class "settlement-lordship"] [
+                div [] [
+                    img [src  "./assets/images/profiles/profile_lord.png", Html.Attributes.class "settlement-lord-icon"] []
+                ]
+                , div [] [
+                    span [Html.Attributes.class "settlement-lord-text"] [Html.text "Sir Quicknuss"]
+                ]
+            ]
+            , div [Html.Attributes.class "settlement-action-container"] 
+            (getSettlementActionsByType settlement.settlementType ++ 
+            [button [] [ span [] [Html.text "Recruit troops"]]
+                , button [] [ span [] [Html.text "Station troops"]]
+                , div [Html.Attributes.class "settlement-info"] [ 
+                    span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
+                    , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
+                    , div [Html.Attributes.class "stationed-troops-overview"] 
+                        (span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "] :: List.map troopToHtml settlement.entity.army)
+                ]
+            ])
+            , div [Html.Attributes.class "settlement-illustration-container"] [
+                img [src  "./assets/images/illustrations/example_ilustration.png"] []
+            ]
+        ]
+    ]
+
+
+getSettlementActionsByType : SettlementType -> List (Html Msg)
+getSettlementActionsByType settle = 
+    if settle == Entities.Castle then
+        [button [] [ span [] [Html.text "Upgrade Buildings"]]]
+    else 
+        []
 
 -- HEADER-TEMPLATE (ist auszulagern)
 

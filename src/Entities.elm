@@ -59,6 +59,7 @@ type alias Settlement =
     { 
         entity : WorldEntity
         , settlementType : SettlementType
+        , income: Float
         , isSieged : Bool }
 
 
@@ -78,12 +79,12 @@ setPosition entity pos =
 
 type SettlementType
     = Village
-    | Town
+    | Castle
 
 
 createCapitalFor : WorldEntity -> Settlement
 createCapitalFor e =
-    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital`" }, settlementType = Town, isSieged = False }
+    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital`" }, settlementType = Castle, income = 1.00, isSieged = False }
 
 
 type alias SettlementInfo =
@@ -95,14 +96,23 @@ type alias SettlementInfo =
 
 getSettlementFor : Lord -> SettlementInfo -> Settlement
 getSettlementFor l info =
-    { entity = { army = [], faction = l.entity.faction, position = info.position, name = "" }, settlementType = info.sType, isSieged = False }
+    { entity = { army = [], faction = l.entity.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.00, isSieged = False }
 
+
+combineSettlementName : Settlement -> String
+combineSettlementName settlement = 
+    getSettlementNameByType settlement.settlementType ++ " - "++ settlement.entity.name
+
+
+getSettlementNameByType : SettlementType -> String
+getSettlementNameByType s =
+    case s of 
+        Village -> 
+            "Village"
+
+        Castle -> 
+            "Castle"
 
 settlementImageName : SettlementType -> String
 settlementImageName s =
-    case s of
-        Village ->
-            "Village.png"
-
-        Town ->
-            "Town.png"
+    getSettlementNameByType s ++ ".png"

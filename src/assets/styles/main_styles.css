@@ -7,6 +7,7 @@ span {
 .page-container {
     height: 100%;
     width: 100vw;
+    overflow-x: hidden;
     background-image: url("../images/background_image.png");
 }
 
@@ -147,6 +148,179 @@ span {
     padding-top: 2px;
 }
 
+
+/* MODAL */
+/* ---------------------------------------------------------------------------- */
+
+.modal-background {
+    position:fixed;
+    top:0;
+    left:0;
+    background:rgba(0,0,0,0.6);
+    z-index:5;
+    width:100%;
+    height:100%;
+}
+
+/* SETTLEMENTS */
+/* ---------------------------------------------------------------------------- */
+
+.settlement-modal {
+    width: 700px;
+    height: 800px;
+    background: #b8bbc0;
+    border-radius: 20px;
+    position: absolute;
+    margin-top: 100px;
+    margin-left: calc(50% - 350px);
+    display: grid;
+    grid-template-columns: 15px 1fr 1fr 15px;
+    grid-template-rows: 20px 50px 110px 1fr 50px;
+    grid-row-gap: 20px;
+    grid-column-gap: 10px;
+    border: 1px solid #49505c;
+}
+
+.settlement-modal-close-container {
+    grid-area: 1 / 2 / 2 / 4;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+}
+
+.settlement-modal-close-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 30px;
+    margin-left: 93%;
+    margin-top: -2.5%;
+    position: absolute;
+    border: 2px solid #49505c;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+}
+
+.settlement-modal-close-btn > span {
+    font-size: 25px;
+    display: block;
+    padding-top: 12px;
+    color: #49505c;
+}
+
+.settlement-modal-close-btn:hover {
+    background: #b8bbc0;
+}
+
+.settlement-modal-name {
+    grid-area: 2 / 2 / 3 / 4;
+    text-align: center;
+}
+
+.settlement-modal-name > span {
+    font-size: 35px;
+    color: #49505c;
+    display: block;
+    padding-top: 10px;
+}
+
+.settlement-lordship {
+    grid-area: 3 / 3 / 4 / 4;
+    display: grid;
+    grid-template-columns: 35% 1fr;
+    text-align: center;
+    background: #a1a4ab;
+    border-radius: 10px;
+
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+.settlement-lord-text {
+    display: block;
+    padding-top: 40px;
+    font-size: 22px;
+    color: #49505c;
+}
+
+.settlement-lord-icon {
+    width: 100px;
+    height: 100px;
+    margin: 2.5px auto;
+    display: block;
+    border: 2px solid #49505c;
+    border-radius: 15px;
+}
+
+.settlement-action-container {
+    grid-area: 4 / 3 / 5 / 4;
+    display: grid;
+    grid-template-rows: 60px 60px 60px 1fr;
+    grid-row-gap: 10px;
+}
+
+.settlement-action-container > button {
+    margin: 0 auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 80%;
+    height: 60px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.settlement-info {
+    border-radius: 20px;
+    border: 2px solid #49505c;
+    width: 80%;
+    display: grid;
+    margin: 0 auto;
+    grid-template-rows: 40px 50px 1fr;
+    grid-row-gap: 10px;
+    text-align: center;
+    color: #49505c;
+    grid-area: 4 / 1 / 5 / 2;
+}
+
+.settlement-info > .header-span {
+    padding: 10px;
+    display: block;
+    font-size: 20px;
+}
+
+.settlement-info > span {
+    padding: 10px;
+    display: block;
+    font-size: 17px;
+}
+
+.troop-span {
+    color: #7b0606
+}
+
+.settlement-info > .income-span {
+    color: #02993b;
+}
+
+.stationed-troops-overview {
+    display: grid;
+    grid-template-rows: 30px 1fr;
+    width: 100%;
+}
+
+.settlement-illustration-container {
+    grid-area: 3 / 2 / 5 / 3;
+    border-radius: 25px;
+    border: 1px solid #49505c;
+}
+
+.settlement-illustration-container > img {
+    width: 100%;
+    height: 100%;
+}
 
 /* TOOLTIPS */
 /* ---------------------------------------------------------------------------- */
