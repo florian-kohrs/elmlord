@@ -18,6 +18,8 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Types exposing (MapTileMsg(..), Msg(..))
 import Vector exposing (..)
+import Troops exposing (..)
+import Faction exposing (..)
 
 
 type alias Model =
@@ -45,6 +47,7 @@ type UiState
     = MainMenue
     | SaveLoad
     | NewCampain
+    | SettlementView
 
 
 
@@ -68,6 +71,29 @@ testRevenueList : List Revenue
 testRevenueList =
     [ { name = "Castles", value = 2.5 }, { name = "Village", value = 1.9 }, { name = "Army", value = -3.3 } ]
 
+
+testTroopList : List Troop
+testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
+
+testWorldEntity : WorldEntity
+testWorldEntity =
+    {
+        army = testTroopList
+        , faction = Faction.Faction1
+        , position = {x = 0, y = 0}
+        , name = "Malaca"
+    }
+
+testSetelement : Settlement
+testSetelement =
+    {
+        entity = testWorldEntity
+        , settlementType = Entities.Village
+        , income = 3.19
+        , isSieged = False
+    }
+
+-- STATIC TEST DATA --
 
 initialModel : Model
 initialModel =
@@ -191,46 +217,98 @@ main =
 
 
 
+-- SETTLEMENT-TEMPLATE (ist auszulagern)
+
+generateSettlementModalTemplate : Settlement -> Html Msg
+generateSettlementModalTemplate settlement =
+    div [Html.Attributes.class "modal-background"] [
+        div [Html.Attributes.class "settlement-modal"] [
+            div [Html.Attributes.class "settlement-modal-close-container"] [
+                div [Html.Attributes.class "settlement-modal-close-btn"] [
+                    span [] [Html.text "X"]
+                ]
+            ]
+            , div [Html.Attributes.class "settlement-modal-name"] [
+                span [] [Html.text (Entities.combineSettlementName settlement)]
+            ]
+            , div [Html.Attributes.class "settlement-lordship"] [
+                div [] [
+                    img [src  "./assets/images/profiles/profile_lord.png", Html.Attributes.class "settlement-lord-icon"] []
+                ]
+                , div [] [
+                    span [Html.Attributes.class "settlement-lord-text"] [Html.text "Sir Quicknuss"]
+                ]
+            ]
+            , div [Html.Attributes.class "settlement-action-container"]
+            (getSettlementActionsByType settlement.settlementType ++
+            [button [] [ span [] [Html.text "Recruit troops"]]
+                , button [] [ span [] [Html.text "Station troops"]]
+                , div [Html.Attributes.class "settlement-info"] [
+                    span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
+                    , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
+                    , div [Html.Attributes.class "stationed-troops-overview"]
+                        (span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "] :: List.map troopToHtml settlement.entity.army)
+                ]
+            ])
+            , div [Html.Attributes.class "settlement-illustration-container"] [
+                img [src  "./assets/images/illustrations/example_ilustration.png"] []
+            ]
+        ]
+    ]
+
+
+getSettlementActionsByType : SettlementType -> List (Html Msg)
+getSettlementActionsByType settle =
+    if settle == Entities.Castle then
+        [button [] [ span [] [Html.text "Upgrade Buildings"]]]
+    else
+        []
+
 -- HEADER-TEMPLATE (ist auszulagern)
 
 
 generateHeaderTemplate : Model -> Html Msg
 generateHeaderTemplate model =
-    div [ Html.Attributes.class "page-header" ]
-        [ div [ Html.Attributes.class "page-turn-header" ]
-            [ div [ Html.Attributes.class "page-turn-handler-header" ]
-                [ div [ Html.Attributes.class "page-turn-button" ]
-                    [ img [ src "./assets/images/round_icon.png" ] []
+    div [Html.Attributes.class "page-header"] [
+        div [Html.Attributes.class "page-turn-header"] [
+            div [Html.Attributes.class "page-turn-handler-header"] [
+                div [Html.Attributes.class "page-turn-button"] [
+                    span [ onClick EndRound ] [Html.text "End turn"]
+                ]
+            ]
+            , div [Html.Attributes.class "page-turn-date-header"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "January 1077 AD" ]
+            ]
+        ]
+        ,div [Html.Attributes.class "page-gold-header"] [
+            img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
+            , div [Html.Attributes.class "tooltip"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "207 Ducats" ]
+                , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
+                    span [] [Html.text "Monthly revenue" ]
+                    , div [] (List.map revenuesToTemplate testRevenueList)
+                    , div [Html.Attributes.class "revenue-result-container"] [
+                        revenueToString { name = "Revenue", value =  List.foldr (+) 0 (List.map revenueToIncomeList testRevenueList)}
                     ]
                 ]
-            , div [ Html.Attributes.class "page-turn-date-header" ]
-                [ span [ Html.Attributes.class "page-header-span" ] [ Html.text "January 1077 AD" ]
+            ]
+        ]
+        , div [Html.Attributes.class "page-troop-header"] [
+            img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
+            , div [Html.Attributes.class "tooltip"] [
+                span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
+                , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
+                    span [] [Html.text "Current Troops" ]
+                    , div [] (List.map troopToHtml testTroopList)
                 ]
             ]
-        , div [ Html.Attributes.class "page-gold-header" ]
-            [ img [ src "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images" ] []
-            , div [ Html.Attributes.class "tooltip" ]
-                [ span [ Html.Attributes.class "page-header-span" ] [ Html.text "207 Ducats" ]
-                , div [ Html.Attributes.class "tooltiptext gold-tooltip" ]
-                    [ span [] [ Html.text "Monthly revenue" ]
-                    , div [] (revenuesToTemplate testRevenueList)
-                    , div [ Html.Attributes.class "revenue-result-container" ]
-                        [ revenueToString (generateRevenue "Revenue" (List.foldr (+) 0 (revenueToIncomeList testRevenueList)))
-                        ]
-                    ]
-                ]
-            ]
-        , div [ Html.Attributes.class "page-troop-header" ]
-            [ img [ src "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images" ] []
-            , span [ Html.Attributes.class "page-header-span" ] [ Html.text "121 Troops" ]
-            ]
-        , div [ Html.Attributes.class "page-settings-header" ]
-            [ div [ Html.Attributes.class "page-settings-grid" ]
-                [ div [ Html.Attributes.class "page-setting-container tooltip" ]
-                    [ img [ src "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings" ] []
-                    , div [ Html.Attributes.class "tooltip" ]
-                        [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Mute or unmute the gamesounds" ]
-                        ]
+        ]
+        , div [Html.Attributes.class "page-settings-header"] [
+            div [Html.Attributes.class "page-settings-grid"] [
+                div [Html.Attributes.class "page-setting-container tooltip"] [
+                    img [src  "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings"] []
+                    , div [Html.Attributes.class "tooltip"] [
+                        span [Html.Attributes.class "tooltiptext settings-tooltip"] [ Html.text "Mute or unmute the gamesounds" ]
                     ]
                 ]
             , div [ Html.Attributes.class "page-settings-grid" ]
@@ -249,16 +327,9 @@ generateHeaderTemplate model =
 -- REVENUE WIRD AUSGELAGERT
 ------------------------------------------------------------------------------------------------------------------------------------
 
-
-revenuesToTemplate : List Revenue -> List (Html Msg)
-revenuesToTemplate list =
-    case list of
-        [] ->
-            []
-
-        x :: xs ->
-            div [ Html.Attributes.class "revenue-container" ] [ revenueToString x ] :: revenuesToTemplate xs
-
+revenuesToTemplate : Revenue -> Html Msg
+revenuesToTemplate rev =
+            div [Html.Attributes.class "revenue-container"] [ revenueToString rev]
 
 revenueToString : Revenue -> Html Msg
 revenueToString rev =
@@ -269,19 +340,20 @@ revenueToString rev =
         span [ Html.Attributes.class "negative-income" ] [ Html.text (rev.name ++ ": " ++ String.fromFloat rev.value ++ " Ducats") ]
 
 
-revenueToIncomeList : List Revenue -> List Float
+revenueToIncomeList : Revenue -> Float
 revenueToIncomeList rev =
-    case rev of
-        [] ->
-            []
-
-        x :: xs ->
-            x.value :: revenueToIncomeList xs
+    rev.value
 
 
-generateRevenue : String -> Float -> Revenue
-generateRevenue str value =
-    { name = str, value = value }
+-- Troop WIRD AUSGELAGERT (Sobald MSG ausgelagert ist)
+------------------------------------------------------------------------------------------------------------------------------------
+
+troopToHtml : Troop -> Html Msg
+troopToHtml troop =
+        div [Html.Attributes.class "troop-container"] [
+            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
+            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
+        ]
 
 
 

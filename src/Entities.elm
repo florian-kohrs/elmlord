@@ -13,7 +13,12 @@ type alias Gold =
 
 
 type alias Lord =
-    { entity : WorldEntity, gold : Gold, action : Action, land : List Settlement, moveSpeed : Float }
+    { entity : WorldEntity
+    , gold : Gold
+    , action : Action
+    , land : List Settlement
+    , moveSpeed : Float
+    }
 
 
 
@@ -25,6 +30,67 @@ type alias Lord =
        in
        { s | gold = s.gold + goldIncome }
 -}
+-- https://www.fantasynamegenerators.com/town_names.php
+-- around 15 Castle names
+
+
+castleNames : List String
+castleNames =
+    [ "Stathford"
+    , "Wingston"
+    , "Boroughton"
+    , "Peterbrugh"
+    , "Wimborne"
+    , "Westwend"
+    , "Kingcardine"
+    , "Helmfirth"
+    , "Accrington"
+    , "Mournstead"
+    , "Alcombey"
+    , "Aeberuthey"
+    , "Bradford"
+    , "Bamborourgh"
+    , "Everton"
+    ]
+
+
+
+-- around 30 Villages names
+
+
+villageNames : List String
+villageNames =
+    [ "Haran"
+    , "Hillfar"
+    , "Waekefield"
+    , "Sudbury"
+    , "Murkwell"
+    , "Caerfyrddin"
+    , "Llanybydder"
+    , "Galssop"
+    , "Farnworth"
+    , "Porthaethwy"
+    , "Favorsham"
+    , "Kilead"
+    , "Kald"
+    , "Holsworthy"
+    , "Wolfwater"
+    , "Southwold"
+    , "Marnmouth"
+    , "Kilmarnock"
+    , "Far Water"
+    , "Aylesbury"
+    , "Dornwich"
+    , "Haran"
+    , "Murkwell"
+    , "Drumnacanvy"
+    , "Waeldestone"
+    , "Bracklewhyte"
+    , "Peatsland"
+    , "Ballachulish"
+    , "Arbington"
+    , "Torrine"
+    ]
 
 
 type alias Action =
@@ -44,11 +110,19 @@ type ActionType
 
 
 type alias Settlement =
-    { entity : WorldEntity, settlementType : SettlementType, isSieged : Bool }
+    { entity : WorldEntity
+    , settlementType : SettlementType
+    , income : Float
+    , isSieged : Bool
+    }
 
 
 type alias WorldEntity =
-    { army : List TroopType, faction : Faction, position : Point, name : String }
+    { army : List Troop
+    , faction : Faction
+    , position : Point
+    , name : String
+    }
 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
@@ -58,28 +132,40 @@ setPosition entity pos =
 
 type SettlementType
     = Village
-    | Town
+    | Castle
 
 
 createCapitalFor : WorldEntity -> Settlement
 createCapitalFor e =
-    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital`" }, settlementType = Town, isSieged = False }
+    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital`" }, settlementType = Castle, income = 1.0, isSieged = False }
 
 
 type alias SettlementInfo =
-    { sType : SettlementType, position : Vector.Point }
+    { sType : SettlementType
+    , position : Vector.Point
+    }
 
 
 getSettlementFor : Lord -> SettlementInfo -> Settlement
 getSettlementFor l info =
-    { entity = { army = [], faction = l.entity.faction, position = info.position, name = "" }, settlementType = info.sType, isSieged = False }
+    { entity = { army = [], faction = l.entity.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.0, isSieged = False }
+
+
+combineSettlementName : Settlement -> String
+combineSettlementName settlement =
+    getSettlementNameByType settlement.settlementType ++ " - " ++ settlement.entity.name
+
+
+getSettlementNameByType : SettlementType -> String
+getSettlementNameByType s =
+    case s of
+        Village ->
+            "Village"
+
+        Castle ->
+            "Castle"
 
 
 settlementImageName : SettlementType -> String
 settlementImageName s =
-    case s of
-        Village ->
-            "Village.png"
-
-        Town ->
-            "Town.png"
+    getSettlementNameByType s ++ ".png"
