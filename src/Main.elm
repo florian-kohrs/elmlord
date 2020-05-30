@@ -304,8 +304,7 @@ generateHeaderTemplate model =
             ]
         ]
         , div [Html.Attributes.class "page-settings-header"] [
-            div [Html.Attributes.class "page-settings-grid"] [
-                div [Html.Attributes.class "page-setting-container tooltip"] [
+            div [Html.Attributes.class "page-setting-container tooltip"] [
                     img [src  "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings"] []
                     , div [Html.Attributes.class "tooltip"] [
                         span [Html.Attributes.class "tooltiptext settings-tooltip"] [ Html.text "Mute or unmute the gamesounds" ]
@@ -319,7 +318,6 @@ generateHeaderTemplate model =
                         ]
                     ]
                 ]
-            ]
         ]
     ]
 
