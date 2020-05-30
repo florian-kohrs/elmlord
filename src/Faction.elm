@@ -27,6 +27,22 @@ factionName : Faction -> String
 factionName faction =
     case faction of
         Faction1 ->
+            "#ff4c4c"
+
+        Faction2 ->
+            "blue"
+
+        Faction3 ->
+            "green"
+
+        Faction4 ->
+            "yellow"
+
+
+factionColor : Faction -> String
+factionColor faction =
+    case faction of
+        Faction1 ->
             "Faction1"
 
         Faction2 ->

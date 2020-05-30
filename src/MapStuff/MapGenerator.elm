@@ -21,7 +21,7 @@ getNav : Map.Map -> NavigatableMap
 getNav map =
     { timeToCrossField =
         \p ->
-            case Dict.get (Vector.showPoint p) map of
+            case Dict.get (MapData.hashMapPoint p) map of
                 Nothing ->
                     9000
 
@@ -43,7 +43,7 @@ getNav map =
                         -1
 
                 canUseTile point =
-                    case Dict.get (Vector.showPoint point) map of
+                    case Dict.get (MapData.hashMapPoint point) map of
                         Nothing ->
                             False
 
@@ -87,49 +87,41 @@ createMap =
 createMap_ : Int -> Noise.PermutationTable -> Map.Map
 createMap_ i n =
     if i >= 0 then
-        Dict.union (buildHexagonRow Vector.zero (i - mapHeight) n) (createMap_ (i - 1) n)
+        Dict.union (buildHexagonRow (i - mapHeight) n) (createMap_ (i - 1) n)
 
     else
         Dict.empty
 
 
-buildHexagonRow : Vector -> Int -> Noise.PermutationTable -> Map.Map
-buildHexagonRow offset i =
-    buildHexagons offset
-        i
-        (mapWidth * 2
-         {--abs i-}
-        )
+buildHexagonRow : Int -> Noise.PermutationTable -> Map.Map
+buildHexagonRow i =
+    buildHexagons i (mapWidth * 2)
 
 
-buildHexagons : Vector -> Int -> Int -> Noise.PermutationTable -> Map.Map
-buildHexagons offset height i n =
+buildHexagons : Int -> Int -> Noise.PermutationTable -> Map.Map
+buildHexagons height i n =
     let
         indexOffset =
             mapHeight
-
-        -- - (abs height // 2)
-        rowXOffset =
-            Vector.Vector -(toFloat i * (Vector.pointOnCircle hexRadius rad).x) (toFloat (modBy 2 i * tileRowXOffset))
     in
     if i >= 0 then
         let
             point =
                 Vector.Point (i - indexOffset) height
         in
-        Dict.insert (Vector.showPoint point)
-            (buildHexagon (Vector.add offset rowXOffset) point n)
-            (buildHexagons offset height (i - 1) n)
+        Dict.insert (MapData.hashMapPoint point)
+            (buildHexagon point n)
+            (buildHexagons height (i - 1) n)
 
     else
         Dict.empty
 
 
-buildHexagon : Vector.Vector -> Vector.Point -> Noise.PermutationTable -> MapTile
-buildHexagon offset p n =
+buildHexagon : Vector.Point -> Noise.PermutationTable -> MapTile
+buildHexagon p n =
     MapTile
         p
-        (Vector (getXPosForIndex p.x + offset.x) (getYPosForIndex p.y + offset.y))
+        (MapData.mapPositionForIndex p)
         (getTerrainFor p n)
         Nothing
         []

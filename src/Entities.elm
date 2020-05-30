@@ -2,6 +2,7 @@ module Entities exposing (..)
 
 import Faction exposing (..)
 import List exposing (..)
+import Pathfinder
 import RedundantDataManager
 import Troops exposing (..)
 import Vector exposing (..)
@@ -26,27 +27,20 @@ type alias Lord =
 -}
 
 
-type Action
+type alias Action =
+    { actionType : ActionType, actionMotive : ActionMotive }
+
+
+type ActionMotive
+    = AttackLord
+    | Siege
+    | Defend
+    | Flee
+
+
+type ActionType
     = Wait
-    | GoTo Point
-    | Chase Int -- -> references the index of the chased Lord
-    | Siege Settlement
-
-
-actionImportanceMultiplier : Action -> Float
-actionImportanceMultiplier a =
-    case a of
-        Wait ->
-            0.8
-
-        GoTo point ->
-            1
-
-        Chase int ->
-            1.1
-
-        Siege settlement ->
-            1.3
+    | Travel Point (Maybe Pathfinder.Path)
 
 
 type alias Settlement =

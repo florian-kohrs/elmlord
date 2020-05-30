@@ -8,16 +8,18 @@ import Html.Events exposing (onClick)
 import List exposing (..)
 import ListExt
 import MapData exposing (rad)
+import MapDrawer
 import MaybeExt
 import Pathfinder exposing (NavigatableMap)
 import String exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Types
 import Vector exposing (..)
 
 
 type alias Map =
-    Dict.Dict String MapTile
+    Dict.Dict Int MapTile
 
 
 type alias MapTile =
@@ -37,17 +39,14 @@ type alias MapTileDesign =
     }
 
 
-moveLord : Entities.Lord -> Vector.Point -> Map -> Map
-moveLord l newP m =
-    updateLordsOnTile newP { l | entity = Entities.setPosition l.entity newP } (::) (updateLordsOnTile l.entity.position l (\lord -> List.filter ((/=) lord)) m)
+drawMap : Map -> MapDrawer.MapClickAction
+drawMap m =
+    Dict.map (\_ tile -> [ tileToClickAction tile ]) m
 
 
-updateLordsOnTile : Vector.Point -> Entities.Lord -> (Entities.Lord -> List Entities.Lord -> List Entities.Lord) -> Map -> Map
-updateLordsOnTile p l update m =
-    Dict.update
-        (Vector.showPoint p)
-        (Maybe.andThen (\t -> Just { t | lords = update l t.lords }))
-        m
+tileToClickAction : MapTile -> MapDrawer.InteractableSvg
+tileToClickAction tile =
+    MapDrawer.InteractableSvg (showMapTile tile) (getMapTileAction tile)
 
 
 
@@ -55,39 +54,6 @@ updateLordsOnTile p l update m =
    getClosestFreeFieldAt : Vector.Point -> Map -> Vector.Point
    getClosestFreeFieldAt p =
 -}
-
-
-type SvgItem a
-    = SvgItem Int (Svg.Svg a)
-
-
-getSvgForSettlement : Vector.Vector -> Vector.Vector -> Entities.Settlement -> SvgItem a
-getSvgForSettlement pos size s =
-    getImage 2 (Entities.settlementImageName s.settlementType) pos size
-
-
-getSvgForLord : Vector.Vector -> Vector.Vector -> Lord -> SvgItem a
-getSvgForLord pos size l =
-    getImage 3 "Lord1.png" pos size
-
-
-getImage : Int -> String -> Vector.Vector -> Vector.Vector -> SvgItem a
-getImage z imgName pos size =
-    SvgItem z
-        (Svg.image
-            [ --onClick (f tile.indices),
-              Svg.Attributes.x (String.fromFloat (pos.x - size.x / 2))
-            , Svg.Attributes.y (String.fromFloat (pos.y - size.y / 2))
-            , Svg.Attributes.width (String.fromFloat size.x)
-            , Svg.Attributes.height (String.fromFloat size.y)
-            , Svg.Attributes.xlinkHref ("../Images/" ++ imgName)
-
-            --, Svg.Attributes.src "../Images/Background.png"
-            --, Svg.Attributes.overflow "visible"
-            --, Svg.Attributes.fill "red"
-            ]
-            []
-        )
 
 
 setSettlement : MapTile -> Maybe Settlement -> MapTile
@@ -180,79 +146,45 @@ terrainToName t =
             "Mountain"
 
 
-mapToSvg : Map -> Float -> (Point -> a) -> List (Svg a)
-mapToSvg =
-    mapWithPathToSvg []
-
-
-mapWithPathToSvg : List Vector.Point -> Map -> Float -> (Point -> a) -> List (Svg a)
-mapWithPathToSvg ps m r f =
-    List.map getSvg (List.sortBy getZIndex (List.concat (List.map (showMapTile ps r f) (Dict.values m))))
-
-
-getZIndex : SvgItem a -> Int
-getZIndex (SvgItem i _) =
-    i
-
-
-getSvg : SvgItem a -> Svg a
-getSvg (SvgItem _ svg) =
-    svg
-
-
-styleMapTile : List Vector.Point -> MapTile -> MapTileDesign
-styleMapTile ps tile =
+styleMapTile : MapTile -> MapTileDesign
+styleMapTile tile =
     { backgroundColor = terrainToColor tile.terrain
-    , strokeColor = getStrokeStyle ps tile "Orange" (factionToStrokeColor tile.faction)
-    , strokeWidth = getStrokeStyle ps tile "8px" "2px"
+    , strokeColor = Faction.factionColor tile.faction
+    , strokeWidth = "8px"
     }
 
 
-getStrokeStyle : List Vector.Point -> MapTile -> String -> String -> String
-getStrokeStyle ps tile op1 op2 =
-    if ListExt.indexOf (Vector.pointEqual tile.indices) ps >= 0 then
-        op1
+getMapTileAction : MapTile -> Maybe MapDrawer.SvgAction
+getMapTileAction tile =
+    if canMoveOnTile tile then
+        Just (MapDrawer.SvgAction "Move here" (Types.MoveTo tile.indices))
 
     else
-        op2
+        Nothing
 
 
-factionToStrokeColor : Faction -> String
-factionToStrokeColor faction =
-    case faction of
-        Faction.Faction1 ->
-            "#ff4c4c"
-
-        Faction.Faction2 ->
-            "blue"
-
-        Faction.Faction3 ->
-            "green"
-
-        Faction.Faction4 ->
-            "yellow"
-
-
-showMapTile : List Vector.Point -> Float -> (Point -> a) -> MapTile -> List (SvgItem a)
-showMapTile ps tileRadius f tile =
+showMapTile : MapTile -> MapDrawer.SvgItem
+showMapTile tile =
     let
         tileDesign =
-            styleMapTile ps tile
+            styleMapTile tile
     in
-    [ SvgItem 0
+    MapDrawer.SvgItem 0
         (polygon
-            [ onClick (f tile.indices)
+            [ onClick (Types.Click tile.indices)
             , Svg.Attributes.overflow "visible"
             , fill tileDesign.backgroundColor
             , stroke tileDesign.strokeColor
             , strokeWidth tileDesign.strokeWidth
-            , points (pointsToHexagonPoints (generateHexagonPoints tile.point tileRadius))
+            , points (pointsToHexagonPoints (generateHexagonPoints tile.point MapData.hexRadius))
             ]
             []
         )
-    ]
-        ++ MaybeExt.foldMaybe (\s -> [ getSvgForSettlement tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) s ]) [] tile.settlement
-        ++ List.foldl (\l r -> getSvgForLord tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) l :: r) [] tile.lords
+
+
+
+--    ++ MaybeExt.foldMaybe (\s -> [ getSvgForSettlement tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) s ]) [] tile.settlement
+--    ++ List.foldl (\l r -> getSvgForLord tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) l :: r) [] tile.lords
 
 
 pointsToHexagonPoints : List Vector.Vector -> String

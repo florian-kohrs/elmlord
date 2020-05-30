@@ -1,5 +1,6 @@
 module MapData exposing (..)
 
+import Bitwise
 import Vector
 
 
@@ -51,6 +52,35 @@ noiseScale =
 rad : Float
 rad =
     0.35
+
+
+hashMapPoint : Vector.Point -> Int
+hashMapPoint p =
+    let
+        shiftedP =
+            Vector.addPoints p (Vector.Point mapWidth mapHeight)
+    in
+    Bitwise.shiftLeftBy 16 shiftedP.x + shiftedP.y
+
+
+mapPositionForIndex : Vector.Point -> Vector.Vector
+mapPositionForIndex p =
+    let
+        offset =
+            rowXOffset p.x
+    in
+    Vector.Vector (getXPosForIndex p.x + offset.x) (getYPosForIndex p.y + offset.y)
+
+
+rowXOffset : Int -> Vector.Vector
+rowXOffset x =
+    let
+        shiftedX =
+            x + mapHeight
+    in
+    Vector.Vector
+        -(toFloat shiftedX * (Vector.pointOnCircle hexRadius rad).x)
+        (toFloat (modBy 2 shiftedX * tileRowXOffset))
 
 
 getXPosForIndex : Int -> Float

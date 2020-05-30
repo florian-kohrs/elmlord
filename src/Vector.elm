@@ -91,6 +91,11 @@ zero =
     Vector 0 0
 
 
+one : Vector
+one =
+    Vector 1 1
+
+
 flipOnY : Vector -> Vector
 flipOnY v =
     { v | y = -v.y }
