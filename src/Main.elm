@@ -321,6 +321,7 @@ generateHeaderTemplate model =
                 ]
             ]
         ]
+    ]
 
 
 
