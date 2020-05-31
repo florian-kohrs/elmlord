@@ -1,6 +1,7 @@
 module Types exposing (..)
 
 import Entities
+import Troops exposing (..)
 import Vector
 
 
@@ -10,6 +11,7 @@ type Msg
     | ShowSettlement
     | ShowTroopRecruiting
     | ShowTroopStationing
+    | SettlementAction SettlementMsg TroopType
     | Click Vector.Point
 
 
@@ -18,6 +20,11 @@ type MapTileMsg
     | ViewSettlement Entities.Settlement
     | MoveTo Vector.Point
 
+
+type SettlementMsg 
+    = BuyTroops
+    | StationTroops 
+    | TakeTroops 
 
 type UiSettlementState 
     = StandardView

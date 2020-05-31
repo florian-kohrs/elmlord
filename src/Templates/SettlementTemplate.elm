@@ -12,8 +12,8 @@ import Troops exposing (..)
 testTroopList : List Troop
 testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
 
-generateSettlementModalTemplate : Settlement -> UiSettlementState -> Html Msg
-generateSettlementModalTemplate settlement uistate=
+generateSettlementModalTemplate : Lord -> Settlement -> UiSettlementState -> Html Msg
+generateSettlementModalTemplate lord settlement uistate=
     div [Html.Attributes.class "modal-background"] [
         div [Html.Attributes.class "settlement-modal"] [
             div [Html.Attributes.class "settlement-modal-close-container"] [
@@ -33,15 +33,15 @@ generateSettlementModalTemplate settlement uistate=
                 ]
             ]
             , div [Html.Attributes.class "settlement-action-container"]
-            (settlementStateToAction settlement uistate)
+            (settlementStateToAction lord settlement uistate)
             , div [Html.Attributes.class "settlement-illustration-container"] [
                 img [src  "./assets/images/illustrations/example_ilustration.png"] []
             ]
         ]
     ]
 
-settlementStateToAction : Settlement -> UiSettlementState -> List (Html Msg)
-settlementStateToAction settlement uistate = 
+settlementStateToAction : Lord -> Settlement -> UiSettlementState -> List (Html Msg)
+settlementStateToAction lord settlement uistate = 
     case uistate of 
         StandardView -> 
             (getSettlementActionsByType settlement.settlementType ++
@@ -58,29 +58,31 @@ settlementStateToAction settlement uistate =
         RecruitView -> 
             [div [Html.Attributes.class "settlement-troop-recruiting"] 
                     (span [] [Html.text "Recruit troops"] ::
-                    List.map generateRecruitTroopContainer testTroopList ++
+                    List.map generateRecruitTroopContainer lord.entity.army ++
                     [button [onClick Types.ShowSettlement] [ span [] [Html.text "Back"]]])]
 
         StationView -> 
             [div [Html.Attributes.class "settlement-troop-stationing"] 
                     (span [] [Html.text "Station troops"] ::
-                    List.map generateStationTroopContainer testTroopList ++
+                    List.map2 generateStationTroopContainer lord.entity.army settlement.entity.army ++
                     [button [onClick Types.ShowSettlement] [ span [] [Html.text "Back"]]])]
         _ ->
             []
 
 
-generateStationTroopContainer : Troop -> Html Msg
-generateStationTroopContainer troop = 
+generateStationTroopContainer : Troop ->  Troop -> Html Msg
+generateStationTroopContainer lT sT = 
     div [Html.Attributes.class "troop-stationing-container"] [
             img [src "./assets/images/knight_icon.png"] []
-            , span [] [Html.text ("[" ++ String.fromInt troop.amount ++ "]")]
+            , span [] [Html.text ("[" ++ String.fromInt lT.amount ++ "]")]
             , div [] [
-                span [] [Html.text "0"]
+                span [] [Html.text ("[" ++ String.fromInt sT.amount ++ "]")]
             ]
-            , button [] [ Html.text "O" ]
-            , button [] [ Html.text "I" ]
+            , button [onClick (SettlementAction Types.TakeTroops lT.troopType)] [ Html.text "O" ]
+            , button [onClick (SettlementAction Types.StationTroops lT.troopType)] [ Html.text "I" ]
     ]
+
+
 
 
 generateRecruitTroopContainer : Troop -> Html Msg
@@ -89,10 +91,10 @@ generateRecruitTroopContainer troop =
             img [src ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] []
             , span [] [Html.text ("[" ++ String.fromInt troop.amount ++ "]")]
             , div [] [
-                span [] [Html.text "30"]
+                span [] [Html.text (String.fromFloat (Troops.troopCost troop.troopType))]
                 , img [src  "./assets/images/ducats_icon.png"] []
             ]
-            , button [] [ Html.text "+" ]
+            , button [onClick (SettlementAction Types.BuyTroops troop.troopType)] [ Html.text "+" ]
     ]
 
 getSettlementActionsByType : SettlementType -> List (Html Msg)

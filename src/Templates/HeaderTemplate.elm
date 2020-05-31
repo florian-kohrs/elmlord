@@ -23,8 +23,8 @@ testRevenueList =
 testTroopList : List Troop
 testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
 
-generateHeaderTemplate : Html Msg
-generateHeaderTemplate =
+generateHeaderTemplate : Lord ->  Html Msg
+generateHeaderTemplate lord =
     div [Html.Attributes.class "page-header"] [
         div [Html.Attributes.class "page-turn-header"] [
             div [Html.Attributes.class "page-turn-handler-header"] [
@@ -39,7 +39,7 @@ generateHeaderTemplate =
         ,div [Html.Attributes.class "page-gold-header"] [
             img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
-                span [Html.Attributes.class "page-header-span"] [ Html.text "207 Ducats" ]
+                span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt lord.gold ++ " Ducats") ]
                 , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
                     span [] [Html.text "Monthly revenue" ]
                     , div [] (List.map revenuesToTemplate testRevenueList)
@@ -52,7 +52,7 @@ generateHeaderTemplate =
         , div [Html.Attributes.class "page-troop-header"] [
             img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
-                span [Html.Attributes.class "page-header-span"] [ Html.text "121 Troops" ]
+                span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt (List.foldr (+) 0 (List.map troopsToIntList lord.entity.army)) ++ " Troops") ]
                 , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
                     span [] [Html.text "Current Troops" ]
                     , div [] (List.map troopToHtml testTroopList)
@@ -108,7 +108,9 @@ troopToHtml troop =
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]
 
-
+troopsToIntList : Troop ->  Int
+troopsToIntList troop =
+            troop.amount
 
 -- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
 

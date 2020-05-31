@@ -16,7 +16,7 @@ import MaybeExt
 import Pathfinder
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Types exposing (MapTileMsg(..), Msg(..), UiSettlementState(..))
+import Types exposing (MapTileMsg(..), Msg(..), UiSettlementState(..), SettlementMsg(..))
 import Vector exposing (..)
 import Troops exposing (..)
 import Faction exposing (..)
@@ -65,7 +65,7 @@ allSettlements m =
 
 
 testTroopList : List Troop
-testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
+testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 10, troopType = Troops.Knight}]
 
 testWorldEntity : WorldEntity
 testWorldEntity =
@@ -84,6 +84,42 @@ testSetelement =
         , income = 3.19
         , isSieged = False
     }
+
+{- type alias Lord =
+    { entity : WorldEntity
+    , gold : Gold
+    , action : Action
+    , land : List Settlement
+    , moveSpeed : Float
+    } -}
+
+testLordWorldEntity : WorldEntity
+testLordWorldEntity =
+    {
+        army = testTroopList
+        , faction = Faction.Faction1
+        , position = {x = 0, y = 0}
+        , name = "Sir Quicknuss"
+    }
+    
+testActionType : Action
+testActionType = 
+    {
+        actionType = Wait
+        , actionMotive = Flee
+    }
+
+testLord : Lord
+testLord = 
+    {
+        entity = testLordWorldEntity
+        , gold = 250
+        , action = testActionType
+        , land = [testSetelement, testSetelement, testSetelement]
+        , moveSpeed = 1.0
+    }
+
+
 
 -- STATIC TEST DATA --
 
@@ -186,8 +222,25 @@ update msg model =
         ShowTroopStationing -> 
             { model |  gameState = GameSetup (SettlementView StationView)}
 
+        SettlementAction action troopType ->
+            updateSettlement action troopType model
+
         Click p ->
             { model | selectedPoint = Just p }
+
+
+updateSettlement : SettlementMsg -> TroopType -> Model -> Model
+updateSettlement msg t model =
+    case msg of 
+        BuyTroops -> 
+            model
+
+        StationTroops -> 
+            model
+
+        TakeTroops -> 
+            model
+
 
 
 view : Model -> Html Msg
@@ -199,7 +252,7 @@ view model =
     div [ Html.Attributes.class "page-container" ]
         [
         findModalWindow model
-        ,Templates.HeaderTemplate.generateHeaderTemplate
+        ,Templates.HeaderTemplate.generateHeaderTemplate testLord
         , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , Svg.svg
@@ -238,7 +291,7 @@ findModalWindow  model =
                             div [] []
 
                         _ ->
-                            generateSettlementModalTemplate testSetelement sView
+                            generateSettlementModalTemplate testLord testSetelement sView
                 _ -> 
                     div [] []
         _ ->
