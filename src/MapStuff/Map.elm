@@ -150,7 +150,7 @@ styleMapTile : MapTile -> MapTileDesign
 styleMapTile tile =
     { backgroundColor = terrainToColor tile.terrain
     , strokeColor = Faction.factionColor tile.faction
-    , strokeWidth = "8px"
+    , strokeWidth = "2px"
     }
 
 
@@ -177,6 +177,7 @@ showMapTile tile =
             , stroke tileDesign.strokeColor
             , strokeWidth tileDesign.strokeWidth
             , points (pointsToHexagonPoints (generateHexagonPoints tile.point MapData.hexRadius))
+            , opacity "0.7"
             ]
             []
         )

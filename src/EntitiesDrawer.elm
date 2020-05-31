@@ -94,9 +94,9 @@ getImage imgName indices scale =
 
 lordZAxis : Int
 lordZAxis =
-    3
+    5
 
 
 settlementZAxis : Int
 settlementZAxis =
-    2
+    4
