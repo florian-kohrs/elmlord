@@ -19,6 +19,7 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Templates.HeaderTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
+import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 
