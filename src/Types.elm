@@ -6,6 +6,8 @@ import Vector
 
 type Msg
     = EndRound
+    | CloseModal
+    | ShowSettlement
     | Click Vector.Point
 
 
