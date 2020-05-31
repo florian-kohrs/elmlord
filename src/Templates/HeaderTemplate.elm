@@ -23,17 +23,32 @@ generateHeaderTemplate lord =
         value = revenueToSpan ("", List.foldr (+) 0 (List.map Tuple.second testRevenueList))
     in
     div [Html.Attributes.class "page-header"] [
-        div [Html.Attributes.class "page-turn-header"] [
-            div [Html.Attributes.class "page-turn-handler-header"] [
-                div [Html.Attributes.class "page-turn-button"] [
-                    span [ onClick EndRound ] [Html.text "End turn"]
+        div [Html.Attributes.class "page-turn-header"] headerTurnTemplate
+        ,div [Html.Attributes.class "page-gold-header"] (headerGoldTemplate lord value)
+        , div [Html.Attributes.class "page-troop-header"] (headerTroopTemplate lord)
+        , div [Html.Attributes.class "page-settings-header"]  headerSettingsTemplate
+    ]
+
+
+-- HTML Parts
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+headerTurnTemplate :  List (Html Msg)
+headerTurnTemplate  =
+            [
+                div [Html.Attributes.class "page-turn-handler-header"] [
+                    div [Html.Attributes.class "page-turn-button"] [
+                        span [ onClick EndRound ] [Html.text "End turn"]
+                    ]
+                ]
+                , div [Html.Attributes.class "page-turn-date-header"] [
+                    span [Html.Attributes.class "page-header-span"] [ Html.text "January 1077 AD" ]
                 ]
             ]
-            , div [Html.Attributes.class "page-turn-date-header"] [
-                span [Html.Attributes.class "page-header-span"] [ Html.text "January 1077 AD" ]
-            ]
-        ]
-        ,div [Html.Attributes.class "page-gold-header"] [
+
+headerGoldTemplate : Lord -> Html Msg -> List (Html Msg)
+headerGoldTemplate lord value=
+        [
             img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
                 span [Html.Attributes.class "page-header-span"] [
@@ -49,7 +64,11 @@ generateHeaderTemplate lord =
                 ]
             ]
         ]
-        , div [Html.Attributes.class "page-troop-header"] [
+
+
+headerTroopTemplate : Lord -> List (Html Msg)
+headerTroopTemplate lord =
+        [
             img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
                 span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt (List.foldr (+) 0 (List.map (\x -> x.amount) lord.entity.army)) ++ " Troops") ]
@@ -64,7 +83,11 @@ generateHeaderTemplate lord =
                 ]
             ]
         ]
-        , div [Html.Attributes.class "page-settings-header"] [
+
+
+headerSettingsTemplate : List (Html Msg)
+headerSettingsTemplate =
+        [
             div [onClick ShowSettlement, Html.Attributes.class "page-setting-container tooltip"] [
                     img [src  "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings"] []
                     , div [Html.Attributes.class "tooltip"] [
@@ -80,11 +103,9 @@ generateHeaderTemplate lord =
                     ]
                 ]
         ]
-    ]
 
--- REVENUE WIRD AUSGELAGERT
-------------------------------------------------------------------------------------------------------------------------------------
-
+-- Logic
+---------------------------------------------------------------------------------------------------------------------------------------------------
 revenuesToTemplate : (String, Float)-> Html Msg
 revenuesToTemplate rev =
             div [Html.Attributes.class "revenue-container"] [ revenueToSpan rev]
