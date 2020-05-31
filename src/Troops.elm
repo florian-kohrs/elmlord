@@ -12,6 +12,9 @@ type TroopType
     | Sword
     | Knight
 
+troopTypeList : List TroopType
+troopTypeList = [Archer, Spear, Sword, Knight]
+
 troopCost : TroopType -> Float
 troopCost t =
     case t of
