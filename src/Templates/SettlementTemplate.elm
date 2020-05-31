@@ -29,7 +29,7 @@ generateSettlementModalTemplate lord settlement uistate=
                     img [src  "./assets/images/profiles/profile_lord.png", Html.Attributes.class "settlement-lord-icon"] []
                 ]
                 , div [] [
-                    span [Html.Attributes.class "settlement-lord-text"] [Html.text "Sir Quicknuss"]
+                    span [Html.Attributes.class "settlement-lord-text"] [Html.text lord.entity.name]
                 ]
             ]
             , div [Html.Attributes.class "settlement-action-container"]

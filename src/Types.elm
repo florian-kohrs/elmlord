@@ -4,13 +4,15 @@ import Entities
 import Troops exposing (..)
 import Vector
 
+-- TODO: Combine ShowSettlement, ShowTroopRecruiting, ShowTroopStationing in 1 Msg
 
 type Msg
     = EndRound
     | CloseModal
-    | ShowSettlement
+    | ShowSettlement 
     | ShowTroopRecruiting
     | ShowTroopStationing
+    | ShowBattleView
     | SettlementAction SettlementMsg TroopType
     | Click Vector.Point
 
