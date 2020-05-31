@@ -1,4 +1,4 @@
--- downloaded from https://gist.github.com/shamansir/b65671aac466352cb8b284a3bf2c2e10
+-- everything below this line is downloaded from https://gist.github.com/shamansir/b65671aac466352cb8b284a3bf2c2e10
 -- Taken from: https://raw.githubusercontent.com/eskimoblood/elm-simplex-noise/master/src/Noise.elm
 -- Updated to 0.19
 

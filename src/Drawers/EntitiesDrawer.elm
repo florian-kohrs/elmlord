@@ -1,5 +1,6 @@
 module EntitiesDrawer exposing (..)
 
+import BasicDrawing
 import Dict
 import Entities
 import ListExt
@@ -54,7 +55,7 @@ showSettlement s =
 
 getSvgForLord : Entities.Lord -> Svg.Svg Types.Msg
 getSvgForLord l =
-    getImage
+    BasicDrawing.getImage
         "Lord1.png"
         l.entity.position
         Vector.one
@@ -62,34 +63,10 @@ getSvgForLord l =
 
 getSvgForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
 getSvgForSettlement s =
-    getImage
+    BasicDrawing.getImage
         (Entities.settlementImageName s.settlementType)
         s.entity.position
         Vector.one
-
-
-getImage : String -> Vector.Point -> Vector.Vector -> Svg.Svg Types.Msg
-getImage imgName indices scale =
-    let
-        pos =
-            MapData.mapPositionForIndex indices
-
-        size =
-            Vector.Vector (MapData.hexRadius * 1.5) (MapData.hexRadius * 2)
-    in
-    Svg.image
-        [ Svg.Events.onClick (Types.Click indices)
-        , Svg.Attributes.x (String.fromFloat (pos.x - size.x / 2))
-        , Svg.Attributes.y (String.fromFloat (pos.y - size.y / 2))
-        , Svg.Attributes.width (String.fromFloat size.x)
-        , Svg.Attributes.height (String.fromFloat size.y)
-        , Svg.Attributes.xlinkHref ("../Images/" ++ imgName)
-
-        --, Svg.Attributes.src "../Images/Background.png"
-        --, Svg.Attributes.overflow "visible"
-        --, Svg.Attributes.fill "red"
-        ]
-        []
 
 
 lordZAxis : Int

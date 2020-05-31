@@ -1,6 +1,7 @@
 module Pathfinder exposing (..)
 
 import Dict exposing (Dict)
+import MapData
 import MaybeExt
 import Vector
 
@@ -87,31 +88,34 @@ totalDistance (PathPart p) =
     p.previousDistance + p.minDistanceToTarget
 
 
-getPath : Vector.Point -> PathInfo -> Path
+getPath : Vector.Point -> PathInfo -> Maybe Path
 getPath from info =
-    buildPath [ createPathPart from Nothing info ] (Dict.singleton (Vector.showPoint from) ()) info
+    buildPath (createPathPart from Nothing info) [] (Dict.singleton (MapData.hashMapPoint from) ()) info
 
 
-buildPath : PathTails -> PathTailLookup -> PathInfo -> Path
-buildPath tails dict info =
-    case tails of
-        [] ->
-            Path info.target []
+buildPath : PathPart -> PathTails -> PathTailLookup -> PathInfo -> Maybe Path
+buildPath (PathPart closest) tails dict info =
+    if Vector.pointEqual closest.position info.target then
+        Just (Path info.target (toPath (PathPart closest)))
 
-        (PathPart closest) :: ts ->
-            --info.nav.getCircumjacentFields closest.position
-            if Vector.pointEqual closest.position info.target then
-                Path info.target (toPath (PathPart closest))
+    else
+        let
+            circumjacent =
+                List.filter (\p -> not (Dict.member (MapData.hashMapPoint p) dict))
+                    (info.nav.getCircumjacentFields closest.position)
 
-            else
-                let
-                    circumjacent =
-                        List.filter (\p -> not (Dict.member (Vector.showPoint p) dict))
-                            (info.nav.getCircumjacentFields closest.position)
-                in
+            tails2 =
+                List.foldl (\p ts2 -> addSortedPathTail ts2 (createPathPart p (Just (PathPart closest)) info)) tails circumjacent
+        in
+        case closestPath tails2 dict of
+            ( _, Nothing ) ->
+                Nothing
+
+            ( newTails, Just (PathPart newClosest) ) ->
                 buildPath
-                    (List.foldl (\p ts2 -> addSortedPathTail ts2 (createPathPart p (Just (PathPart closest)) info)) ts circumjacent)
-                    (List.foldl (\p dict2 -> Dict.insert (Vector.showPoint p) () dict2) dict circumjacent)
+                    (PathPart newClosest)
+                    tails2
+                    (Dict.insert (MapData.hashMapPoint newClosest.position) () dict)
                     info
 
 
@@ -119,8 +123,22 @@ type alias PathTails =
     List PathPart
 
 
+closestPath : PathTails -> PathTailLookup -> ( PathTails, Maybe PathPart )
+closestPath tails dict =
+    case tails of
+        [] ->
+            ( [], Nothing )
+
+        (PathPart p) :: ps ->
+            if Dict.member (MapData.hashMapPoint p.position) dict then
+                closestPath ps dict
+
+            else
+                ( ps, Just (PathPart p) )
+
+
 type alias PathTailLookup =
-    Dict String ()
+    Dict Int ()
 
 
 addSortedPathTail : PathTails -> PathPart -> PathTails
