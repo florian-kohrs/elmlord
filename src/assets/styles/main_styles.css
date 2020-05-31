@@ -146,6 +146,7 @@ span {
 .positive-income {
     color: #03c04a;
     padding-top: 2px;
+    display: block;
 }
 
 

@@ -14,6 +14,8 @@ type alias Revenue =
     , value : Float
     }
 
+-- TODO: Revenue to Tupel
+
 
 testRevenueList : List Revenue
 testRevenueList =
@@ -25,6 +27,9 @@ testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopTyp
 
 generateHeaderTemplate : Lord ->  Html Msg
 generateHeaderTemplate lord =
+    let
+        value = revenueToString2 { name = "Revenue", value =  List.foldr (+) 0 (List.map revenueToIncomeList testRevenueList)}
+    in
     div [Html.Attributes.class "page-header"] [
         div [Html.Attributes.class "page-turn-header"] [
             div [Html.Attributes.class "page-turn-handler-header"] [
@@ -39,7 +44,10 @@ generateHeaderTemplate lord =
         ,div [Html.Attributes.class "page-gold-header"] [
             img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
-                span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt lord.gold ++ " Ducats") ]
+                span [Html.Attributes.class "page-header-span"] [
+                     Html.text (String.fromInt lord.gold ++ " Ducats") 
+                     , value
+                ]
                 , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
                     span [] [Html.text "Monthly revenue" ]
                     , div [] (List.map revenuesToTemplate testRevenueList)
@@ -55,7 +63,7 @@ generateHeaderTemplate lord =
                 span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt (List.foldr (+) 0 (List.map troopsToIntList lord.entity.army)) ++ " Troops") ]
                 , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
                     span [] [Html.text "Current Troops" ]
-                    , div [] (List.map troopToHtml testTroopList)
+                    , div [] (List.map troopToHtml lord.entity.army)
                 ]
             ]
         ]
@@ -91,6 +99,15 @@ revenueToString rev =
 
     else
         span [ Html.Attributes.class "negative-income" ] [ Html.text (rev.name ++ ": " ++ String.fromFloat rev.value ++ " Ducats") ]
+
+-- temp
+revenueToString2 : Revenue -> Html Msg 
+revenueToString2 rev =
+    if rev.value > 0 then
+        span [ Html.Attributes.class "positive-income" ] [ Html.text ("(+" ++ String.fromFloat rev.value ++ " Ducats)") ]
+
+    else
+        span [ Html.Attributes.class "negative-income" ] [ Html.text (String.fromFloat rev.value ++ " Ducats") ]
 
 
 revenueToIncomeList : Revenue -> Float
