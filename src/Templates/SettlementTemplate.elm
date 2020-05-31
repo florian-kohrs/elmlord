@@ -50,8 +50,11 @@ settlementStateToAction lord settlement uistate =
                 , div [Html.Attributes.class "settlement-info"] [
                     span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
                     , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
-                    , div [Html.Attributes.class "stationed-troops-overview"]
-                        (span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "] :: List.map troopToHtml settlement.entity.army)
+                    , div [Html.Attributes.class "stationed-troops-overview"] [
+                        span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
+                        , div [] (List.map troopToHtml settlement.entity.army)
+                        
+                    ]
                 ]
             ])
         
@@ -106,7 +109,7 @@ getSettlementActionsByType settle =
 
 troopToHtml : Troop -> Html Msg
 troopToHtml troop =
-        div [Html.Attributes.class "troop-container"] [
+        div [Html.Attributes.class "stationed-troop-container troop-container"] [
             img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]

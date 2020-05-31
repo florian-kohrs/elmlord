@@ -308,8 +308,16 @@ span {
 
 .stationed-troops-overview {
     display: grid;
-    grid-template-rows: 30px 1fr;
+    grid-template-rows: 25px 1fr;
     width: 100%;
+}
+
+.stationed-troop-container {
+    width: 80%;
+    height: 30px !important;
+    display: grid;
+    margin: 2.5px auto !important;
+    grid-template-columns: 25% 1fr 1fr;
 }
 
 .settlement-illustration-container {
