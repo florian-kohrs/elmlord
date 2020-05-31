@@ -22,6 +22,7 @@ type alias Lord =
 
 
 
+
 {- updateLord : Lord -> Lord
    updateLord s =
        let
@@ -30,6 +31,9 @@ type alias Lord =
        in
        { s | gold = s.gold + goldIncome }
 -}
+
+
+
 -- https://www.fantasynamegenerators.com/town_names.php
 -- around 15 Castle names
 
@@ -107,6 +111,7 @@ type ActionMotive
 type ActionType
     = Wait
     | Travel Point (Maybe Pathfinder.Path)
+
 
 
 type alias Settlement =

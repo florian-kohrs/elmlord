@@ -17,8 +17,9 @@ import PathDrawer
 import Pathfinder
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Troops exposing (..)
-import Types exposing (MapTileMsg(..), Msg(..))
+import Templates.HeaderTemplate exposing (..)
+import Templates.SettlementTemplate exposing (..)
+import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 
 
@@ -28,12 +29,6 @@ type alias Model =
     , selectedPoint : Maybe Point
     , map : Map.Map --used for pathfinding
     , mapTileClickActions : MapDrawer.MapClickAction
-    }
-
-
-type alias Revenue =
-    { name : String
-    , value : Float
     }
 
 
@@ -47,7 +42,8 @@ type UiState
     = MainMenue
     | SaveLoad
     | NewCampain
-    | SettlementView
+    | GameMenue
+    | SettlementView UiSettlementState
 
 
 
@@ -109,14 +105,9 @@ allSettlements m =
     List.concat (List.map .land m.lords)
 
 
-testRevenueList : List Revenue
-testRevenueList =
-    [ { name = "Castles", value = 2.5 }, { name = "Village", value = 1.9 }, { name = "Army", value = -3.3 } ]
-
-
 testTroopList : List Troop
 testTroopList =
-    [ { amount = 50, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 11, troopType = Troops.Knight } ]
+    [ { amount = 50, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 10, troopType = Troops.Knight } ]
 
 
 testWorldEntity : WorldEntity
@@ -134,6 +125,43 @@ testSetelement =
     , settlementType = Entities.Village
     , income = 3.19
     , isSieged = False
+    }
+
+
+
+{- type alias Lord =
+   { entity : WorldEntity
+   , gold : Gold
+   , action : Action
+   , land : List Settlement
+   , moveSpeed : Float
+   }
+-}
+
+
+testLordWorldEntity : WorldEntity
+testLordWorldEntity =
+    { army = testTroopList
+    , faction = Faction.Faction1
+    , position = { x = 0, y = 0 }
+    , name = "Sir Quicknuss"
+    }
+
+
+testActionType : Action
+testActionType =
+    { actionType = Wait
+    , actionMotive = Flee
+    }
+
+
+testLord : Lord
+testLord =
+    { entity = testLordWorldEntity
+    , gold = 250
+    , action = testActionType
+    , land = [ testSetelement, testSetelement, testSetelement ]
+    , moveSpeed = 1.0
     }
 
 
@@ -227,8 +255,36 @@ update msg model =
         EndRound ->
             model
 
+        CloseModal ->
+            { model | gameState = GameSetup GameMenue }
+
+        ShowSettlement ->
+            { model | gameState = GameSetup (SettlementView StandardView) }
+
+        ShowTroopRecruiting ->
+            { model | gameState = GameSetup (SettlementView RecruitView) }
+
+        ShowTroopStationing ->
+            { model | gameState = GameSetup (SettlementView StationView) }
+
+        SettlementAction action troopType ->
+            updateSettlement action troopType model
+
         Click p ->
             { model | selectedPoint = Just p }
+
+
+updateSettlement : SettlementMsg -> TroopType -> Model -> Model
+updateSettlement msg t model =
+    case msg of
+        BuyTroops ->
+            model
+
+        StationTroops ->
+            model
+
+        TakeTroops ->
+            model
 
 
 view : Model -> Html Msg
@@ -238,8 +294,9 @@ view model =
             buildAllMapSvgs model
     in
     div [ Html.Attributes.class "page-container" ]
-        ([ generateHeaderTemplate model
-         , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
+        [ findModalWindow model
+        , Templates.HeaderTemplate.generateHeaderTemplate testLord
+        , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , Svg.svg
                 [ Svg.Attributes.viewBox "0 0 2000 1800"
@@ -249,21 +306,51 @@ view model =
                 ]
                 (MapDrawer.allSvgs allClickActions)
             ]
-         ]
-            ++ MaybeExt.foldMaybe
-                (\path ->
-                    [ Html.text
-                        (List.foldl
-                            (\t r -> String.fromFloat t.timeLoss ++ "," ++ r)
-                            ""
-                            path.path
-                        )
-                    , Html.text (Vector.showPoint path.target)
-                    ]
-                )
-                [ Html.text (MaybeExt.foldMaybe (\p -> Vector.showPoint p) "no point selected" model.selectedPoint) ]
-                (getSelectedPath model)
-        )
+        , span [] [ Html.text (gameStateToText model.gameState) ]
+        ]
+
+
+
+-- temp to test
+
+
+gameStateToText : GameState -> String
+gameStateToText gs =
+    case gs of
+        GameSetup uistate ->
+            case uistate of
+                SettlementView _ ->
+                    "ja man"
+
+                _ ->
+                    "[]"
+
+        _ ->
+            "[]"
+
+
+
+--temp
+
+
+findModalWindow : Model -> Html Msg
+findModalWindow model =
+    case model.gameState of
+        GameSetup uistate ->
+            case uistate of
+                SettlementView sView ->
+                    case sView of
+                        BuildingView ->
+                            div [] []
+
+                        _ ->
+                            generateSettlementModalTemplate testLord testSetelement sView
+
+                _ ->
+                    div [] []
+
+        _ ->
+            div [] []
 
 
 pointToMsg : Vector.Point -> Msg
@@ -274,158 +361,6 @@ pointToMsg p =
 main : Program () Model Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
-
-
-
--- SETTLEMENT-TEMPLATE (ist auszulagern)
-
-
-generateSettlementModalTemplate : Settlement -> Html Msg
-generateSettlementModalTemplate settlement =
-    div [ Html.Attributes.class "modal-background" ]
-        [ div [ Html.Attributes.class "settlement-modal" ]
-            [ div [ Html.Attributes.class "settlement-modal-close-container" ]
-                [ div [ Html.Attributes.class "settlement-modal-close-btn" ]
-                    [ span [] [ Html.text "X" ]
-                    ]
-                ]
-            , div [ Html.Attributes.class "settlement-modal-name" ]
-                [ span [] [ Html.text (Entities.combineSettlementName settlement) ]
-                ]
-            , div [ Html.Attributes.class "settlement-lordship" ]
-                [ div []
-                    [ img [ src "./assets/images/profiles/profile_lord.png", Html.Attributes.class "settlement-lord-icon" ] []
-                    ]
-                , div []
-                    [ span [ Html.Attributes.class "settlement-lord-text" ] [ Html.text "Sir Quicknuss" ]
-                    ]
-                ]
-            , div [ Html.Attributes.class "settlement-action-container" ]
-                (getSettlementActionsByType settlement.settlementType
-                    ++ [ button [] [ span [] [ Html.text "Recruit troops" ] ]
-                       , button [] [ span [] [ Html.text "Station troops" ] ]
-                       , div [ Html.Attributes.class "settlement-info" ]
-                            [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                            , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
-                            , div [ Html.Attributes.class "stationed-troops-overview" ]
-                                (span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ] :: List.map troopToHtml settlement.entity.army)
-                            ]
-                       ]
-                )
-            , div [ Html.Attributes.class "settlement-illustration-container" ]
-                [ img [ src "./assets/images/illustrations/example_ilustration.png" ] []
-                ]
-            ]
-        ]
-
-
-getSettlementActionsByType : SettlementType -> List (Html Msg)
-getSettlementActionsByType settle =
-    if settle == Entities.Castle then
-        [ button [] [ span [] [ Html.text "Upgrade Buildings" ] ] ]
-
-    else
-        []
-
-
-
--- HEADER-TEMPLATE (ist auszulagern)
-
-
-generateHeaderTemplate : Model -> Html Msg
-generateHeaderTemplate model =
-    div [ Html.Attributes.class "page-header" ]
-        [ div [ Html.Attributes.class "page-turn-header" ]
-            [ div [ Html.Attributes.class "page-turn-handler-header" ]
-                [ div [ Html.Attributes.class "page-turn-button" ]
-                    [ span [ onClick EndRound ] [ Html.text "End turn" ]
-                    ]
-                ]
-            , div [ Html.Attributes.class "page-turn-date-header" ]
-                [ span [ Html.Attributes.class "page-header-span" ] [ Html.text "January 1077 AD" ]
-                ]
-            ]
-        , div [ Html.Attributes.class "page-gold-header" ]
-            [ img [ src "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images" ] []
-            , div [ Html.Attributes.class "tooltip" ]
-                [ span [ Html.Attributes.class "page-header-span" ] [ Html.text "207 Ducats" ]
-                , div [ Html.Attributes.class "tooltiptext gold-tooltip" ]
-                    [ span [] [ Html.text "Monthly revenue" ]
-                    , div [] (List.map revenuesToTemplate testRevenueList)
-                    , div [ Html.Attributes.class "revenue-result-container" ]
-                        [ revenueToString { name = "Revenue", value = List.foldr (+) 0 (List.map revenueToIncomeList testRevenueList) }
-                        ]
-                    ]
-                ]
-            ]
-        , div [ Html.Attributes.class "page-troop-header" ]
-            [ img [ src "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images" ] []
-            , div [ Html.Attributes.class "tooltip" ]
-                [ span [ Html.Attributes.class "page-header-span" ] [ Html.text "121 Troops" ]
-                , div [ Html.Attributes.class "tooltiptext troop-tooltip" ]
-                    [ span [] [ Html.text "Current Troops" ]
-                    , div [] (List.map troopToHtml testTroopList)
-                    ]
-                ]
-            ]
-        , div [ Html.Attributes.class "page-settings-header" ]
-            [ div [ Html.Attributes.class "page-setting-container tooltip" ]
-                [ img [ src "./assets/images/audio_on_icon.png", Html.Attributes.class "page-image-settings" ] []
-                , div [ Html.Attributes.class "tooltip" ]
-                    [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Mute or unmute the gamesounds" ]
-                    ]
-                ]
-            , div [ Html.Attributes.class "page-settings-grid" ]
-                [ div [ Html.Attributes.class "page-setting-container tooltip" ]
-                    [ img [ src "./assets/images/save_icon.png", Html.Attributes.class "page-image-settings" ] []
-                    , div [ Html.Attributes.class "tooltip" ]
-                        [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Save the game as a file" ]
-                        ]
-                    ]
-                ]
-            ]
-        ]
-
-
-
--- REVENUE WIRD AUSGELAGERT
-------------------------------------------------------------------------------------------------------------------------------------
-
-
-revenuesToTemplate : Revenue -> Html Msg
-revenuesToTemplate rev =
-    div [ Html.Attributes.class "revenue-container" ] [ revenueToString rev ]
-
-
-revenueToString : Revenue -> Html Msg
-revenueToString rev =
-    if rev.value > 0 then
-        span [ Html.Attributes.class "positive-income" ] [ Html.text (rev.name ++ ":  +" ++ String.fromFloat rev.value ++ " Ducats") ]
-
-    else
-        span [ Html.Attributes.class "negative-income" ] [ Html.text (rev.name ++ ": " ++ String.fromFloat rev.value ++ " Ducats") ]
-
-
-revenueToIncomeList : Revenue -> Float
-revenueToIncomeList rev =
-    rev.value
-
-
-
--- Troop WIRD AUSGELAGERT (Sobald MSG ausgelagert ist)
-------------------------------------------------------------------------------------------------------------------------------------
-
-
-troopToHtml : Troop -> Html Msg
-troopToHtml troop =
-    div [ Html.Attributes.class "troop-container" ]
-        [ img [ src ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png") ] []
-        , span [] [ Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
-        ]
-
-
-
--- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
 
 
 addStylesheet : String -> String -> Html Msg

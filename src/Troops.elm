@@ -1,6 +1,5 @@
 module Troops exposing (..)
 
-
 type alias Troop =
     {
         amount: Int
@@ -13,8 +12,10 @@ type TroopType
     | Sword
     | Knight
 
+troopTypeList : List TroopType
+troopTypeList = [Archer, Spear, Sword, Knight]
 
-troopCost : TroopType -> Int
+troopCost : TroopType -> Float
 troopCost t =
     case t of
         Archer ->
@@ -28,6 +29,21 @@ troopCost t =
 
         Knight ->
             120
+
+troopWage : TroopType -> Float
+troopWage t =
+    case t of
+        Archer ->
+            4
+
+        Spear ->
+            2
+
+        Sword ->
+            5
+
+        Knight ->
+            10
 
 
 troopName : TroopType -> String
@@ -44,3 +60,4 @@ troopName t =
 
         Knight ->
             "Knight"
+
