@@ -16,7 +16,7 @@ import MaybeExt
 import Pathfinder
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Types exposing (MapTileMsg(..), Msg(..))
+import Types exposing (MapTileMsg(..), Msg(..), UiSettlementState(..))
 import Vector exposing (..)
 import Troops exposing (..)
 import Faction exposing (..)
@@ -44,7 +44,7 @@ type UiState
     | SaveLoad
     | NewCampain
     | GameMenue
-    | SettlementView
+    | SettlementView UiSettlementState
 
 
 
@@ -178,7 +178,13 @@ update msg model =
             { model |  gameState = GameSetup GameMenue}
 
         ShowSettlement -> 
-            { model |  gameState = GameSetup SettlementView}
+            { model |  gameState = GameSetup (SettlementView StandardView)}
+
+        ShowTroopRecruiting -> 
+            { model |  gameState = GameSetup (SettlementView RecruitView)}
+
+        ShowTroopStationing -> 
+            { model |  gameState = GameSetup (SettlementView StationView)}
 
         Click p ->
             { model | selectedPoint = Just p }
@@ -192,7 +198,7 @@ view model =
     in
     div [ Html.Attributes.class "page-container" ]
         [
-        findModalWindow model 
+        findModalWindow model
         ,Templates.HeaderTemplate.generateHeaderTemplate
         , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
@@ -207,34 +213,13 @@ view model =
         , span [] [Html.text (gameStateToText model.gameState)]
         ]
 
-{- type alias Model =
-    { lords : List Lord
-    , gameState : GameState
-    , selectedPoint : Maybe Point
-    , map : Map.Map --used for pathfinding
-    , mapTileClickActions : MapDrawer.MapClickAction
-    }
-
-
-type GameState
-    = GameSetup UiState
-    | InGame Int -- int = playerCount
-    | GameOver Bool -- true = gewonnen, false = verloren
-
-
-type UiState
-    = MainMenue
-    | SaveLoad
-    | NewCampain
-    | SettlementView -}
-
 -- temp to test
 gameStateToText : GameState -> String
 gameStateToText gs =
     case gs of
         GameSetup uistate ->
             case uistate of
-                SettlementView ->
+                SettlementView _->
                     "ja man"
                 _ -> 
                     "[]"
@@ -247,8 +232,13 @@ findModalWindow  model =
     case model.gameState of
         GameSetup uistate ->
             case uistate of
-                SettlementView ->
-                    generateSettlementModalTemplate testSetelement
+                SettlementView sView->
+                    case sView of
+                        BuildingView -> 
+                            div [] []
+
+                        _ ->
+                            generateSettlementModalTemplate testSetelement sView
                 _ -> 
                     div [] []
         _ ->

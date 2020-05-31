@@ -5,11 +5,15 @@ import Faction exposing (..)
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Types exposing (Msg(..))
+import Types exposing ( Msg(..), UiSettlementState(..))
 import Troops exposing (..)
 
-generateSettlementModalTemplate : Settlement -> Html Msg
-generateSettlementModalTemplate settlement =
+
+testTroopList : List Troop
+testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
+
+generateSettlementModalTemplate : Settlement -> UiSettlementState -> Html Msg
+generateSettlementModalTemplate settlement uistate=
     div [Html.Attributes.class "modal-background"] [
         div [Html.Attributes.class "settlement-modal"] [
             div [Html.Attributes.class "settlement-modal-close-container"] [
@@ -29,9 +33,20 @@ generateSettlementModalTemplate settlement =
                 ]
             ]
             , div [Html.Attributes.class "settlement-action-container"]
+            (settlementStateToAction settlement uistate)
+            , div [Html.Attributes.class "settlement-illustration-container"] [
+                img [src  "./assets/images/illustrations/example_ilustration.png"] []
+            ]
+        ]
+    ]
+
+settlementStateToAction : Settlement -> UiSettlementState -> List (Html Msg)
+settlementStateToAction settlement uistate = 
+    case uistate of 
+        StandardView -> 
             (getSettlementActionsByType settlement.settlementType ++
-            [button [] [ span [] [Html.text "Recruit troops"]]
-                , button [] [ span [] [Html.text "Station troops"]]
+                [button [onClick Types.ShowTroopRecruiting] [ span [] [Html.text "Recruit troops"]]
+                , button [onClick Types.ShowTroopStationing] [ span [] [Html.text "Station troops"]]
                 , div [Html.Attributes.class "settlement-info"] [
                     span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
                     , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
@@ -39,12 +54,46 @@ generateSettlementModalTemplate settlement =
                         (span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "] :: List.map troopToHtml settlement.entity.army)
                 ]
             ])
-            , div [Html.Attributes.class "settlement-illustration-container"] [
-                img [src  "./assets/images/illustrations/example_ilustration.png"] []
+        
+        RecruitView -> 
+            [div [Html.Attributes.class "settlement-troop-recruiting"] 
+                    (span [] [Html.text "Recruit troops"] ::
+                    List.map generateRecruitTroopContainer testTroopList ++
+                    [button [onClick Types.ShowSettlement] [ span [] [Html.text "Back"]]])]
+
+        StationView -> 
+            [div [Html.Attributes.class "settlement-troop-stationing"] 
+                    (span [] [Html.text "Station troops"] ::
+                    List.map generateStationTroopContainer testTroopList ++
+                    [button [onClick Types.ShowSettlement] [ span [] [Html.text "Back"]]])]
+        _ ->
+            []
+
+
+generateStationTroopContainer : Troop -> Html Msg
+generateStationTroopContainer troop = 
+    div [Html.Attributes.class "troop-stationing-container"] [
+            img [src "./assets/images/knight_icon.png"] []
+            , span [] [Html.text ("[" ++ String.fromInt troop.amount ++ "]")]
+            , div [] [
+                span [] [Html.text "0"]
             ]
-        ]
+            , button [] [ Html.text "O" ]
+            , button [] [ Html.text "I" ]
     ]
 
+
+generateRecruitTroopContainer : Troop -> Html Msg
+generateRecruitTroopContainer troop = 
+    div [Html.Attributes.class "troop-recruiting-container"] [
+            img [src ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] []
+            , span [] [Html.text ("[" ++ String.fromInt troop.amount ++ "]")]
+            , div [] [
+                span [] [Html.text "30"]
+                , img [src  "./assets/images/ducats_icon.png"] []
+            ]
+            , button [] [ Html.text "+" ]
+    ]
 
 getSettlementActionsByType : SettlementType -> List (Html Msg)
 getSettlementActionsByType settle =

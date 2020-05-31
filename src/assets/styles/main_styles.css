@@ -409,6 +409,93 @@ span {
     font-size: 18px;
 }
 
+/* Troop stationing */
+/* ---------------------------------------------------------------------------- */
+
+.settlement-troop-stationing {
+    grid-area: 1 / 1 / 5 / 2;
+    display: grid;
+    grid-template-rows: 65px 50px 50px 50px 50px 1fr;
+    grid-row-gap: 10px;
+    text-align: center;
+}
+
+.settlement-troop-stationing > span {
+    color: #49505c;
+    font-size: 22px;
+    display: block;
+    padding-top: 25px;
+}
+
+.troop-stationing-container {
+    display: grid;
+    grid-template-columns: 60px 40px 80px 50px 50px 1fr;
+    grid-column-gap: 10px;
+    border: 1px solid #49505c;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.troop-stationing-container > img {
+    width: 40px;
+    height: 40px;
+    margin: 2.5px auto;
+    display: block;
+}
+
+.troop-stationing-container > span {
+    color: #49505c;
+    font-size: 18px;
+    display: block;
+    padding-top: 12.5px;
+}
+
+.troop-stationing-container > div {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    text-align: right;
+}
+
+.troop-stationing-container > div > img {
+    height: 35px;
+    width: 35px;
+    margin: 5px auto;
+    display: block;
+}
+
+.troop-stationing-container > div > span {
+    color: #49505c;
+    font-size: 18px;
+    display: block;
+    padding-top: 12.5px;
+}
+
+.troop-stationing-container > button {
+    margin: 5px auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 25px;
+}
+
+.settlement-troop-stationing > button {
+    margin: 0 auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 80%;
+    height: 60px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
 /* TOOLTIPS */
 /* ---------------------------------------------------------------------------- */
 
