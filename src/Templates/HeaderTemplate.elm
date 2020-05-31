@@ -9,6 +9,7 @@ import Types exposing (Msg(..))
 import Troops exposing (..)
 
 
+
 type alias Revenue =
     { name : String
     , value : Float
@@ -63,7 +64,12 @@ generateHeaderTemplate lord =
                 span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt (List.foldr (+) 0 (List.map troopsToIntList lord.entity.army)) ++ " Troops") ]
                 , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
                     span [] [Html.text "Current Troops" ]
-                    , div [] (List.map troopToHtml lord.entity.army)
+                    , div [ Html.Attributes.class "troop-container-header troop-container"] [
+                        div [] []
+                        , span [] [Html.text "In the Army"]
+                        , span [] [Html.text "Stantioned"]
+                    ]
+                    , div [] (List.map2 generateTroopTooltip lord.entity.army (sumTroopsFromSettlements lord.land))
                 ]
             ]
         ]
@@ -118,20 +124,45 @@ revenueToIncomeList rev =
 -- Troop WIRD AUSGELAGERT (Sobald MSG ausgelagert ist)
 ------------------------------------------------------------------------------------------------------------------------------------
 
-troopToHtml : Troop -> Html Msg
-troopToHtml troop =
+generateTroopTooltip : Troop -> Troop -> Html Msg
+generateTroopTooltip aT sT = 
         div [Html.Attributes.class "troop-container"] [
-            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
-            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
+            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName aT.troopType) ++ "_icon.png")] []
+            ,span [] [Html.text (String.fromInt aT.amount ++ "  " ++ Troops.troopName aT.troopType) ]
+            ,span [] [Html.text (String.fromInt sT.amount ++ "  " ++ Troops.troopName sT.troopType) ]
         ]
+
 
 troopsToIntList : Troop ->  Int
 troopsToIntList troop =
             troop.amount
 
--- auslagern, konnte nicht gemacht werden, weil Msg in Templates benötigt wird xd
+
+sumSettlementsTroops : List Settlement -> List Troop
+sumSettlementsTroops settle =
+        case settle of 
+            [] ->
+                []
+            
+            (x :: xs) ->
+                List.append x.entity.army (sumSettlementsTroops xs)
 
 
-addStylesheet : String -> String -> Html Msg
-addStylesheet tag href =
-    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
+sumTroops : List Troop -> Int
+sumTroops t =
+        case t of
+            [] -> 
+                0
+
+            (x :: xs) ->
+                x.amount + sumTroops xs
+
+-- very bad rework it!
+sumTroopsFromSettlements : List Settlement -> List Troop
+sumTroopsFromSettlements settel = 
+            [
+                {amount = sumTroops (List.filter (\ x -> x.troopType == Spear) (sumSettlementsTroops settel)), troopType = Spear}
+                , {amount = sumTroops (List.filter (\ x -> x.troopType == Archer) (sumSettlementsTroops settel)), troopType = Archer}
+                , {amount = sumTroops (List.filter (\ x -> x.troopType == Sword) (sumSettlementsTroops settel)), troopType = Sword}
+                , {amount = sumTroops (List.filter (\ x -> x.troopType == Knight) (sumSettlementsTroops settel)), troopType = Knight}
+            ]

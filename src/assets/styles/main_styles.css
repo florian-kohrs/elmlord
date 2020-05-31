@@ -527,23 +527,29 @@ span {
 }
 
 .troop-tooltip {
-    width: 240px;
-    height: 200px;
+    width: 360px;
+    height: 270px;
     background: #191919;
     color: #fff;
     margin-top: 20px;
-    margin-left: -100px;
+    margin-left: -160px;
     opacity: 0.925;
     display: grid;
-    grid-template-rows: 30px 1fr;
+    grid-template-rows: 30px 30px 1fr;
+}
+
+.troop-container-header {
+    border-bottom: 1px solid white;
+    height: 30px !important;
+    margin-top: 0px !important;
 }
 
 .troop-container {
     width: 80%;
     height: 40px;
     display: grid;
-    margin: 0 auto;
-    grid-template-columns: 30% 1fr;
+    margin: 10px auto;
+    grid-template-columns: 25% 1fr 1fr;
 }
 
 .troop-container > img {

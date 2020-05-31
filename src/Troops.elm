@@ -1,6 +1,5 @@
 module Troops exposing (..)
 
-
 type alias Troop =
     {
         amount: Int
@@ -12,7 +11,6 @@ type TroopType
     | Spear
     | Sword
     | Knight
-
 
 troopCost : TroopType -> Float
 troopCost t =
@@ -59,3 +57,4 @@ troopName t =
 
         Knight ->
             "Knight"
+
