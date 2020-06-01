@@ -34,16 +34,16 @@ troopWage : TroopType -> Float
 troopWage t =
     case t of
         Archer ->
-            4
+            0.4
 
         Spear ->
-            2
+            0.2
 
         Sword ->
-            5
+            0.5
 
         Knight ->
-            10
+            1.0
 
 
 troopName : TroopType -> String
