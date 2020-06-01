@@ -20,6 +20,7 @@ import Svg.Attributes exposing (..)
 import Templates.HeaderTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
 import Templates.BattleTemplate exposing (..)
+import Templates.EndTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
@@ -258,6 +259,9 @@ update msg model =
         EndRound ->
             model
 
+        EndGame bool-> 
+             { model | gameState = GameOver bool }
+
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
 
@@ -357,6 +361,9 @@ findModalWindow model =
 
                 _ ->
                     div [] []
+
+        GameOver bool ->
+            generateEndTemplate bool
 
         _ ->
             div [] []

@@ -49,7 +49,7 @@ headerTurnTemplate  =
 headerGoldTemplate : Lord -> Html Msg -> List (Html Msg)
 headerGoldTemplate lord value=
         [
-            img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
+            img [onClick (EndGame True), src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
                 span [Html.Attributes.class "page-header-span"] [
                      Html.text (String.fromInt lord.gold ++ " Ducats") 

@@ -8,6 +8,7 @@ import Vector
 
 type Msg
     = EndRound
+    | EndGame Bool
     | CloseModal
     | ShowSettlement 
     | ShowTroopRecruiting
