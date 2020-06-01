@@ -357,6 +357,25 @@ span {
     border-radius: 10px;
 }
 
+.troop-recruiting-tooltip {
+    width: 150px;
+    height: 60px;
+    background: #191919;
+    color: #fff;
+    margin-top: -60px;
+    margin-left: 50px;
+    opacity: 0.925;
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    text-align: center;
+}
+
+.troop-recruiting-tooltip > span {
+    font-size: 16px;
+    display: block;
+    padding-top: 10px;
+}
+
 .troop-recruiting-container > img {
     width: 40px;
     height: 40px;

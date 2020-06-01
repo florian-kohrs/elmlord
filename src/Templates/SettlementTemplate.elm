@@ -97,7 +97,13 @@ generateRecruitTroopContainer troop =
                 span [] [Html.text (String.fromFloat (Troops.troopCost troop.troopType))]
                 , img [src  "./assets/images/ducats_icon.png"] []
             ]
-            , button [onClick (SettlementAction Types.BuyTroops troop.troopType)] [ Html.text "+" ]
+            , button [onClick (SettlementAction Types.BuyTroops troop.troopType), Html.Attributes.class "tooltip"] [ 
+                span [] [Html.text "+"]
+                , div [Html.Attributes.class "tooltiptext troop-recruiting-tooltip"] [
+                    span [] [Html.text "Monthly wage"]
+                    , span [Html.Attributes.class "negative-income"] [Html.text ("- " ++ String.fromFloat (Troops.troopWage troop.troopType) ++ " Ducats")]
+                ] 
+            ]
     ]
 
 getSettlementActionsByType : SettlementType -> List (Html Msg)
