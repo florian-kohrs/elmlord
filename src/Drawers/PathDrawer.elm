@@ -54,4 +54,4 @@ getSvgForPathPart i p =
 
 
 pathZAxis =
-    1
+    3

@@ -71,9 +71,9 @@ getSvgForSettlement s =
 
 lordZAxis : Int
 lordZAxis =
-    5
+    6
 
 
 settlementZAxis : Int
 settlementZAxis =
-    4
+    5

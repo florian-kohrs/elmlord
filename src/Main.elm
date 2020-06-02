@@ -8,6 +8,7 @@ import Faction exposing (..)
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import ListExt
 import Map exposing (Map, MapTile)
 import MapData exposing (..)
 import MapDrawer
@@ -17,10 +18,10 @@ import PathDrawer
 import Pathfinder
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Templates.HeaderTemplate exposing (..)
-import Templates.SettlementTemplate exposing (..)
 import Templates.BattleTemplate exposing (..)
 import Templates.EndTemplate exposing (..)
+import Templates.HeaderTemplate exposing (..)
+import Templates.SettlementTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
@@ -50,14 +51,19 @@ type UiState
     | SettlementView UiSettlementState
 
 
-hasActionOnPoint : Vector.Point -> MapData.MapClickAction -> Bool
-hasActionOnPoint p dict =
-    MaybeExt.foldMaybe Map.canMoveOnTile False (Dict.get (MapData.hashMapPoint p) dict)
+hasActionOnPoint : Vector.Point -> MapTileMsg -> MapDrawer.MapClickAction -> Bool
+hasActionOnPoint p msg dict =
+    List.member msg (List.map .action (actionsOnPoint p dict))
 
 
-canMoveToPoint : Map.Map -> Vector.Point -> Bool
-canMoveToPoint m p =
-    MaybeExt.foldMaybe Map.canMoveOnTile False (Dict.get (MapData.hashMapPoint p) m)
+actionsOnPoint : Vector.Point -> MapDrawer.MapClickAction -> List MapDrawer.SvgAction
+actionsOnPoint p dict =
+    MaybeExt.foldMaybe (\l -> ListExt.justList (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
+
+
+canMoveToPoint : MapDrawer.MapClickAction -> Vector.Point -> Bool
+canMoveToPoint dict p =
+    hasActionOnPoint p (MoveTo p) dict
 
 
 getPlayer : Model -> Maybe Entities.Lord
@@ -102,7 +108,7 @@ getSelectedPath m =
                     Nothing
 
                 Just point ->
-                    if canMoveToPoint m.map point then
+                    if canMoveToPoint m.mapTileClickActions point then
                         Pathfinder.getPath
                             player.entity.position
                             (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
@@ -270,8 +276,8 @@ update msg model =
         EndRound ->
             model
 
-        EndGame bool-> 
-             { model | gameState = GameOver bool }
+        EndGame bool ->
+            { model | gameState = GameOver bool }
 
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
@@ -285,7 +291,7 @@ update msg model =
         ShowTroopStationing ->
             { model | gameState = GameSetup (SettlementView StationView) }
 
-        ShowBattleView -> 
+        ShowBattleView ->
             { model | gameState = GameSetup BattleView }
 
         SettlementAction action troopType ->
@@ -370,7 +376,7 @@ findModalWindow model =
                         _ ->
                             generateSettlementModalTemplate testLord testSetelement sView
 
-                BattleView -> 
+                BattleView ->
                     generateBattleTemplate testLord testLord
 
                 _ ->
