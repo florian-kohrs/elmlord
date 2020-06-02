@@ -21,8 +21,8 @@ import Svg.Attributes exposing (..)
 import Templates.BattleTemplate exposing (..)
 import Templates.EndTemplate exposing (..)
 import Templates.HeaderTemplate exposing (..)
-import Templates.SettlementTemplate exposing (..)
 import Templates.MapActionTemplate exposing (..)
+import Templates.SettlementTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
@@ -55,11 +55,6 @@ type UiState
 hasActionOnPoint : Vector.Point -> MapTileMsg -> MapDrawer.MapClickAction -> Bool
 hasActionOnPoint p msg dict =
     List.member msg (List.map .action (actionsOnPoint p dict))
-
-
-actionsOnPoint : Vector.Point -> MapDrawer.MapClickAction -> List MapDrawer.SvgAction
-actionsOnPoint p dict =
-    MaybeExt.foldMaybe (\l -> ListExt.justList (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
 
 
 canMoveToPoint : MapDrawer.MapClickAction -> Vector.Point -> Bool
@@ -139,6 +134,7 @@ testWorldEntity =
     , position = { x = 0, y = 0 }
     , name = "Malaca"
     }
+
 
 testSetelement : Settlement
 testSetelement =
@@ -329,14 +325,14 @@ view model =
         , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , generateMapActionTemplate model.selectedPoint
-            , div [] [
-                Svg.svg
+            , div []
+                [ Svg.svg
                     [ Svg.Attributes.viewBox "0 0 850 1000"
                     , Svg.Attributes.fill "none"
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-                , span [] [ Html.text (gameStateToText model.gameState) ]
+            , span [] [ Html.text (gameStateToText model.gameState) ]
             ]
         ]
 

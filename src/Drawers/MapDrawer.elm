@@ -25,6 +25,11 @@ type alias MapClickAction =
     Dict.Dict Int (List InteractableSvg)
 
 
+actionsOnPoint : Vector.Point -> MapDrawer.MapClickAction -> List SvgAction
+actionsOnPoint p dict =
+    MaybeExt.foldMaybe (\l -> ListExt.justList (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
+
+
 addToMap : Int -> InteractableSvg -> MapClickAction -> MapClickAction
 addToMap k v =
     Dict.update

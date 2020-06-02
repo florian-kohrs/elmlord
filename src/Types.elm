@@ -4,13 +4,16 @@ import Entities
 import Troops exposing (..)
 import Vector
 
+
+
 -- TODO: Combine ShowSettlement, ShowTroopRecruiting, ShowTroopStationing in 1 Msg
+
 
 type Msg
     = EndRound
     | EndGame Bool
     | CloseModal
-    | ShowSettlement 
+    | ShowSettlement
     | ShowTroopRecruiting
     | ShowTroopStationing
     | ShowBattleView
@@ -23,6 +26,19 @@ type MapTileMsg
     = ViewLord Entities.Lord
     | ViewSettlement Entities.Settlement
     | MoveTo Vector.Point
+
+
+mapTileMsgToToolTip : MapTileMsg -> String
+mapTileMsgToToolTip m =
+    case m of
+        ViewLord _ ->
+            "View Lord"
+
+        ViewSettlement _ ->
+            "ViewSettlement"
+
+        MoveTo _ ->
+            "Move to"
 
 
 type SettlementMsg
