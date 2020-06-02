@@ -12,6 +12,7 @@ type Msg
     | ShowTroopRecruiting
     | ShowTroopStationing
     | SettlementAction SettlementMsg TroopType
+    | MapTileAction MapTileMsg
     | Click Vector.Point
 
 
@@ -21,12 +22,13 @@ type MapTileMsg
     | MoveTo Vector.Point
 
 
-type SettlementMsg 
+type SettlementMsg
     = BuyTroops
-    | StationTroops 
-    | TakeTroops 
+    | StationTroops
+    | TakeTroops
 
-type UiSettlementState 
+
+type UiSettlementState
     = StandardView
     | RecruitView
     | StationView

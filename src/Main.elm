@@ -46,11 +46,14 @@ type UiState
     | SettlementView UiSettlementState
 
 
+hasActionOnPoint : Vector.Point -> MapData.MapClickAction -> Bool
+hasActionOnPoint p dict =
+    MaybeExt.foldMaybe Map.canMoveOnTile False (Dict.get (MapData.hashMapPoint p) dict)
 
---todo : Modell überarbeiten, map generierung anschauen -> pathfinding?
---lordToDrawInfo : Entities.Lord -> MapDrawer.MapDrawInfo Msg MapTileMsg
---lordToDrawInfo l =
--- STATIC TEST DATA
+
+canMoveToPoint : Map.Map -> Vector.Point -> Bool
+canMoveToPoint m p =
+    MaybeExt.foldMaybe Map.canMoveOnTile False (Dict.get (MapData.hashMapPoint p) m)
 
 
 getPlayer : Model -> Maybe Entities.Lord
@@ -95,14 +98,22 @@ getSelectedPath m =
                     Nothing
 
                 Just point ->
-                    Pathfinder.getPath
-                        player.entity.position
-                        (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
+                    if canMoveToPoint m.map point then
+                        Pathfinder.getPath
+                            player.entity.position
+                            (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
+
+                    else
+                        Nothing
 
 
 allSettlements : Model -> List Settlement
 allSettlements m =
     List.concat (List.map .land m.lords)
+
+
+
+-- STATIC TEST DATA
 
 
 testTroopList : List Troop
@@ -269,6 +280,9 @@ update msg model =
 
         SettlementAction action troopType ->
             updateSettlement action troopType model
+
+        MapTileAction action ->
+            model
 
         Click p ->
             { model | selectedPoint = Just p }

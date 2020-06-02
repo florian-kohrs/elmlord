@@ -8,14 +8,14 @@ import Types
 import Vector
 
 
-getImage : String -> Vector.Point -> Vector.Vector -> Svg.Svg Types.Msg
+getImage : String -> Vector.Point -> Float -> Svg.Svg Types.Msg
 getImage imgName indices scale =
     let
         pos =
             MapData.mapPositionForIndex indices
 
         size =
-            Vector.Vector (MapData.hexRadius * 1.5) (MapData.hexRadius * 2)
+            Vector.scale (Vector.Vector (MapData.hexRadius * 1.5) (MapData.hexRadius * 2)) scale
     in
     Svg.image
         [ Svg.Events.onClick (Types.Click indices)

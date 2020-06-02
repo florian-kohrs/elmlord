@@ -50,7 +50,7 @@ getSvgForPathPart i p =
     BasicDrawing.getImage
         ("letters/" ++ String.fromInt i ++ ".png")
         p
-        Vector.one
+        1
 
 
 pathZAxis =

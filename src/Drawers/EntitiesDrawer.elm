@@ -58,7 +58,7 @@ getSvgForLord l =
     BasicDrawing.getImage
         "Lord1.png"
         l.entity.position
-        Vector.one
+        1
 
 
 getSvgForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
@@ -66,7 +66,7 @@ getSvgForSettlement s =
     BasicDrawing.getImage
         (Entities.settlementImageName s.settlementType)
         s.entity.position
-        Vector.one
+        1
 
 
 lordZAxis : Int

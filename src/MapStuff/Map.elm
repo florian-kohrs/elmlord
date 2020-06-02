@@ -1,5 +1,6 @@
 module Map exposing (..)
 
+import BasicDrawing
 import Browser
 import Dict
 import Entities exposing (Lord, Settlement)
@@ -41,12 +42,13 @@ type alias MapTileDesign =
 
 drawMap : Map -> MapDrawer.MapClickAction
 drawMap m =
-    Dict.map (\_ tile -> [ tileToClickAction tile ]) m
+    Dict.map (\_ tile -> tileToClickAction tile) m
 
 
-tileToClickAction : MapTile -> MapDrawer.InteractableSvg
+tileToClickAction : MapTile -> List MapDrawer.InteractableSvg
 tileToClickAction tile =
     MapDrawer.InteractableSvg (showMapTile tile) (getMapTileAction tile)
+        :: MaybeExt.foldMaybe (\img -> [ MapDrawer.InteractableSvg img Nothing ]) [] (getImageItemForTile tile)
 
 
 
@@ -130,6 +132,22 @@ terrainToColor t =
             "#ba8f30"
 
 
+terrainToImageName : Terrain -> Maybe String
+terrainToImageName t =
+    case t of
+        Grass ->
+            Nothing
+
+        Water ->
+            Nothing
+
+        Forest ->
+            Just "map/tree.png"
+
+        Mountain ->
+            Just "map/tree.png"
+
+
 terrainToName : Terrain -> String
 terrainToName t =
     case t of
@@ -179,8 +197,31 @@ showMapTile tile =
             , points (pointsToHexagonPoints (generateHexagonPoints tile.point MapData.hexRadius))
             , opacity "0.7"
             ]
-            []
+            (MaybeExt.foldMaybe List.singleton [] (getImageForTile tile))
         )
+
+
+getImageItemForTile : MapTile -> Maybe MapDrawer.SvgItem
+getImageItemForTile t =
+    Maybe.andThen
+        (\img ->
+            Just (MapDrawer.SvgItem 1 img)
+        )
+        (getImageForTile t)
+
+
+getImageForTile : MapTile -> Maybe (Svg.Svg Types.Msg)
+getImageForTile t =
+    Maybe.andThen
+        (\imageName ->
+            Just
+                (BasicDrawing.getImage
+                    imageName
+                    t.indices
+                    0.9
+                )
+        )
+        (terrainToImageName t.terrain)
 
 
 
