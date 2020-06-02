@@ -294,14 +294,6 @@ update msg model =
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
 
-{-         ShowSettlement ->
-            { model | gameState = GameSetup (SettlementView StandardView) }
-
-        ShowTroopRecruiting ->
-            { model | gameState = GameSetup (SettlementView RecruitView) }
-
-        ShowTroopStationing ->
-            { model | gameState = GameSetup (SettlementView StationView) } -}
 
         ShowBattleView ->
             { model | gameState = GameSetup BattleView }
