@@ -176,9 +176,9 @@ settlementImageName s =
     getSettlementNameByType s ++ ".png"
 
 -- calc income
-calculateRoundIncome: Lord -> Lord
-calculateRoundIncome lord 
-                = { lord | gold = lord.gold + sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)}
+calculateRoundIncome: Lord -> Float
+calculateRoundIncome lord =
+                sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)
 
 sumSettlementsIncome : List Settlement -> Float
 sumSettlementsIncome s = 

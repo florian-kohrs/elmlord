@@ -13,11 +13,8 @@ type Msg
     = EndRound
     | EndGame Bool
     | CloseModal
-    | ShowSettlement
-    | ShowTroopRecruiting
-    | ShowTroopStationing
     | ShowBattleView
-    | SettlementAction SettlementMsg TroopType
+    | SettlementAction SettlementMsg
     | MapTileAction MapTileMsg
     | Click Vector.Point
 
@@ -32,19 +29,22 @@ mapTileMsgToToolTip : MapTileMsg -> String
 mapTileMsgToToolTip m =
     case m of
         ViewLord _ ->
-            "View Lord"
+            "Inspect Lord"
 
         ViewSettlement _ ->
-            "ViewSettlement"
+            "Inspect Settlement"
 
         MoveTo _ ->
             "Move to"
 
 
 type SettlementMsg
-    = BuyTroops
-    | StationTroops
-    | TakeTroops
+    = BuyTroops Troops.TroopType Entities.Settlement Entities.Lord
+    | StationTroops Troops.TroopType
+    | TakeTroops Troops.TroopType
+    | ShowSettlement Entities.Settlement
+    | ShowBuyTroops Entities.Settlement
+    | ShowStationTroops Entities.Settlement
 
 
 type UiSettlementState
@@ -52,3 +52,5 @@ type UiSettlementState
     | RecruitView
     | StationView
     | BuildingView
+
+ 

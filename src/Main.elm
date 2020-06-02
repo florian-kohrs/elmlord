@@ -49,12 +49,12 @@ type UiState
     | NewCampain
     | GameMenue
     | BattleView
-    | SettlementView UiSettlementState
+    | SettlementView Lord Settlement UiSettlementState
 
 
 hasActionOnPoint : Vector.Point -> MapTileMsg -> MapDrawer.MapClickAction -> Bool
 hasActionOnPoint p msg dict =
-    List.member msg (List.map .action (actionsOnPoint p dict))
+    List.member msg (List.map .action (MapDrawer.actionsOnPoint p dict))
 
 
 canMoveToPoint : MapDrawer.MapClickAction -> Vector.Point -> Bool
@@ -224,14 +224,14 @@ initPlayer i rad =
     let
         entity =
             WorldEntity
-                []
+                testTroopList
                 (Faction.getFaction i)
                 (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad))
                 ("Lord " ++ String.fromInt i)
     in
     Lord
         entity
-        0
+        250
         (Entities.Action Entities.Wait Entities.Defend)
         (initSettlementsFor entity)
         5
@@ -278,39 +278,68 @@ update msg model =
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
 
-        ShowSettlement ->
+{-         ShowSettlement ->
             { model | gameState = GameSetup (SettlementView StandardView) }
 
         ShowTroopRecruiting ->
             { model | gameState = GameSetup (SettlementView RecruitView) }
 
         ShowTroopStationing ->
-            { model | gameState = GameSetup (SettlementView StationView) }
+            { model | gameState = GameSetup (SettlementView StationView) } -}
 
         ShowBattleView ->
             { model | gameState = GameSetup BattleView }
 
-        SettlementAction action troopType ->
-            updateSettlement action troopType model
+        SettlementAction action ->
+            updateSettlement action model
 
         MapTileAction action ->
-            model
+            updateMaptileAction model action
 
         Click p ->
             { model | selectedPoint = Just p }
 
 
-updateSettlement : SettlementMsg -> TroopType -> Model -> Model
-updateSettlement msg t model =
+updateMaptileAction : Model -> MapTileMsg -> Model
+updateMaptileAction model ma =
+    case ma of
+        ViewLord _ ->
+            model
+
+        ViewSettlement settlement ->
+            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) settlement Types.StandardView) }
+
+        MoveTo _ ->
+            model 
+
+
+{-     = ViewLord Entities.Lord
+    | ViewSettlement Entities.Settlement
+    | MoveTo Vector.Point -}
+
+
+updateSettlement : SettlementMsg -> Model -> Model
+updateSettlement msg model =
     case msg of
-        BuyTroops ->
+        BuyTroops t s l->
+            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
+
+        StationTroops _ ->
             model
 
-        StationTroops ->
+        TakeTroops _ ->
             model
 
-        TakeTroops ->
-            model
+        ShowBuyTroops s ->
+            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
+
+        ShowStationTroops s ->
+            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StationView) }
+
+        ShowSettlement s -> 
+            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StandardView) }
+
+
 
 
 view : Model -> Html Msg
@@ -324,7 +353,7 @@ view model =
         , Templates.HeaderTemplate.generateHeaderTemplate testLord
         , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
-            , generateMapActionTemplate model.selectedPoint
+            , generateMapActionTemplate model.selectedPoint allClickActions
             , div []
                 [ Svg.svg
                     [ Svg.Attributes.viewBox "0 0 850 1000"
@@ -346,8 +375,8 @@ gameStateToText gs =
     case gs of
         GameSetup uistate ->
             case uistate of
-                SettlementView _ ->
-                    "ja man"
+{-                 SettlementView _ ->
+                    "ja man" -}
 
                 _ ->
                     "[]"
@@ -365,13 +394,15 @@ findModalWindow model =
     case model.gameState of
         GameSetup uistate ->
             case uistate of
-                SettlementView sView ->
-                    case sView of
+                SettlementView l s u->
+                    generateSettlementModalTemplate l s u
+
+{-                     case sView of
                         BuildingView ->
                             div [] []
 
                         _ ->
-                            generateSettlementModalTemplate testLord testSetelement sView
+                            generateSettlementModalTemplate testLord testSetelement sView -}
 
                 BattleView ->
                     generateBattleTemplate testLord testLord
@@ -399,3 +430,17 @@ main =
 addStylesheet : String -> String -> Html Msg
 addStylesheet tag href =
     Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
+
+
+tempLordHead : List Lord -> Lord
+tempLordHead l =
+        case List.head l of 
+            Nothing ->
+                testLord
+            (Just x) ->
+                x
+            
+                    
+            
+        
+            

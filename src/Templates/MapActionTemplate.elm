@@ -10,6 +10,7 @@ import OperatorExt exposing (..)
 import Troops exposing (..)
 import Types exposing (Msg(..), UiSettlementState(..))
 import Vector exposing (..)
+import MapDrawer exposing (..)
 
 
 generateMapActionTemplate : Maybe Point -> MapDrawer.MapClickAction -> Html Msg
@@ -24,32 +25,9 @@ generateMapActionTemplate p dict =
                     MapDrawer.actionsOnPoint x dict
             in
             div [ Html.Attributes.class "map-action-menu" ]
-                (staticActionButton x ++ displayActionButtons x)
+                (span [] [Html.text "Map Actions"] :: List.map generateMapActionButtons actions)
 
 
-staticActionButton : Point -> List (Html Msg)
-staticActionButton p =
-    [ span [] [ Html.text "Map Actions" ]
-    , button [ onClick (MapTileAction (Types.MoveTo p)) ] [ span [] [ Html.text "Move To" ] ]
-    ]
-
-
-displayActionButtons : Point -> List (Html Msg)
-displayActionButtons p =
-    [ ternary (checkPointForLord p) (button [] [ span [] [ Html.text "Inspect Lord" ] ]) (div [] [])
-    , ternary (checkPointForSettlement p) (button [] [ span [] [ Html.text "Inspect Settlement" ] ]) (div [] [])
-    ]
-
-
-
--- get deleted when Point -> Maybe Setllement / Lord gets implemented
-
-
-checkPointForLord : Point -> Bool
-checkPointForLord p =
-    True
-
-
-checkPointForSettlement : Point -> Bool
-checkPointForSettlement p =
-    True
+generateMapActionButtons : SvgAction -> Html Msg
+generateMapActionButtons svga = 
+                button [ onClick (MapTileAction svga.action) ] [ span [] [ Html.text (Types.mapTileMsgToToolTip svga.action) ] ]
