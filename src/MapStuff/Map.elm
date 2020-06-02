@@ -145,7 +145,7 @@ terrainToImageName t =
             Just "map/tree.png"
 
         Mountain ->
-            Just "map/tree.png"
+            Just "map/mountain_icon.png"
 
 
 terrainToName : Terrain -> String
@@ -187,7 +187,7 @@ showMapTile tile =
         tileDesign =
             styleMapTile tile
     in
-    MapDrawer.SvgItem 0
+    MapDrawer.SvgItem MapData.defaultTileZIndex
         (polygon
             [ onClick (Types.Click tile.indices)
             , Svg.Attributes.overflow "visible"
@@ -205,7 +205,7 @@ getImageItemForTile : MapTile -> Maybe MapDrawer.SvgItem
 getImageItemForTile t =
     Maybe.andThen
         (\img ->
-            Just (MapDrawer.SvgItem 1 img)
+            Just (MapDrawer.SvgItem MapData.imageTileZIndex img)
         )
         (getImageForTile t)
 

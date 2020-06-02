@@ -54,6 +54,31 @@ rad =
     0.35
 
 
+lordZIndex : Int
+lordZIndex =
+    9
+
+
+settlementZIndex : Int
+settlementZIndex =
+    7
+
+
+pathZIndex : Int
+pathZIndex =
+    5
+
+
+imageTileZIndex : Int
+imageTileZIndex =
+    2
+
+
+defaultTileZIndex : Int
+defaultTileZIndex =
+    0
+
+
 hashMapPoint : Vector.Point -> Int
 hashMapPoint p =
     let

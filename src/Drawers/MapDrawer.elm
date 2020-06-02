@@ -3,6 +3,7 @@ module MapDrawer exposing (..)
 import Dict
 import Entities
 import ListExt
+import MapData
 import MaybeExt
 import Svg
 import Types
@@ -23,6 +24,22 @@ type SvgItem
 
 type alias MapClickAction =
     Dict.Dict Int (List InteractableSvg)
+
+
+isZAllowedOn : Int -> Int -> Bool
+isZAllowedOn z main =
+    ((main /= MapData.lordZIndex && main /= MapData.settlementZIndex) || z /= MapData.imageTileZIndex)
+        && (main /= MapData.pathZIndex || z /= MapData.imageTileZIndex)
+
+
+isZAllowedIn : Int -> List Int -> Bool
+isZAllowedIn i is =
+    List.all (isZAllowedOn i) is
+
+
+isSvgAllowedIn : InteractableSvg -> List InteractableSvg -> Bool
+isSvgAllowedIn svg svgs =
+    isZAllowedIn (getZIndex svg.svg) (List.map (\s -> getZIndex s.svg) svgs)
 
 
 addToMap : Int -> InteractableSvg -> MapClickAction -> MapClickAction

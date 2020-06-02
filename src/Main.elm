@@ -32,7 +32,6 @@ type alias Model =
     , gameState : GameState
     , selectedPoint : Maybe Point
     , map : Map.Map --used for pathfinding
-    , mapTileClickActions : MapDrawer.MapClickAction
     }
 
 
@@ -73,12 +72,32 @@ getPlayer m =
 
 buildAllMapSvgs : Model -> MapDrawer.MapClickAction
 buildAllMapSvgs m =
-    buildPathSvgs m
-        (List.foldl
-            EntitiesDrawer.drawSettlement
-            (List.foldl EntitiesDrawer.drawLord m.mapTileClickActions m.lords)
-            (allSettlements m)
+    filterMapSvgs
+        (buildPathSvgs m
+            (List.foldl
+                EntitiesDrawer.drawSettlement
+                (List.foldl EntitiesDrawer.drawLord (drawnMap m.map) m.lords)
+                (allSettlements m)
+            )
         )
+
+
+filterMapSvgs : MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+filterMapSvgs =
+    Dict.map (\_ v -> filterInteractables v)
+
+
+filterInteractables : List MapDrawer.InteractableSvg -> List MapDrawer.InteractableSvg
+filterInteractables =
+    List.foldr
+        (\svg r ->
+            if MapDrawer.isSvgAllowedIn svg r then
+                svg :: r
+
+            else
+                r
+        )
+        []
 
 
 buildPathSvgs : Model -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
@@ -108,7 +127,7 @@ getSelectedPath m =
                     Nothing
 
                 Just point ->
-                    if canMoveToPoint m.mapTileClickActions point then
+                    if canMoveToPoint (drawnMap m.map) point then
                         Pathfinder.getPath
                             player.entity.position
                             (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
@@ -195,16 +214,13 @@ initialModel =
     let
         map =
             MapGenerator.createMap
-
-        drawnMap =
-            Map.drawMap map
     in
-    Model [] (GameSetup MainMenue) Nothing map drawnMap
+    Model [] (GameSetup MainMenue) Nothing map
 
 
 startGame : Int -> Model
 startGame playerCount =
-    createMapClickActions (initPlayers initialModel playerCount)
+    initPlayers initialModel playerCount
 
 
 initPlayers : Model -> Int -> Model
@@ -218,9 +234,9 @@ initPlayers m count =
     { m | lords = lords }
 
 
-createMapClickActions : Model -> Model
-createMapClickActions m =
-    { m | mapTileClickActions = Map.drawMap m.map }
+drawnMap : Map.Map -> MapDrawer.MapClickAction
+drawnMap map =
+    Map.drawMap map
 
 
 initPlayer : Int -> Float -> Lord

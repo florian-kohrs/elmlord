@@ -45,12 +45,12 @@ getSettlementAction s =
 
 showLord : Entities.Lord -> MapDrawer.SvgItem
 showLord lord =
-    MapDrawer.SvgItem lordZAxis (getSvgForLord lord)
+    MapDrawer.SvgItem MapData.lordZIndex (getSvgForLord lord)
 
 
 showSettlement : Entities.Settlement -> MapDrawer.SvgItem
 showSettlement s =
-    MapDrawer.SvgItem settlementZAxis (getSvgForSettlement s)
+    MapDrawer.SvgItem MapData.settlementZIndex (getSvgForSettlement s)
 
 
 getSvgForLord : Entities.Lord -> Svg.Svg Types.Msg
@@ -67,13 +67,3 @@ getSvgForSettlement s =
         (Entities.settlementImageName s.settlementType)
         s.entity.position
         1
-
-
-lordZAxis : Int
-lordZAxis =
-    6
-
-
-settlementZAxis : Int
-settlementZAxis =
-    5

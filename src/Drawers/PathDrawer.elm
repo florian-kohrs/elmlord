@@ -42,7 +42,7 @@ getPathPartAction _ =
 
 showPathPart : Int -> Pathfinder.PathTile -> MapDrawer.SvgItem
 showPathPart i tile =
-    MapDrawer.SvgItem pathZAxis (getSvgForPathPart i tile.indices)
+    MapDrawer.SvgItem MapData.pathZIndex (getSvgForPathPart i tile.indices)
 
 
 getSvgForPathPart : Int -> Vector.Point -> Svg.Svg Types.Msg
@@ -51,7 +51,3 @@ getSvgForPathPart i p =
         ("letters/" ++ String.fromInt i ++ ".png")
         p
         1
-
-
-pathZAxis =
-    3
