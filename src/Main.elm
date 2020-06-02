@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import DateExt
 import Dict
 import Entities exposing (..)
 import EntitiesDrawer
@@ -31,6 +32,7 @@ type alias Model =
     { lords : List Lord
     , gameState : GameState
     , selectedPoint : Maybe Point
+    , date : DateExt.Date
     , map : Map.Map --used for pathfinding
     }
 
@@ -215,7 +217,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model [] (GameSetup MainMenue) Nothing map
+    Model [] (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
 
 
 startGame : Int -> Model
@@ -290,7 +292,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            model
+            { model | date = DateExt.addMonths 1 model.date }
 
         EndGame bool ->
             { model | gameState = GameOver bool }
@@ -341,7 +343,7 @@ view model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , Templates.HeaderTemplate.generateHeaderTemplate testLord
+        , Templates.HeaderTemplate.generateHeaderTemplate testLord model.date
         , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , Svg.svg
