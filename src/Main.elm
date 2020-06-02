@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Browser
+import DateExt
 import Dict
 import Entities exposing (..)
 import EntitiesDrawer
@@ -32,6 +33,7 @@ type alias Model =
     { lords : List Lord
     , gameState : GameState
     , selectedPoint : Maybe Point
+    , date : DateExt.Date
     , map : Map.Map --used for pathfinding
     }
 
@@ -211,7 +213,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model [] (GameSetup MainMenue) Nothing map
+    Model [] (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
 
 
 startGame : Int -> Model
@@ -286,14 +288,13 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            model
+            { model | date = DateExt.addMonths 1 model.date }
 
         EndGame bool ->
             { model | gameState = GameOver bool }
 
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
-
 
         ShowBattleView ->
             { model | gameState = GameSetup BattleView }
@@ -318,18 +319,20 @@ updateMaptileAction model ma =
             { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) settlement Types.StandardView) }
 
         MoveTo _ ->
-            model 
+            model
 
 
-{-     = ViewLord Entities.Lord
-    | ViewSettlement Entities.Settlement
-    | MoveTo Vector.Point -}
+
+{- = ViewLord Entities.Lord
+   | ViewSettlement Entities.Settlement
+   | MoveTo Vector.Point
+-}
 
 
 updateSettlement : SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
-        BuyTroops t s l->
+        BuyTroops t s l ->
             { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
 
         StationTroops _ ->
@@ -344,10 +347,8 @@ updateSettlement msg model =
         ShowStationTroops s ->
             { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StationView) }
 
-        ShowSettlement s -> 
+        ShowSettlement s ->
             { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StandardView) }
-
-
 
 
 view : Model -> Html Msg
@@ -358,8 +359,8 @@ view model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , Templates.HeaderTemplate.generateHeaderTemplate testLord
-        , div [ Html.Attributes.class "page-map" ]
+        , Templates.HeaderTemplate.generateHeaderTemplate testLord model.date
+        , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , generateMapActionTemplate model.selectedPoint allClickActions
             , div []
@@ -383,9 +384,9 @@ gameStateToText gs =
     case gs of
         GameSetup uistate ->
             case uistate of
-{-                 SettlementView _ ->
-                    "ja man" -}
-
+                {- SettlementView _ ->
+                   "ja man"
+                -}
                 _ ->
                     "[]"
 
@@ -402,16 +403,16 @@ findModalWindow model =
     case model.gameState of
         GameSetup uistate ->
             case uistate of
-                SettlementView l s u->
+                SettlementView l s u ->
                     generateSettlementModalTemplate l s u
 
-{-                     case sView of
-                        BuildingView ->
-                            div [] []
+                {- case sView of
+                   BuildingView ->
+                       div [] []
 
-                        _ ->
-                            generateSettlementModalTemplate testLord testSetelement sView -}
-
+                   _ ->
+                       generateSettlementModalTemplate testLord testSetelement sView
+                -}
                 BattleView ->
                     generateBattleTemplate testLord testLord
 
@@ -442,13 +443,9 @@ addStylesheet tag href =
 
 tempLordHead : List Lord -> Lord
 tempLordHead l =
-        case List.head l of 
-            Nothing ->
-                testLord
-            (Just x) ->
-                x
-            
-                    
-            
-        
-            
+    case List.head l of
+        Nothing ->
+            testLord
+
+        Just x ->
+            x
