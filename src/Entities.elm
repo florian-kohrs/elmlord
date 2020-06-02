@@ -176,9 +176,9 @@ settlementImageName s =
     getSettlementNameByType s ++ ".png"
 
 -- calc income
-calculateRoundIncome: Lord -> Lord
-calculateRoundIncome lord 
-                = { lord | gold = lord.gold + sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)}
+calculateRoundIncome: Lord -> Float
+calculateRoundIncome lord =
+                sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)
 
 sumSettlementsIncome : List Settlement -> Float
 sumSettlementsIncome s = 
@@ -202,4 +202,4 @@ flattenTroops troops types =
                 (y :: ys) ->
                     {amount = List.foldr (\t v-> t.amount + v) 0 (List.filter (\ x -> x.troopType == y) troops), troopType = y} :: flattenTroops troops ys
 
-            
+
