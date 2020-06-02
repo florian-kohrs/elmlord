@@ -7,6 +7,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Types exposing ( Msg(..), UiSettlementState(..))
 import Troops exposing (..)
+import OperatorExt exposing (..)
 
 
 testTroopList : List Troop
@@ -40,14 +41,13 @@ generateSettlementModalTemplate lord settlement uistate=
         ]
     ]
 
+
 settlementStateToAction : Lord -> Settlement -> UiSettlementState -> List (Html Msg)
 settlementStateToAction lord settlement uistate = 
     case uistate of 
         StandardView -> 
-            (getSettlementActionsByType settlement.settlementType ++
-                [button [onClick Types.ShowTroopRecruiting] [ span [] [Html.text "Recruit troops"]]
-                , button [onClick Types.ShowTroopStationing] [ span [] [Html.text "Station troops"]]
-                , div [Html.Attributes.class "settlement-info"] [
+            (getSettlementActionsByType settlement.settlementType ++ validateSettlement lord settlement ++
+                [ div [Html.Attributes.class "settlement-info"] [
                     span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
                     , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
                     , div [Html.Attributes.class "stationed-troops-overview"] [
@@ -119,3 +119,15 @@ troopToHtml troop =
             img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]
+
+validateSettlement : Lord -> Settlement -> List (Html Msg)
+validateSettlement l s =
+        if l.entity.faction == s.entity.faction then
+            [button [onClick Types.ShowTroopRecruiting] [ span [] [Html.text "Recruit troops"]], button [onClick Types.ShowTroopStationing] [ span [] [Html.text "Station troops"]]]
+        else 
+            [div [Html.Attributes.class "settlement-enemy-overview"] [
+                span [] [Html.text "This is an enemy castle!"]
+            ]]
+
+
+

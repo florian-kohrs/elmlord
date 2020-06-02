@@ -22,6 +22,7 @@ import Templates.BattleTemplate exposing (..)
 import Templates.EndTemplate exposing (..)
 import Templates.HeaderTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
+import Templates.MapActionTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
@@ -139,7 +140,6 @@ testWorldEntity =
     , name = "Malaca"
     }
 
-
 testSetelement : Settlement
 testSetelement =
     { entity = testWorldEntity
@@ -163,7 +163,7 @@ testSetelement =
 testLordWorldEntity : WorldEntity
 testLordWorldEntity =
     { army = testTroopList
-    , faction = Faction.Faction1
+    , faction = Faction.Faction2
     , position = { x = 0, y = 0 }
     , name = "Sir Quicknuss"
     }
@@ -326,17 +326,18 @@ view model =
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
         , Templates.HeaderTemplate.generateHeaderTemplate testLord
-        , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
+        , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
-            , Svg.svg
-                [ Svg.Attributes.viewBox "0 0 2000 1800"
-                , Svg.Attributes.width "2000"
-                , Svg.Attributes.height "1800"
-                , Svg.Attributes.fill "none"
+            , generateMapActionTemplate model.selectedPoint
+            , div [] [
+                Svg.svg
+                    [ Svg.Attributes.viewBox "0 0 850 1000"
+                    , Svg.Attributes.fill "none"
+                    ]
+                    (MapDrawer.allSvgs allClickActions)
                 ]
-                (MapDrawer.allSvgs allClickActions)
+                , span [] [ Html.text (gameStateToText model.gameState) ]
             ]
-        , span [] [ Html.text (gameStateToText model.gameState) ]
         ]
 
 

@@ -202,4 +202,4 @@ flattenTroops troops types =
                 (y :: ys) ->
                     {amount = List.foldr (\t v-> t.amount + v) 0 (List.filter (\ x -> x.troopType == y) troops), troopType = y} :: flattenTroops troops ys
 
-            
+
