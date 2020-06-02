@@ -13,7 +13,7 @@ type TroopType
     | Knight
 
 troopTypeList : List TroopType
-troopTypeList = [Archer, Spear, Sword, Knight]
+troopTypeList = [Sword, Spear, Archer, Knight]
 
 troopCost : TroopType -> Float
 troopCost t =

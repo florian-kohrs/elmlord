@@ -9,7 +9,7 @@ import Vector exposing (..)
 
 
 type alias Gold =
-    Int
+    Float
 
 
 type alias Lord =
@@ -174,3 +174,32 @@ getSettlementNameByType s =
 settlementImageName : SettlementType -> String
 settlementImageName s =
     getSettlementNameByType s ++ ".png"
+
+-- calc income
+calculateRoundIncome: Lord -> Lord
+calculateRoundIncome lord 
+                = { lord | gold = lord.gold + sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)}
+
+sumSettlementsIncome : List Settlement -> Float
+sumSettlementsIncome s = 
+    foldr (\x v -> x.income + v) 0 s
+
+sumTroopWages : List Troop -> Float
+sumTroopWages t =
+    foldr (\x v -> toFloat x.amount * troopWage x.troopType + v) 0 t
+
+sumLordTroops : Lord -> List Troop
+sumLordTroops lord =
+        lord.entity.army ++ foldr (\x y -> x.entity.army ++ y) [] lord.land
+
+-- refactor it
+flattenTroops : List Troop -> List TroopType -> List Troop
+flattenTroops troops types = 
+            case types of
+                [] -> 
+                    []
+
+                (y :: ys) ->
+                    {amount = List.foldr (\t v-> t.amount + v) 0 (List.filter (\ x -> x.troopType == y) troops), troopType = y} :: flattenTroops troops ys
+
+            

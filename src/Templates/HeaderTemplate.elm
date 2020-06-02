@@ -52,7 +52,7 @@ headerGoldTemplate lord value=
             img [onClick (EndGame True), src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
                 span [Html.Attributes.class "page-header-span"] [
-                     Html.text (String.fromInt lord.gold ++ " Ducats") 
+                     Html.text (String.fromFloat lord.gold ++ " Ducats") 
                      , value
                 ]
                 , div [Html.Attributes.class "tooltiptext gold-tooltip"] [
@@ -71,7 +71,7 @@ headerTroopTemplate lord =
         [
             img [src  "./assets/images/troop_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
-                span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromInt (List.foldr (+) 0 (List.map (\x -> x.amount) lord.entity.army)) ++ " Troops") ]
+                span [Html.Attributes.class "page-header-span"] [ Html.text (String.fromFloat (List.foldr (+) 0.0 (List.map (\x -> toFloat x.amount) lord.entity.army)) ++ " Troops") ]
                 , div [Html.Attributes.class "tooltiptext troop-tooltip"] [
                     span [] [Html.text "Current Troops" ]
                     , div [ Html.Attributes.class "troop-container-header troop-container"] [
@@ -79,7 +79,7 @@ headerTroopTemplate lord =
                         , span [] [Html.text "In the Army"]
                         , span [] [Html.text "Stantioned"]
                     ]
-                    , div [] (List.map2 generateTroopTooltip lord.entity.army (sumTroopsFromSettlements lord.land troopTypeList))
+                    , div [] (List.map2 generateTroopTooltip lord.entity.army (Entities.flattenTroops (List.foldr (\x y -> x.entity.army ++ y) [] lord.land) troopTypeList))
                 ]
             ]
         ]
@@ -130,23 +130,3 @@ generateTroopTooltip aT sT =
             ,span [] [Html.text (String.fromInt aT.amount ++ "  " ++ Troops.troopName aT.troopType) ]
             ,span [] [Html.text (String.fromInt sT.amount ++ "  " ++ Troops.troopName sT.troopType) ]
         ]
-
-
-sumSettlementsTroops : List Settlement -> List Troop
-sumSettlementsTroops settle =
-        case settle of 
-            [] ->
-                []
-            
-            (x :: xs) ->
-                List.append x.entity.army (sumSettlementsTroops xs)
-
-
-sumTroopsFromSettlements : List Settlement -> List TroopType -> List Troop
-sumTroopsFromSettlements settel troops = 
-            case troops of
-                [] -> 
-                    []
-
-                (y :: ys) ->
-                    {amount = List.foldr (\t v-> t.amount + v) 0 (List.filter (\ x -> x.troopType == y) (sumSettlementsTroops settel)), troopType = y} :: sumTroopsFromSettlements settel ys
