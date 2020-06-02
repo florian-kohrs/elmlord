@@ -19,6 +19,9 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Templates.HeaderTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
+import Templates.BattleTemplate exposing (..)
+import Templates.EndTemplate exposing (..)
+import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 
@@ -43,6 +46,7 @@ type UiState
     | SaveLoad
     | NewCampain
     | GameMenue
+    | BattleView
     | SettlementView UiSettlementState
 
 
@@ -266,6 +270,9 @@ update msg model =
         EndRound ->
             model
 
+        EndGame bool-> 
+             { model | gameState = GameOver bool }
+
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
 
@@ -277,6 +284,9 @@ update msg model =
 
         ShowTroopStationing ->
             { model | gameState = GameSetup (SettlementView StationView) }
+
+        ShowBattleView -> 
+            { model | gameState = GameSetup BattleView }
 
         SettlementAction action troopType ->
             updateSettlement action troopType model
@@ -360,8 +370,14 @@ findModalWindow model =
                         _ ->
                             generateSettlementModalTemplate testLord testSetelement sView
 
+                BattleView -> 
+                    generateBattleTemplate testLord testLord
+
                 _ ->
                     div [] []
+
+        GameOver bool ->
+            generateEndTemplate bool
 
         _ ->
             div [] []

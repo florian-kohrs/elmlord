@@ -29,7 +29,7 @@ generateSettlementModalTemplate lord settlement uistate=
                     img [src  "./assets/images/profiles/profile_lord.png", Html.Attributes.class "settlement-lord-icon"] []
                 ]
                 , div [] [
-                    span [Html.Attributes.class "settlement-lord-text"] [Html.text "Sir Quicknuss"]
+                    span [Html.Attributes.class "settlement-lord-text"] [Html.text lord.entity.name]
                 ]
             ]
             , div [Html.Attributes.class "settlement-action-container"]
@@ -50,8 +50,11 @@ settlementStateToAction lord settlement uistate =
                 , div [Html.Attributes.class "settlement-info"] [
                     span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
                     , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
-                    , div [Html.Attributes.class "stationed-troops-overview"]
-                        (span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "] :: List.map troopToHtml settlement.entity.army)
+                    , div [Html.Attributes.class "stationed-troops-overview"] [
+                        span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
+                        , div [] (List.map troopToHtml settlement.entity.army)
+                        
+                    ]
                 ]
             ])
         
@@ -94,7 +97,13 @@ generateRecruitTroopContainer troop =
                 span [] [Html.text (String.fromFloat (Troops.troopCost troop.troopType))]
                 , img [src  "./assets/images/ducats_icon.png"] []
             ]
-            , button [onClick (SettlementAction Types.BuyTroops troop.troopType)] [ Html.text "+" ]
+            , button [onClick (SettlementAction Types.BuyTroops troop.troopType), Html.Attributes.class "tooltip"] [ 
+                span [] [Html.text "+"]
+                , div [Html.Attributes.class "tooltiptext troop-recruiting-tooltip"] [
+                    span [] [Html.text "Monthly wage"]
+                    , span [Html.Attributes.class "negative-income"] [Html.text ("- " ++ String.fromFloat (Troops.troopWage troop.troopType) ++ " Ducats")]
+                ] 
+            ]
     ]
 
 getSettlementActionsByType : SettlementType -> List (Html Msg)
@@ -106,7 +115,7 @@ getSettlementActionsByType settle =
 
 troopToHtml : Troop -> Html Msg
 troopToHtml troop =
-        div [Html.Attributes.class "troop-container"] [
+        div [Html.Attributes.class "stationed-troop-container troop-container"] [
             img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]

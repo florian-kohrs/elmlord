@@ -34,17 +34,62 @@ troopWage : TroopType -> Float
 troopWage t =
     case t of
         Archer ->
+            0.4
+
+        Spear ->
+            0.2
+
+        Sword ->
+            0.5
+
+        Knight ->
+            1.0
+
+troopDamage : TroopType -> Float
+troopDamage t =
+    case t of
+        Archer ->
             4
 
         Spear ->
             2
 
         Sword ->
+            3
+
+        Knight ->
+            6
+
+troopDefense : TroopType -> Float
+troopDefense t =
+    case t of
+        Archer ->
+            3
+
+        Spear ->
             5
+
+        Sword ->
+            7
 
         Knight ->
             10
 
+
+troopPriority : TroopType -> Float
+troopPriority t =
+    case t of
+        Archer ->
+            0.15
+
+        Spear ->
+            0.3
+
+        Sword ->
+            0.25
+
+        Knight ->
+            0.3
 
 troopName : TroopType -> String
 troopName t =

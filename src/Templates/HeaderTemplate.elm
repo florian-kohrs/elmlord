@@ -49,7 +49,7 @@ headerTurnTemplate  =
 headerGoldTemplate : Lord -> Html Msg -> List (Html Msg)
 headerGoldTemplate lord value=
         [
-            img [src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
+            img [onClick (EndGame True), src  "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images"] []
             , div [Html.Attributes.class "tooltip"] [
                 span [Html.Attributes.class "page-header-span"] [
                      Html.text (String.fromInt lord.gold ++ " Ducats") 
@@ -95,7 +95,7 @@ headerSettingsTemplate =
                     ]
                 ]
             , div [ Html.Attributes.class "page-settings-grid" ]
-                [ div [ Html.Attributes.class "page-setting-container tooltip" ]
+                [ div [ onClick Types.ShowBattleView, Html.Attributes.class "page-setting-container tooltip" ]
                     [ img [ src "./assets/images/save_icon.png", Html.Attributes.class "page-image-settings" ] []
                     , div [ Html.Attributes.class "tooltip" ]
                         [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Save the game as a file" ]
