@@ -76,7 +76,7 @@ buildAllMapSvgs m =
         (buildPathSvgs m
             (List.foldl
                 (EntitiesDrawer.drawSettlement testLord)
-                (List.foldl EntitiesDrawer.drawLord (drawnMap m.map) m.lords)
+                (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) m.lords)
                 (allSettlements m)
             )
         )

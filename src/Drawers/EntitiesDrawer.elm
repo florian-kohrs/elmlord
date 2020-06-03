@@ -15,11 +15,11 @@ import Types
 import Vector
 
 
-drawLord : Entities.Lord -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawLord l =
+drawLord : Entities.Lord -> Entities.Lord -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawLord player l =
     let
         drawnLord =
-            MapDrawer.InteractableSvg (showLord l) (getLordAction l)
+            MapDrawer.InteractableSvg (showLord l) (getLordAction player l)
     in
     MapDrawer.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
 
@@ -33,9 +33,25 @@ drawSettlement player s =
     MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement
 
 
-getLordAction : Entities.Lord -> List Types.MapTileMsg
-getLordAction lord =
-    [ Types.LordMsg Types.ViewLord lord ]
+getLordAction : Entities.Lord -> Entities.Lord -> List Types.MapTileMsg
+getLordAction player lord =
+    let
+        action =
+            if
+                player.entity.position
+                    == lord.entity.position
+                    && lord.entity.name
+                    /= player.entity.name
+            then
+                Just Types.EngageLord
+
+            else
+                Nothing
+    in
+    Types.LordMsg Types.ViewLord lord
+        :: MaybeExt.foldMaybe (\a -> [ Types.LordMsg a lord ])
+            []
+            action
 
 
 getSettlementAction : Entities.Lord -> Entities.Settlement -> List Types.MapTileMsg
@@ -44,15 +60,16 @@ getSettlementAction player s =
         action =
             if player.entity.position == s.entity.position then
                 if List.member s.entity.position (List.map (\l -> l.entity.position) player.land) then
-                    Types.EnterSettlement
+                    Just Types.EnterSettlement
 
                 else
-                    Types.SiegeSettlement
+                    Just Types.SiegeSettlement
 
             else
-                Types.ViewSettlement
+                Nothing
     in
-    [ Types.SettlementMsg action s ]
+    Types.SettlementMsg Types.ViewSettlement s
+        :: MaybeExt.foldMaybe (\a -> [ Types.SettlementMsg a s ]) [] action
 
 
 showLord : Entities.Lord -> MapDrawer.SvgItem
