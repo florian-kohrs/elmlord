@@ -172,10 +172,10 @@ styleMapTile tile =
     }
 
 
-getMapTileAction : MapTile -> Maybe MapDrawer.SvgAction
+getMapTileAction : MapTile -> Maybe Types.MapTileMsg
 getMapTileAction tile =
     if canMoveOnTile tile then
-        Just (MapDrawer.SvgAction "Move here" (Types.MoveTo tile.indices))
+        Just (Types.MoveTo tile.indices)
 
     else
         Nothing

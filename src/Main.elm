@@ -22,9 +22,9 @@ import Svg.Attributes exposing (..)
 import Templates.BattleTemplate exposing (..)
 import Templates.EndTemplate exposing (..)
 import Templates.HeaderTemplate exposing (..)
+import Templates.LordTemplate exposing (..)
 import Templates.MapActionTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
-import Templates.LordTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
@@ -57,7 +57,7 @@ type UiState
 
 hasActionOnPoint : Vector.Point -> MapTileMsg -> MapDrawer.MapClickAction -> Bool
 hasActionOnPoint p msg dict =
-    List.member msg (List.map .action (MapDrawer.actionsOnPoint p dict))
+    List.member msg (MapDrawer.actionsOnPoint p dict)
 
 
 canMoveToPoint : MapDrawer.MapClickAction -> Vector.Point -> Bool
@@ -75,7 +75,7 @@ buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
             (List.foldl
-                EntitiesDrawer.drawSettlement
+                (EntitiesDrawer.drawSettlement testLord)
                 (List.foldl EntitiesDrawer.drawLord (drawnMap m.map) m.lords)
                 (allSettlements m)
             )
@@ -314,10 +314,10 @@ update msg model =
 updateMaptileAction : Model -> MapTileMsg -> Model
 updateMaptileAction model ma =
     case ma of
-        ViewLord lord ->
-             { model | gameState = GameSetup (LordView lord) }
+        LordMsg msg lord ->
+            { model | gameState = GameSetup (LordView lord) }
 
-        ViewSettlement settlement ->
+        SettlementMsg msg settlement ->
             { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) settlement Types.StandardView) }
 
         MoveTo _ ->

@@ -35,7 +35,7 @@ drawPathPart i tile =
         (MapDrawer.InteractableSvg (showPathPart i tile) (getPathPartAction tile))
 
 
-getPathPartAction : Pathfinder.PathTile -> Maybe MapDrawer.SvgAction
+getPathPartAction : Pathfinder.PathTile -> Maybe Types.MapTileMsg
 getPathPartAction _ =
     Nothing
 

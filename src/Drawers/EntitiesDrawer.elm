@@ -24,23 +24,35 @@ drawLord l =
     MapDrawer.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
 
 
-drawSettlement : Entities.Settlement -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawSettlement s =
+drawSettlement : Entities.Lord -> Entities.Settlement -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawSettlement player s =
     let
         drawnSettlement =
-            MapDrawer.InteractableSvg (showSettlement s) (getSettlementAction s)
+            MapDrawer.InteractableSvg (showSettlement s) (getSettlementAction player s)
     in
     MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement
 
 
-getLordAction : Entities.Lord -> Maybe MapDrawer.SvgAction
+getLordAction : Entities.Lord -> Maybe Types.MapTileMsg
 getLordAction lord =
-    Just (MapDrawer.SvgAction ("View " ++ lord.entity.name) (Types.ViewLord lord))
+    Just (Types.LordMsg Types.ViewLord lord)
 
 
-getSettlementAction : Entities.Settlement -> Maybe MapDrawer.SvgAction
-getSettlementAction s =
-    Just (MapDrawer.SvgAction ("View " ++ s.entity.name) (Types.ViewSettlement s))
+getSettlementAction : Entities.Lord -> Entities.Settlement -> Maybe Types.MapTileMsg
+getSettlementAction player s =
+    let
+        action =
+            if player.entity.position == s.entity.position then
+                if List.member s.entity.position (List.map (\l -> l.entity.position) player.land) then
+                    Types.EnterSettlement
+
+                else
+                    Types.SiegeSettlement
+
+            else
+                Types.ViewSettlement
+    in
+    Just (Types.SettlementMsg action s)
 
 
 showLord : Entities.Lord -> MapDrawer.SvgItem

@@ -20,22 +20,38 @@ type Msg
 
 
 type MapTileMsg
-    = ViewLord Entities.Lord
-    | ViewSettlement Entities.Settlement
+    = LordMsg LordTileMsg Entities.Lord
+    | SettlementMsg SettlementTileMsg Entities.Settlement
     | MoveTo Vector.Point
 
 
 mapTileMsgToToolTip : MapTileMsg -> String
 mapTileMsgToToolTip m =
-    case m of
-        ViewLord _ ->
-            "Inspect Lord"
+    "Unnamed Action"
 
-        ViewSettlement _ ->
-            "Inspect Settlement"
 
-        MoveTo _ ->
-            "Move to"
+
+{- case m of
+   ViewLord _ ->
+       "Inspect Lord"
+
+   ViewSettlement _ ->
+       "Inspect Settlement"
+
+   MoveTo _ ->
+       "Move to"
+-}
+
+
+type LordTileMsg
+    = ViewLord
+    | EngageLord
+
+
+type SettlementTileMsg
+    = ViewSettlement
+    | EnterSettlement
+    | SiegeSettlement
 
 
 type SettlementMsg
@@ -52,5 +68,3 @@ type UiSettlementState
     | RecruitView
     | StationView
     | BuildingView
-
- 
