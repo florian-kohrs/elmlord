@@ -48,7 +48,7 @@ drawMap m =
 tileToClickAction : MapTile -> List MapDrawer.InteractableSvg
 tileToClickAction tile =
     MapDrawer.InteractableSvg (showMapTile tile) (getMapTileAction tile)
-        :: MaybeExt.foldMaybe (\img -> [ MapDrawer.InteractableSvg img Nothing ]) [] (getImageItemForTile tile)
+        :: MaybeExt.foldMaybe (\img -> [ MapDrawer.InteractableSvg img [] ]) [] (getImageItemForTile tile)
 
 
 
@@ -172,13 +172,13 @@ styleMapTile tile =
     }
 
 
-getMapTileAction : MapTile -> Maybe Types.MapTileMsg
+getMapTileAction : MapTile -> List Types.MapTileMsg
 getMapTileAction tile =
     if canMoveOnTile tile then
-        Just (Types.MoveTo tile.indices)
+        [ Types.MoveTo tile.indices ]
 
     else
-        Nothing
+        []
 
 
 showMapTile : MapTile -> MapDrawer.SvgItem

@@ -11,7 +11,7 @@ import Vector
 
 
 type alias InteractableSvg =
-    { svg : SvgItem, action : Maybe Types.MapTileMsg }
+    { svg : SvgItem, action : List Types.MapTileMsg }
 
 
 type SvgItem
@@ -40,7 +40,7 @@ isSvgAllowedIn svg svgs =
 
 actionsOnPoint : Vector.Point -> MapClickAction -> List Types.MapTileMsg
 actionsOnPoint p dict =
-    MaybeExt.foldMaybe (\l -> ListExt.justList (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
+    MaybeExt.foldMaybe (\l -> List.concat (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
 
 
 addToMap : Int -> InteractableSvg -> MapClickAction -> MapClickAction

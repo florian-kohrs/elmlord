@@ -33,12 +33,12 @@ drawSettlement player s =
     MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement
 
 
-getLordAction : Entities.Lord -> Maybe Types.MapTileMsg
+getLordAction : Entities.Lord -> List Types.MapTileMsg
 getLordAction lord =
-    Just (Types.LordMsg Types.ViewLord lord)
+    [ Types.LordMsg Types.ViewLord lord ]
 
 
-getSettlementAction : Entities.Lord -> Entities.Settlement -> Maybe Types.MapTileMsg
+getSettlementAction : Entities.Lord -> Entities.Settlement -> List Types.MapTileMsg
 getSettlementAction player s =
     let
         action =
@@ -52,7 +52,7 @@ getSettlementAction player s =
             else
                 Types.ViewSettlement
     in
-    Just (Types.SettlementMsg action s)
+    [ Types.SettlementMsg action s ]
 
 
 showLord : Entities.Lord -> MapDrawer.SvgItem
