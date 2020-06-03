@@ -324,13 +324,6 @@ updateMaptileAction model ma =
             model
 
 
-
-{- = ViewLord Entities.Lord
-   | ViewSettlement Entities.Settlement
-   | MoveTo Vector.Point
--}
-
-
 updateSettlement : SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
