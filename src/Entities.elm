@@ -21,6 +21,9 @@ type alias Lord =
     }
 
 
+updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
+updateEntitiesArmy l e = 
+        {e | army = l}
 
 
 {- updateLord : Lord -> Lord

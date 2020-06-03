@@ -8,12 +8,14 @@ import Html.Events exposing (onClick)
 import Types exposing (Msg(..))
 import Troops exposing (..)
 import Map exposing (Terrain)
+import Battle
 
 
 generateBattleTemplate : Lord -> Lord -> Html Msg
 generateBattleTemplate player enemy =
     div [Html.Attributes.class "modal-background"] [
-        div [Html.Attributes.class "battle-modal"] [
+        (calcTemp (Battle.evaluateBattle player))
+        ,div [Html.Attributes.class "battle-modal"] [
             div [Html.Attributes.class "battle-modal-main"] [
                 generateArmyOverview player
                 , generateActionOverview Map.Forest
@@ -57,3 +59,16 @@ generateActionOverview ter =
                 , button [onClick Types.CloseModal] [span [] [Html.text  "Flee battle"]]
             ]
         ]
+
+
+calcTemp : Lord -> Html Msg
+calcTemp lord = 
+        span [] [Html.text (flattenStringList (List.map calcTemp2 lord.entity.army))]
+
+calcTemp2 : Troop -> String
+calcTemp2 t = 
+        (Troops.troopName t.troopType) ++ ": " ++  String.fromInt t.amount ++ " | "
+
+flattenStringList : List String -> String 
+flattenStringList l = 
+            List.foldr (\x y -> x ++ y) "" l

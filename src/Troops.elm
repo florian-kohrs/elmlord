@@ -49,16 +49,16 @@ troopDamage : TroopType -> Float
 troopDamage t =
     case t of
         Archer ->
-            4
+            15
 
         Spear ->
-            2
+            10
 
         Sword ->
-            3
+            12
 
         Knight ->
-            6
+            25
 
 troopDefense : TroopType -> Float
 troopDefense t =
@@ -105,6 +105,7 @@ troopName t =
 
         Knight ->
             "Knight"
+
 
 
     
