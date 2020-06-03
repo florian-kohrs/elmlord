@@ -286,11 +286,16 @@ initSettlementsFor e =
 -}
 
 
+updateLordsAfterRound : List Entities.Lord -> List Entities.Lord
+updateLordsAfterRound =
+    List.map Entities.updateLordOnRoundEnd
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            { model | date = DateExt.addMonths 1 model.date }
+            { model | date = DateExt.addMonths 1 model.date, lords = updateLordsAfterRound model.lords }
 
         EndGame bool ->
             { model | gameState = GameOver bool }

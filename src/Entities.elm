@@ -22,7 +22,6 @@ type alias Lord =
 
 
 
-
 {- updateLord : Lord -> Lord
    updateLord s =
        let
@@ -31,9 +30,6 @@ type alias Lord =
        in
        { s | gold = s.gold + goldIncome }
 -}
-
-
-
 -- https://www.fantasynamegenerators.com/town_names.php
 -- around 15 Castle names
 
@@ -113,7 +109,6 @@ type ActionType
     | Travel Point (Maybe Pathfinder.Path)
 
 
-
 type alias Settlement =
     { entity : WorldEntity
     , settlementType : SettlementType
@@ -135,6 +130,11 @@ setPosition entity pos =
     { entity | position = pos }
 
 
+updateLordOnRoundEnd : Lord -> Lord
+updateLordOnRoundEnd lord =
+    { lord | gold = lord.gold + calculateRoundIncome lord }
+
+
 type SettlementType
     = Village
     | Castle
@@ -142,7 +142,7 @@ type SettlementType
 
 createCapitalFor : WorldEntity -> Settlement
 createCapitalFor e =
-    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital`" }, settlementType = Castle, income = 1.0, isSieged = False }
+    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital" }, settlementType = Castle, income = 1.0, isSieged = False }
 
 
 type alias SettlementInfo =
@@ -175,31 +175,40 @@ settlementImageName : SettlementType -> String
 settlementImageName s =
     getSettlementNameByType s ++ ".png"
 
+
+
 -- calc income
-calculateRoundIncome: Lord -> Float
+
+
+calculateRoundIncome : Lord -> Float
 calculateRoundIncome lord =
-                sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)
+    sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)
+
 
 sumSettlementsIncome : List Settlement -> Float
-sumSettlementsIncome s = 
+sumSettlementsIncome s =
     foldr (\x v -> x.income + v) 0 s
+
 
 sumTroopWages : List Troop -> Float
 sumTroopWages t =
     foldr (\x v -> toFloat x.amount * troopWage x.troopType + v) 0 t
 
+
 sumLordTroops : Lord -> List Troop
 sumLordTroops lord =
-        lord.entity.army ++ foldr (\x y -> x.entity.army ++ y) [] lord.land
+    lord.entity.army ++ foldr (\x y -> x.entity.army ++ y) [] lord.land
+
+
 
 -- refactor it
+
+
 flattenTroops : List Troop -> List TroopType -> List Troop
-flattenTroops troops types = 
-            case types of
-                [] -> 
-                    []
+flattenTroops troops types =
+    case types of
+        [] ->
+            []
 
-                (y :: ys) ->
-                    {amount = List.foldr (\t v-> t.amount + v) 0 (List.filter (\ x -> x.troopType == y) troops), troopType = y} :: flattenTroops troops ys
-
-
+        y :: ys ->
+            { amount = List.foldr (\t v -> t.amount + v) 0 (List.filter (\x -> x.troopType == y) troops), troopType = y } :: flattenTroops troops ys
