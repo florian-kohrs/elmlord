@@ -64,16 +64,16 @@ troopDefense : TroopType -> Float
 troopDefense t =
     case t of
         Archer ->
-            3
+            30
 
         Spear ->
-            5
+            50
 
         Sword ->
-            7
+            70
 
         Knight ->
-            10
+            100
 
 
 troopPriority : TroopType -> Float
