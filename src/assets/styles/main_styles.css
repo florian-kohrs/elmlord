@@ -797,6 +797,9 @@ span {
     grid-template-columns: 30% 1fr;
 }
 
+/* Map Action Styling */
+/* ---------------------------------------------------------------------------- */
+
 .map-action-menu {
     width: 95%;
     height: 300px;
@@ -834,4 +837,120 @@ span {
 .svg {
     width: 1000px;
     height: 600px;
+}
+
+/* Lord Overview Styling */
+/* ---------------------------------------------------------------------------- */
+
+.lord-modal {
+    width: 600px;
+    height: 800px;
+    background: #b8bbc0;
+    border-radius: 20px;
+    position: absolute;
+    margin-top: 100px;
+    margin-left: calc(50% - 300px);
+    display: grid;
+    grid-template-columns: 15px 1fr 1fr 15px;
+    grid-template-rows: 20px 50px 250px 1fr;
+    grid-row-gap: 10px;
+    grid-column-gap: 10px;
+    border: 1px solid #49505c;
+}
+
+.lord-title {
+    grid-area: 2 / 2 / 3 / 4;
+    text-align: center;
+    color: #49505c;
+}
+
+.lord-title > span {
+    display: block;
+    padding-top: 15px;
+    font-size: 25px;
+}
+
+.lord-image {
+    grid-area: 3 / 2 / 4 / 4;
+}
+
+.lord-image > img{
+    width: 200px;
+    height: 200px;
+    display: block;
+    margin: 0 auto;
+    border: 2px solid #49505c;
+    border-radius: 10px;
+}
+
+.lord-stats {
+    grid-area: 4 / 2 / 5 / 4;
+    display: grid;
+    grid-row-gap: 20px;
+    grid-template-rows: 50px 50px;
+    text-align: center;
+    color: #49505c;
+}
+
+.lord-stats > .lord-data {
+    display: grid;
+    grid-template-columns: 25% 1fr;
+    color: #49505c;
+    width: 250px;
+    margin: 0 auto;
+}
+
+.lord-stats > .lord-data > img {
+    width: 40px;
+    height: 40px;
+    display: block;
+    padding-top: 5px;
+    margin: 0 auto;
+}
+
+.lord-stats > .lord-data > span {
+    font-size: 20px;
+    display: block;
+    padding-top: 15px;
+}
+
+.lord-stats > div {
+    border: 1px solid #49505c;
+    border-radius: 5px;
+}
+
+.lord-troops {
+    width: 250px;
+    height: 90%;
+    margin: 0 auto;
+}
+
+.lord-stats > div > .lord-troop-container {
+    height: 40px;
+    display: grid;
+    margin: 20px auto;
+    grid-template-columns: 25% 1fr;
+}
+
+.lord-troop-container > img {
+    height: 40px;
+    width: 40px;
+    display: block;
+    margin: 0 auto;
+}
+
+.lord-troop-container > span {
+    font-size: 20px;
+    color: #49505c;
+    padding-top: 7.5px
+}
+
+.lord-troop-header {
+    height: 30px;
+}
+
+.lord-troop-header > span {
+    display: block;
+    padding-top: 7px;
+    font-size: 20px;
 }

@@ -23,6 +23,7 @@ import Templates.EndTemplate exposing (..)
 import Templates.HeaderTemplate exposing (..)
 import Templates.MapActionTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
+import Templates.LordTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
 import Vector exposing (..)
@@ -49,6 +50,7 @@ type UiState
     | GameMenue
     | BattleView
     | SettlementView Lord Settlement UiSettlementState
+    | LordView Lord
 
 
 hasActionOnPoint : Vector.Point -> MapTileMsg -> MapDrawer.MapClickAction -> Bool
@@ -311,19 +313,14 @@ update msg model =
 updateMaptileAction : Model -> MapTileMsg -> Model
 updateMaptileAction model ma =
     case ma of
-        ViewLord _ ->
-            model
+        ViewLord lord ->
+             { model | gameState = GameSetup (LordView lord) }
 
         ViewSettlement settlement ->
             { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) settlement Types.StandardView) }
 
         MoveTo _ ->
             model 
-
-
-{-     = ViewLord Entities.Lord
-    | ViewSettlement Entities.Settlement
-    | MoveTo Vector.Point -}
 
 
 updateSettlement : SettlementMsg -> Model -> Model
@@ -405,12 +402,8 @@ findModalWindow model =
                 SettlementView l s u->
                     generateSettlementModalTemplate l s u
 
-{-                     case sView of
-                        BuildingView ->
-                            div [] []
-
-                        _ ->
-                            generateSettlementModalTemplate testLord testSetelement sView -}
+                LordView l -> 
+                    generateLordTemplate l
 
                 BattleView ->
                     generateBattleTemplate testLord testLord
