@@ -362,7 +362,7 @@ view model =
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
         , Templates.HeaderTemplate.generateHeaderTemplate testLord model.date
-        , div [ Html.Attributes.style "height" "800", Html.Attributes.style "width" "1000px" ]
+        , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , generateMapActionTemplate model.selectedPoint allClickActions
             , div []
