@@ -15,32 +15,61 @@ import Types
 import Vector
 
 
-drawLord : Entities.Lord -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawLord l =
+drawLord : Entities.Lord -> Entities.Lord -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawLord player l =
     let
         drawnLord =
-            MapDrawer.InteractableSvg (showLord l) (getLordAction l)
+            MapDrawer.InteractableSvg (showLord l) (getLordAction player l)
     in
     MapDrawer.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
 
 
-drawSettlement : Entities.Settlement -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawSettlement s =
+drawSettlement : Entities.Lord -> Entities.Settlement -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawSettlement player s =
     let
         drawnSettlement =
-            MapDrawer.InteractableSvg (showSettlement s) (getSettlementAction s)
+            MapDrawer.InteractableSvg (showSettlement s) (getSettlementAction player s)
     in
     MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement
 
 
-getLordAction : Entities.Lord -> Maybe MapDrawer.SvgAction
-getLordAction lord =
-    Just (MapDrawer.SvgAction ("View " ++ lord.entity.name) (Types.ViewLord lord))
+getLordAction : Entities.Lord -> Entities.Lord -> List Types.MapTileMsg
+getLordAction player lord =
+    let
+        action =
+            if
+                player.entity.position
+                    == lord.entity.position
+                    && lord.entity.name
+                    /= player.entity.name
+            then
+                Just Types.EngageLord
+
+            else
+                Nothing
+    in
+    Types.LordMsg Types.ViewLord lord
+        :: MaybeExt.foldMaybe (\a -> [ Types.LordMsg a lord ])
+            []
+            action
 
 
-getSettlementAction : Entities.Settlement -> Maybe MapDrawer.SvgAction
-getSettlementAction s =
-    Just (MapDrawer.SvgAction ("View " ++ s.entity.name) (Types.ViewSettlement s))
+getSettlementAction : Entities.Lord -> Entities.Settlement -> List Types.MapTileMsg
+getSettlementAction player s =
+    let
+        action =
+            if player.entity.position == s.entity.position then
+                if List.member s.entity.position (List.map (\l -> l.entity.position) player.land) then
+                    Just Types.EnterSettlement
+
+                else
+                    Just Types.SiegeSettlement
+
+            else
+                Nothing
+    in
+    Types.SettlementMsg Types.ViewSettlement s
+        :: MaybeExt.foldMaybe (\a -> [ Types.SettlementMsg a s ]) [] action
 
 
 showLord : Entities.Lord -> MapDrawer.SvgItem

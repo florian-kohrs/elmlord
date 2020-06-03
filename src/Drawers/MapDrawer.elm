@@ -8,15 +8,10 @@ import MaybeExt
 import Svg
 import Types
 import Vector
-import MapData
 
 
 type alias InteractableSvg =
-    { svg : SvgItem, action : Maybe SvgAction }
-
-
-type alias SvgAction =
-    { toolTip : String, action : Types.MapTileMsg }
+    { svg : SvgItem, action : List Types.MapTileMsg }
 
 
 type SvgItem
@@ -41,10 +36,11 @@ isZAllowedIn i is =
 isSvgAllowedIn : InteractableSvg -> List InteractableSvg -> Bool
 isSvgAllowedIn svg svgs =
     isZAllowedIn (getZIndex svg.svg) (List.map (\s -> getZIndex s.svg) svgs)
-    
-actionsOnPoint : Vector.Point -> MapClickAction -> List SvgAction
+
+
+actionsOnPoint : Vector.Point -> MapClickAction -> List Types.MapTileMsg
 actionsOnPoint p dict =
-    MaybeExt.foldMaybe (\l -> ListExt.justList (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
+    MaybeExt.foldMaybe (\l -> List.concat (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
 
 
 addToMap : Int -> InteractableSvg -> MapClickAction -> MapClickAction
