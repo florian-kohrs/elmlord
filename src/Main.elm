@@ -401,6 +401,9 @@ findModalWindow model =
                 SettlementView l s u ->
                     generateSettlementModalTemplate l s u
 
+                LordView l ->
+                    generateLordTemplate l
+
                 {- case sView of
                    BuildingView ->
                        div [] []
