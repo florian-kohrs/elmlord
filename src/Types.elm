@@ -27,20 +27,15 @@ type MapTileMsg
 
 mapTileMsgToToolTip : MapTileMsg -> String
 mapTileMsgToToolTip m =
-    "Unnamed Action"
+    case m of
+        LordMsg msg l ->
+            showLordTileMsg msg ++ " " ++ l.entity.name
 
+        SettlementMsg msg s ->
+            showSettlementTileMsg msg ++ " " ++ s.entity.name
 
-
-{- case m of
-   ViewLord _ ->
-       "Inspect Lord"
-
-   ViewSettlement _ ->
-       "Inspect Settlement"
-
-   MoveTo _ ->
-       "Move to"
--}
+        MoveTo _ ->
+            "Move here"
 
 
 type LordTileMsg
@@ -48,10 +43,33 @@ type LordTileMsg
     | EngageLord
 
 
+showLordTileMsg : LordTileMsg -> String
+showLordTileMsg lordTileMsg =
+    case lordTileMsg of
+        ViewLord ->
+            "View"
+
+        EngageLord ->
+            "Engage"
+
+
 type SettlementTileMsg
     = ViewSettlement
     | EnterSettlement
     | SiegeSettlement
+
+
+showSettlementTileMsg : SettlementTileMsg -> String
+showSettlementTileMsg msg =
+    case msg of
+        ViewSettlement ->
+            "View"
+
+        EnterSettlement ->
+            "Enter"
+
+        SiegeSettlement ->
+            "Siege"
 
 
 type SettlementMsg
