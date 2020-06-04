@@ -15,6 +15,7 @@ generateBattleTemplate : Lord -> Lord -> Html Msg
 generateBattleTemplate player enemy =
     div [Html.Attributes.class "modal-background"] [
         (calcTemp (Battle.evaluateBattle player))
+        --span [] [Html.text (String.fromFloat (Battle.calcArmyShare player.entity.army {amount = 30, troopType = Troops.Archer}))]
         ,div [Html.Attributes.class "battle-modal"] [
             div [Html.Attributes.class "battle-modal-main"] [
                 generateArmyOverview player
@@ -47,15 +48,15 @@ generateActionOverview ter =
             div [Html.Attributes.class "battle-terrain-info"] [
                 span [] [Html.text "Battlefield-terrain"]
                 , div [] [
-                    span [] [Html.text "+1.5%"]
-                    , span [] [Html.text (Map.terrainToName ter)]
-                    , span [] [Html.text "-1.5%"]
+                    span [] [Html.text (Map.terrainToName ter)]
+                    , span [] [Html.text "Archers +15%"]
                 ] 
             ]
             , span [Html.Attributes.class "battle-versus-text"] [Html.text "VS."]
             , span [Html.Attributes.class "battle-skirmish-text"] [ Html.text "Skirmish-Round: 1"]
             , div [] [
                 button [] [span [] [Html.text "Start skirmish"]]
+                , button [] [span [] [Html.text "Skip skirmishes"]]
                 , button [onClick Types.CloseModal] [span [] [Html.text  "Flee battle"]]
             ]
         ]

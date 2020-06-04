@@ -14,33 +14,40 @@ evaluateBattle : Lord -> Lord
 evaluateBattle a = 
             evaluateLordCasualities a (sumTroopsDamage a.entity.army)
 
+-- check
 sumTroopsDamage : List Troop -> Float
 sumTroopsDamage t =
         List.foldr (\x y -> Troops.troopDamage x.troopType * toFloat x.amount + y ) 0 t
 
 evaluateLordCasualities : Lord -> Float -> Lord
 evaluateLordCasualities lord d =
-            { lord | entity = Entities.updateEntitiesArmy (temp lord.entity.army d) lord.entity }
-            --{ lord | entity = Entities.updateEntitiesArmy (calcCasualties lord.entity.army d 1.0) lord.entity }
+            { lord | entity = Entities.updateEntitiesArmy (temp lord.entity.army d (sumTroops lord.entity.army)) lord.entity }
 
-temp : List Troop -> Float -> List Troop
-temp t d = 
+temp : List Troop -> Float -> Float -> List Troop
+temp t d a = 
     case t of 
         [] ->
             []
 
         (x :: xs) -> 
-            calcCasualties x d (calcArmyShare t x) :: temp xs d
+            calcCasualties x (d * (toFloat x.amount / a)) :: temp xs d a
 
 
-calcCasualties : Troop -> Float -> Float -> Troop
-calcCasualties t d s=
-        { t | amount = round ((calcDefense t - (d * s)) / calcDefense t) * t.amount }
+calcCasualties : Troop -> Float -> Troop
+calcCasualties t d =
+        {t | amount = t.amount - round ( d / Troops.troopDefense t.troopType)}
+        --{ t | amount = t.amount - 10 }
 
+-- check
 calcDefense : Troop -> Float
 calcDefense t =
         toFloat t.amount * Troops.troopDefense t.troopType
 
+-- check
 calcArmyShare : List Troop -> Troop -> Float
 calcArmyShare l t =
-        toFloat t.amount / toFloat (List.foldr (\x y -> x.amount + y) 0 l)
+        toFloat t.amount / List.foldr (+) 0.0 (List.map (\x -> toFloat x.amount) l)
+
+sumTroops : List Troop -> Float
+sumTroops l = 
+        List.foldr (+) 0.0 (List.map (\x -> toFloat x.amount) l)
