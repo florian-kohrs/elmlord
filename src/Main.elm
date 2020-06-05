@@ -26,8 +26,9 @@ import Templates.LordTemplate exposing (..)
 import Templates.MapActionTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
-import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), SettlementUIMsg(..), SettlementArmyMsg(..), UiSettlementState(..))
+import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), SettlementUIMsg(..), SettlementArmyMsg(..), BattleMsg(..), UiSettlementState(..))
 import Vector exposing (..)
+import Battle
 
 
 type alias Model =
@@ -50,7 +51,7 @@ type UiState
     | SaveLoad
     | NewCampain
     | GameMenue
-    | BattleView
+    | BattleView Entities.BattleStats
     | SettlementView Lord Settlement UiSettlementState
     | LordView Lord
 
@@ -159,17 +160,6 @@ testSetelement =
     }
 
 
-
-{- type alias Lord =
-   { entity : WorldEntity
-   , gold : Gold
-   , action : Action
-   , land : List Settlement
-   , moveSpeed : Float
-   }
--}
-
-
 testLordWorldEntity : WorldEntity
 testLordWorldEntity =
     { army = testTroopList
@@ -191,7 +181,7 @@ testLord =
     { entity = testLordWorldEntity
     , gold = 250
     , action = testActionType
-    , land = [ testSetelement, testSetelement, testSetelement ]
+    , land = [ testSetelement ]
     , moveSpeed = 1.0
     }
 
@@ -222,7 +212,7 @@ initPlayers m count =
                 (\i -> initPlayer i (2 * (toFloat i / toFloat count + 0.125)))
                 (List.range 0 (count - 1))
     in
-    { m | lords = (Cons testLord lords) }
+    { m | lords = Cons testLord lords }
 
 
 drawnMap : Map.Map -> MapDrawer.MapClickAction
@@ -235,7 +225,7 @@ initPlayer i rad =
     let
         entity =
             WorldEntity
-                testTroopList
+                secondLordTroops
                 (Faction.getFaction i)
                 (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad))
                 ("Lord " ++ String.fromInt i)
@@ -294,8 +284,8 @@ update msg model =
         CloseModal ->
             { model | gameState = GameSetup GameMenue }
 
-        ShowBattleView ->
-            { model | gameState = GameSetup BattleView }
+        BattleAction bmsg ->
+            updateBattle bmsg model
 
         SettlementAction action ->
             updateSettlement action model
@@ -383,6 +373,44 @@ updateMultipleTroopStats l s u m =
 
 
 
+updateBattle : BattleMsg -> Model -> Model
+updateBattle msg model =
+    case msg of
+        StartBattle str ->
+            let 
+                enemyLord = getLordByName model.lords str 
+            in
+                case enemyLord of
+                    Nothing ->
+                        model
+
+                    (Just x) -> 
+                        { model | gameState = GameSetup (BattleView  {player = getPlayer model.lords, enemy = x, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops})}
+
+        StartSkirmish bS -> 
+            let
+                newPlayer = Battle.evaluateBattle bS.player bS.enemy.entity.army
+                newEnemy = Battle.evaluateBattle bS.enemy bS.player.entity.army
+            in
+                { model | gameState = GameSetup (BattleView  {bS | 
+                                                                round = bS.round + 1
+                                                                , playerCasualties = List.map2 Troops.troopDifferences bS.player.entity.army newPlayer.entity.army
+                                                                , enemyCasualties = List.map2 Troops.troopDifferences bS.enemy.entity.army newEnemy.entity.army
+                                                                , player = newPlayer
+                                                                , enemy = newEnemy
+                                                                })
+                }
+
+        SkipSkirmishes bS -> 
+            { model | gameState = GameSetup (BattleView  {bS | round = 0})}
+
+        FleeBattle -> 
+            { model | gameState = GameSetup GameMenue }
+
+        EndBattle -> 
+            { model | gameState = GameSetup GameMenue }
+            
+            
 view : Model -> Html Msg
 view model =
     let
@@ -438,8 +466,8 @@ findModalWindow model =
                    _ ->
                        generateSettlementModalTemplate testLord testSetelement sView
                 -}
-                BattleView ->
-                    generateBattleTemplate testLord testLord
+                BattleView bS->
+                    generateBattleTemplate bS
 
                 _ ->
                     div [] []
@@ -465,3 +493,50 @@ addStylesheet : String -> String -> Html Msg
 addStylesheet tag href =
     Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
 
+-- testLordData For Battlesimulation
+
+firstLordTroops : List Troop
+firstLordTroops =
+    [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
+
+
+secondLordTroops : List Troop
+secondLordTroops =
+    [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
+
+fristLordEntity : WorldEntity
+fristLordEntity =
+    { army = firstLordTroops
+    , faction = Faction.Faction1
+    , position = { x = 0, y = 0 }
+    , name = "Malaca"
+    }
+
+
+secondLordEntity : WorldEntity
+secondLordEntity =
+    { army = secondLordTroops
+    , faction = Faction.Faction1
+    , position = { x = 0, y = 0 }
+    , name = "Sir Quicknuss"
+    }
+
+
+fristLord : Lord
+fristLord =
+    { entity = fristLordEntity
+    , gold = 250
+    , action = testActionType
+    , land = []
+    , moveSpeed = 1.0
+    }
+
+
+secondLord : Lord
+secondLord =
+    { entity = secondLordEntity
+    , gold = 250
+    , action = testActionType
+    , land = []
+    , moveSpeed = 1.0
+    }

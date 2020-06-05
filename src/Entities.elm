@@ -158,6 +158,15 @@ flattenLordList : LordList -> List Lord
 flattenLordList (Cons p ps) =
         p :: ps
 
+getLordByName : LordList -> String -> Maybe Lord
+getLordByName l str = 
+        case List.filter (\x -> x.entity.name == str) (flattenLordList l) of
+            [] ->
+                Nothing
+            
+            (x :: _) -> 
+                Just x
+
 type ActionMotive
     = AttackLord
     | Siege
@@ -280,3 +289,15 @@ flattenTroops troops types =
 
         y :: ys ->
             { amount = List.foldr (\t v -> t.amount + v) 0 (List.filter (\x -> x.troopType == y) troops), troopType = y } :: flattenTroops troops ys
+
+
+type alias BattleStats =
+    {
+        player: Lord
+        , enemy: Lord
+        , round: Int
+        , playerCasualties: List Troop
+        , enemyCasualties: List Troop
+    }
+
+

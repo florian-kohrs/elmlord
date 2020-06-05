@@ -15,11 +15,6 @@ testRevenueList =
     [ ( "Castles:", 2.5 ), ( "Village:", 1.9 ), ( "Army:", -3.3 ) ]
 
 
-testTroopList : List Troop
-testTroopList =
-    [ { amount = 50, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 11, troopType = Troops.Knight } ]
-
-
 generateHeaderTemplate : Lord -> DateExt.Date -> Html Msg
 generateHeaderTemplate lord date =
     let
@@ -98,7 +93,7 @@ headerSettingsTemplate =
             ]
         ]
     , div [ Html.Attributes.class "page-settings-grid" ]
-        [ div [ onClick Types.ShowBattleView, Html.Attributes.class "page-setting-container tooltip" ]
+        [ div [ onClick (Types.BattleAction (Types.StartBattle "Lord 0")), Html.Attributes.class "page-setting-container tooltip" ]
             [ img [ src "./assets/images/save_icon.png", Html.Attributes.class "page-image-settings" ] []
             , div [ Html.Attributes.class "tooltip" ]
                 [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Save the game as a file" ]
@@ -106,8 +101,6 @@ headerSettingsTemplate =
             ]
         ]
     ]
-
-
 
 -- Logic
 ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,3 +132,4 @@ generateTroopTooltip aT sT =
         , span [] [ Html.text (String.fromInt aT.amount ++ "  " ++ Troops.troopName aT.troopType) ]
         , span [] [ Html.text (String.fromInt sT.amount ++ "  " ++ Troops.troopName sT.troopType) ]
         ]
+

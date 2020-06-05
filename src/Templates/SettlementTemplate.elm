@@ -10,9 +10,6 @@ import Troops exposing (..)
 import OperatorExt exposing (..)
 
 
-testTroopList : List Troop
-testTroopList = [{amount = 50, troopType = Troops.Sword}, {amount = 30, troopType = Troops.Spear}, {amount = 30, troopType = Troops.Archer}, {amount = 11, troopType = Troops.Knight}]
-
 generateSettlementModalTemplate : Lord -> Settlement -> UiSettlementState -> Html Msg
 generateSettlementModalTemplate lord settlement uistate=
     div [Html.Attributes.class "modal-background"] [

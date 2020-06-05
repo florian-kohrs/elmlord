@@ -10,9 +10,9 @@ test = 5
 
 
 -- needs refactoring
-evaluateBattle : Lord -> Lord
-evaluateBattle a = 
-            evaluateLordCasualities a (sumTroopsDamage a.entity.army)
+evaluateBattle : Lord -> List Troop -> Lord
+evaluateBattle l t = 
+            evaluateLordCasualities l (sumTroopsDamage t)
 
 -- check
 sumTroopsDamage : List Troop -> Float
@@ -35,8 +35,13 @@ temp t d a =
 
 calcCasualties : Troop -> Float -> Troop
 calcCasualties t d =
-        {t | amount = t.amount - round ( d / Troops.troopDefense t.troopType)}
-        --{ t | amount = t.amount - 10 }
+        {t | amount = restrictNegativInt (t.amount - round ( d / Troops.troopDefense t.troopType))}
+
+
+-- refactor: take this and change this also in other functions (exp. number of troops < 0)
+restrictNegativInt : Int -> Int 
+restrictNegativInt nmb = 
+                ternary (nmb > 0) nmb 0
 
 -- check
 calcDefense : Troop -> Float

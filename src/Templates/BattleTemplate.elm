@@ -11,39 +11,37 @@ import Map exposing (Terrain)
 import Battle
 
 
-generateBattleTemplate : Lord -> Lord -> Html Msg
-generateBattleTemplate player enemy =
+generateBattleTemplate : BattleStats -> Html Msg
+generateBattleTemplate bS =
     div [Html.Attributes.class "modal-background"] [
-        (calcTemp (Battle.evaluateBattle player))
-        --span [] [Html.text (String.fromFloat (Battle.calcArmyShare player.entity.army {amount = 30, troopType = Troops.Archer}))]
-        ,div [Html.Attributes.class "battle-modal"] [
+        div [Html.Attributes.class "battle-modal"] [
             div [Html.Attributes.class "battle-modal-main"] [
-                generateArmyOverview player
-                , generateActionOverview Map.Forest
-                , generateArmyOverview enemy
+                generateArmyOverview bS.player bS.playerCasualties
+                , generateActionOverview bS Map.Forest
+                , generateArmyOverview bS.enemy bS.enemyCasualties
             ]
         ]
     ]
 
 
-generateArmyOverview : Lord -> Html Msg
-generateArmyOverview lord =
+generateArmyOverview : Lord -> List Troop -> Html Msg
+generateArmyOverview lord troops =
         div [Html.Attributes.class "battle-army-overview"] [
             img [src  "./assets/images/profiles/profile_lord.png"] []
             , span [] [Html.text lord.entity.name]
-            , div [] (List.map generateTroopOverview lord.entity.army)
+            , div [] (List.map2 generateTroopOverview lord.entity.army troops)
         ]
 
-generateTroopOverview : Troop -> Html Msg
-generateTroopOverview troop = 
+generateTroopOverview : Troop -> Troop -> Html Msg
+generateTroopOverview troop casu = 
         div [Html.Attributes.class "battle-troop-container"] [
             img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
-            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
+            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType ++ " " ++ String.fromInt casu.amount ++ "  " ++ Troops.troopName casu.troopType) ]
         ]
 
 
-generateActionOverview : Terrain -> Html Msg
-generateActionOverview ter = 
+generateActionOverview : BattleStats -> Terrain -> Html Msg
+generateActionOverview bS ter = 
         div [Html.Attributes.class "battle-action-container"] [
             div [Html.Attributes.class "battle-terrain-info"] [
                 span [] [Html.text "Battlefield-terrain"]
@@ -53,23 +51,10 @@ generateActionOverview ter =
                 ] 
             ]
             , span [Html.Attributes.class "battle-versus-text"] [Html.text "VS."]
-            , span [Html.Attributes.class "battle-skirmish-text"] [ Html.text "Skirmish-Round: 1"]
+            , span [Html.Attributes.class "battle-skirmish-text"] [ Html.text ("Skirmish-Round: " ++ String.fromInt bS.round)]
             , div [] [
-                button [] [span [] [Html.text "Start skirmish"]]
+                button [onClick (Types.BattleAction (Types.StartSkirmish bS))] [span [] [Html.text "Start skirmish"]]
                 , button [] [span [] [Html.text "Skip skirmishes"]]
                 , button [onClick Types.CloseModal] [span [] [Html.text  "Flee battle"]]
             ]
         ]
-
-
-calcTemp : Lord -> Html Msg
-calcTemp lord = 
-        span [] [Html.text (flattenStringList (List.map calcTemp2 lord.entity.army))]
-
-calcTemp2 : Troop -> String
-calcTemp2 t = 
-        (Troops.troopName t.troopType) ++ ": " ++  String.fromInt t.amount ++ " | "
-
-flattenStringList : List String -> String 
-flattenStringList l = 
-            List.foldr (\x y -> x ++ y) "" l

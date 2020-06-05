@@ -3,6 +3,7 @@ module Types exposing (..)
 import Entities
 import Troops exposing (..)
 import Vector
+import Entities exposing (BattleStats)
 
 
 
@@ -11,7 +12,7 @@ type Msg
     = EndRound
     | EndGame Bool
     | CloseModal
-    | ShowBattleView
+    | BattleAction BattleMsg
     | SettlementAction SettlementMsg
     | MapTileAction MapTileMsg
     | Click Vector.Point
@@ -90,3 +91,10 @@ type UiSettlementState
     | RecruitView
     | StationView
     | BuildingView
+
+type BattleMsg 
+    = StartBattle String
+    | StartSkirmish Entities.BattleStats
+    | SkipSkirmishes Entities.BattleStats
+    | FleeBattle 
+    | EndBattle

@@ -129,3 +129,19 @@ checkTroopTreshhold tr ty v =
 filterTroopList : List Troop -> TroopType -> List Troop
 filterTroopList l t =
             List.filter (\x -> x.troopType == t) l
+
+troopDifferences : Troop -> Troop -> Troop
+troopDifferences t1 t2 =
+    {
+        amount = t2.amount - t1.amount
+        , troopType = t1.troopType
+    }
+
+emptyTroops : List Troop 
+emptyTroops = 
+    [
+        { amount = 0, troopType = Sword }
+        , { amount = 0, troopType = Spear }
+        , { amount = 0, troopType = Archer }
+        , { amount = 0, troopType = Knight }
+    ]
