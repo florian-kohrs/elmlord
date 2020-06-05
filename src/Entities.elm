@@ -133,6 +133,9 @@ type alias Action =
 type LordList 
     =  Cons Lord (List Lord)
 
+mapLordList : (Lord -> Lord) -> LordList -> LordList
+mapLordList f (Cons p ps) =
+    Cons (f p) (List.map f ps)
 
 getPlayer : LordList -> Lord
 getPlayer (Cons p _) =

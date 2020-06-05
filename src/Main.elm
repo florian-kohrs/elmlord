@@ -277,9 +277,9 @@ initSettlementsFor e =
 -}
 
 
-updateLordsAfterRound : List Entities.Lord -> List Entities.Lord
-updateLordsAfterRound =
-    List.map Entities.updateLordOnRoundEnd
+updateLordsAfterRound : LordList -> LordList
+updateLordsAfterRound lords =
+    Entities.mapLordList Entities.updateLordOnRoundEnd lords
 
 
 update : Msg -> Model -> Model
