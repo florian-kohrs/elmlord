@@ -1,4 +1,5 @@
 module Troops exposing (..)
+import OperatorExt
 
 type alias Troop =
     {
@@ -49,31 +50,31 @@ troopDamage : TroopType -> Float
 troopDamage t =
     case t of
         Archer ->
-            4
+            15
 
         Spear ->
-            2
+            10
 
         Sword ->
-            3
+            12
 
         Knight ->
-            6
+            25
 
 troopDefense : TroopType -> Float
 troopDefense t =
     case t of
         Archer ->
-            3
+            30
 
         Spear ->
-            5
+            50
 
         Sword ->
-            7
+            70
 
         Knight ->
-            10
+            100
 
 
 troopPriority : TroopType -> Float
@@ -107,4 +108,24 @@ troopName t =
             "Knight"
 
 
+updateTroops : List Troop -> TroopType -> Int -> List Troop
+updateTroops tr ty v =
+        case tr of 
+            [] ->
+                []
+
+            (x :: xs) -> 
+                OperatorExt.ternary (x.troopType == ty) {x | amount = x.amount + v} x :: updateTroops xs ty v
     
+checkTroopTreshhold : List Troop -> TroopType -> Int -> Bool
+checkTroopTreshhold tr ty v =
+        case tr of 
+            [] ->
+                False
+
+            (x :: xs) -> 
+                x.amount - v >= 0 ||  checkTroopTreshhold xs ty v
+
+filterTroopList : List Troop -> TroopType -> List Troop
+filterTroopList l t =
+            List.filter (\x -> x.troopType == t) l

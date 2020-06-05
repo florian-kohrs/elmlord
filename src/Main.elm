@@ -26,12 +26,12 @@ import Templates.LordTemplate exposing (..)
 import Templates.MapActionTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
-import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
+import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), SettlementUIMsg(..), SettlementArmyMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 
 
 type alias Model =
-    { lords : List Lord
+    { lords : LordList
     , gameState : GameState
     , selectedPoint : Maybe Point
     , date : DateExt.Date
@@ -65,18 +65,13 @@ canMoveToPoint dict p =
     hasActionOnPoint p (MoveTo p) dict
 
 
-getPlayer : Model -> Maybe Entities.Lord
-getPlayer m =
-    List.head m.lords
-
-
 buildAllMapSvgs : Model -> MapDrawer.MapClickAction
 buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
             (List.foldl
                 (EntitiesDrawer.drawSettlement testLord)
-                (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) m.lords)
+                (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) (Entities.flattenLordList m.lords))
                 (allSettlements m)
             )
         )
@@ -102,43 +97,39 @@ filterInteractables =
 
 buildPathSvgs : Model -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
 buildPathSvgs m mapDict =
+    let
+        player = Entities.getPlayer m.lords
+    in
     case getSelectedPath m of
         Nothing ->
             mapDict
 
         Just path ->
-            case getPlayer m of
-                Nothing ->
-                    mapDict
-
-                Just player ->
-                    PathDrawer.drawPath player.moveSpeed path mapDict
+            PathDrawer.drawPath player.moveSpeed path mapDict
 
 
 getSelectedPath : Model -> Maybe Pathfinder.Path
 getSelectedPath m =
-    case getPlayer m of
+    let
+        player = Entities.getPlayer m.lords
+    in
+    case m.selectedPoint of
         Nothing ->
             Nothing
 
-        Just player ->
-            case m.selectedPoint of
-                Nothing ->
-                    Nothing
+        Just point ->
+            if canMoveToPoint (drawnMap m.map) point then
+                Pathfinder.getPath
+                    player.entity.position
+                    (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
 
-                Just point ->
-                    if canMoveToPoint (drawnMap m.map) point then
-                        Pathfinder.getPath
-                            player.entity.position
-                            (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
-
-                    else
-                        Nothing
+            else
+                Nothing
 
 
 allSettlements : Model -> List Settlement
 allSettlements m =
-    List.concat (List.map .land m.lords)
+    List.concat (List.map .land (Entities.flattenLordList m.lords))
 
 
 
@@ -147,7 +138,7 @@ allSettlements m =
 
 testTroopList : List Troop
 testTroopList =
-    [ { amount = 50, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 10, troopType = Troops.Knight } ]
+    [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
 
 
 testWorldEntity : WorldEntity
@@ -162,7 +153,7 @@ testWorldEntity =
 testSetelement : Settlement
 testSetelement =
     { entity = testWorldEntity
-    , settlementType = Entities.Village
+    , settlementType = Entities.Castle
     , income = 3.19
     , isSieged = False
     }
@@ -182,7 +173,7 @@ testSetelement =
 testLordWorldEntity : WorldEntity
 testLordWorldEntity =
     { army = testTroopList
-    , faction = Faction.Faction2
+    , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
     , name = "Sir Quicknuss"
     }
@@ -215,7 +206,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model [] (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
+    Model (Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
 
 
 startGame : Int -> Model
@@ -231,7 +222,7 @@ initPlayers m count =
                 (\i -> initPlayer i (2 * (toFloat i / toFloat count + 0.125)))
                 (List.range 0 (count - 1))
     in
-    { m | lords = lords }
+    { m | lords = (Cons testLord lords) }
 
 
 drawnMap : Map.Map -> MapDrawer.MapClickAction
@@ -323,7 +314,7 @@ updateMaptileAction model ma =
             { model | gameState = GameSetup (LordView lord) }
 
         SettlementMsg msg settlement ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) settlement Types.StandardView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) settlement Types.StandardView) }
 
         MoveTo _ ->
             model
@@ -332,23 +323,64 @@ updateMaptileAction model ma =
 updateSettlement : SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
-        BuyTroops t s l ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
+        (UIMsg umsg) -> 
+            updateSettlementUI umsg model
 
-        StationTroops _ ->
-            model
+        (TroopMsg tmsg) -> 
+            updateSettlementStats tmsg model
 
-        TakeTroops _ ->
-            model
-
+updateSettlementUI : SettlementUIMsg -> Model -> Model
+updateSettlementUI msg model = 
+    case msg of
         ShowBuyTroops s ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
 
         ShowStationTroops s ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StationView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StationView) }
 
         ShowSettlement s ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StandardView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
+
+-- will be refactored
+updateSettlementStats : SettlementArmyMsg -> Model -> Model
+updateSettlementStats msg model =
+    case msg of
+        BuyTroops t s ->
+            updateMultipleTroopStats 
+                (Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t))
+                s
+                Types.RecruitView
+                model
+
+        StationTroops t s ->
+            updateMultipleTroopStats 
+                (Entities.updatePlayer model.lords (Entities.stationTroops (Entities.getPlayer model.lords) t s))
+                s
+                Types.StationView
+                model
+   
+
+        TakeTroops t s->
+            updateMultipleTroopStats 
+                (Entities.updatePlayer model.lords (Entities.takeTroops (Entities.getPlayer model.lords) t s))
+                s
+                Types.StationView
+                model
+
+
+updateMultipleTroopStats : LordList -> Settlement -> UiSettlementState -> Model -> Model
+updateMultipleTroopStats l s u m =
+                    let 
+                        newSettle = getSettlementByName (getPlayer l).land s.entity.name
+                    in
+                        case newSettle of
+                            Nothing ->
+                                m
+
+                            (Just x) -> 
+                                { m | lords = l, 
+                                        gameState = GameSetup (SettlementView (Entities.getPlayer l) x u) }
+
 
 
 view : Model -> Html Msg
@@ -359,7 +391,7 @@ view model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , Templates.HeaderTemplate.generateHeaderTemplate testLord model.date
+        , Templates.HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , generateMapActionTemplate model.selectedPoint allClickActions
@@ -370,7 +402,7 @@ view model =
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-            , span [] [ Html.text (gameStateToText model.gameState) ]
+            , span [] [ Html.text (gameStateToText model) ]
             ]
         ]
 
@@ -379,19 +411,9 @@ view model =
 -- temp to test
 
 
-gameStateToText : GameState -> String
+gameStateToText : Model -> String
 gameStateToText gs =
-    case gs of
-        GameSetup uistate ->
-            case uistate of
-                {- SettlementView _ ->
-                   "ja man"
-                -}
-                _ ->
-                    "[]"
-
-        _ ->
-            "[]"
+    String.fromFloat (getPlayer gs.lords).gold
 
 
 
@@ -443,12 +465,3 @@ addStylesheet : String -> String -> Html Msg
 addStylesheet tag href =
     Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
 
-
-tempLordHead : List Lord -> Lord
-tempLordHead l =
-    case List.head l of
-        Nothing ->
-            testLord
-
-        Just x ->
-            x

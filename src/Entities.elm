@@ -22,6 +22,39 @@ type alias Lord =
 
 
 
+-- temp before refactoring
+buyTroops : Lord -> TroopType -> Lord
+buyTroops l t =
+    if l.gold - Troops.troopCost t > 0 then
+        { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
+    else 
+        l
+
+stationTroops : Lord -> TroopType -> Settlement -> Lord
+stationTroops l t s =
+    if checkTroopTreshhold (Troops.filterTroopList l.entity.army t) t 5  then
+        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5}
+    else
+        l
+
+
+takeTroops : Lord -> TroopType -> Settlement -> Lord
+takeTroops l t s =
+    if checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5  then
+        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
+    else
+        l
+
+
+
+updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
+updateEntitiesArmy l e = 
+        {e | army = l}
+
+updateSettlementTroops : List Settlement -> String -> TroopType -> Int -> List Settlement
+updateSettlementTroops l s t a =
+        List.map (\x -> {x | entity = updateEntitiesArmy (Troops.updateTroops x.entity.army t a) x.entity }) (List.filter (\y -> y.entity.name == s) l)
+
 {- updateLord : Lord -> Lord
    updateLord s =
        let
@@ -97,6 +130,31 @@ type alias Action =
     { actionType : ActionType, actionMotive : ActionMotive }
 
 
+type LordList 
+    =  Cons Lord (List Lord)
+
+
+getPlayer : LordList -> Lord
+getPlayer (Cons p _) =
+    p
+
+getSettlement : List Settlement -> String -> Maybe Settlement
+getSettlement l s =
+        case List.filter (\x -> x.entity.name == s) l of
+            [] -> 
+                Nothing
+
+            (x :: _) -> 
+                Just x
+
+updatePlayer : LordList -> Lord -> LordList
+updatePlayer (Cons _ ps) np =
+        Cons np ps
+
+flattenLordList : LordList -> List Lord
+flattenLordList (Cons p ps) =
+        p :: ps
+
 type ActionMotive
     = AttackLord
     | Siege
@@ -116,7 +174,6 @@ type alias Settlement =
     , isSieged : Bool
     }
 
-
 type alias WorldEntity =
     { army : List Troop
     , faction : Faction
@@ -124,6 +181,14 @@ type alias WorldEntity =
     , name : String
     }
 
+getSettlementByName : List Settlement -> String -> Maybe Settlement
+getSettlementByName l s = 
+        case List.filter (\x -> x.entity.name == s) l of
+            [] -> 
+                Nothing
+
+            (x :: _) -> 
+                Just x 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
 setPosition entity pos =

@@ -719,7 +719,7 @@ span {
 
 .battle-terrain-info > div{
     display: grid;
-    grid-template-columns: 25% 1fr 25%;
+    grid-template-columns: 40% 1fr;
 }
 
 .battle-terrain-info > div > span {

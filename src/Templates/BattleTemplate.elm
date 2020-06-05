@@ -8,12 +8,15 @@ import Html.Events exposing (onClick)
 import Types exposing (Msg(..))
 import Troops exposing (..)
 import Map exposing (Terrain)
+import Battle
 
 
 generateBattleTemplate : Lord -> Lord -> Html Msg
 generateBattleTemplate player enemy =
     div [Html.Attributes.class "modal-background"] [
-        div [Html.Attributes.class "battle-modal"] [
+        (calcTemp (Battle.evaluateBattle player))
+        --span [] [Html.text (String.fromFloat (Battle.calcArmyShare player.entity.army {amount = 30, troopType = Troops.Archer}))]
+        ,div [Html.Attributes.class "battle-modal"] [
             div [Html.Attributes.class "battle-modal-main"] [
                 generateArmyOverview player
                 , generateActionOverview Map.Forest
@@ -45,15 +48,28 @@ generateActionOverview ter =
             div [Html.Attributes.class "battle-terrain-info"] [
                 span [] [Html.text "Battlefield-terrain"]
                 , div [] [
-                    span [] [Html.text "+1.5%"]
-                    , span [] [Html.text (Map.terrainToName ter)]
-                    , span [] [Html.text "-1.5%"]
+                    span [] [Html.text (Map.terrainToName ter)]
+                    , span [] [Html.text "Archers +15%"]
                 ] 
             ]
             , span [Html.Attributes.class "battle-versus-text"] [Html.text "VS."]
             , span [Html.Attributes.class "battle-skirmish-text"] [ Html.text "Skirmish-Round: 1"]
             , div [] [
                 button [] [span [] [Html.text "Start skirmish"]]
+                , button [] [span [] [Html.text "Skip skirmishes"]]
                 , button [onClick Types.CloseModal] [span [] [Html.text  "Flee battle"]]
             ]
         ]
+
+
+calcTemp : Lord -> Html Msg
+calcTemp lord = 
+        span [] [Html.text (flattenStringList (List.map calcTemp2 lord.entity.army))]
+
+calcTemp2 : Troop -> String
+calcTemp2 t = 
+        (Troops.troopName t.troopType) ++ ": " ++  String.fromInt t.amount ++ " | "
+
+flattenStringList : List String -> String 
+flattenStringList l = 
+            List.foldr (\x y -> x ++ y) "" l
