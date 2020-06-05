@@ -104,6 +104,18 @@ type alias Action =
     { actionType : ActionType, actionMotive : ActionMotive }
 
 
+type LordList 
+    =  Cons Lord (List Lord)
+
+
+getPlayer : LordList -> Lord
+getPlayer (Cons p _) =
+    p
+
+flattenLordList : LordList -> List Lord
+flattenLordList (Cons p ps) =
+        p :: ps
+
 type ActionMotive
     = AttackLord
     | Siege

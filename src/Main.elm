@@ -31,7 +31,7 @@ import Vector exposing (..)
 
 
 type alias Model =
-    { lords : List Lord
+    { lords : LordList
     , gameState : GameState
     , selectedPoint : Maybe Point
     , date : DateExt.Date
@@ -65,18 +65,13 @@ canMoveToPoint dict p =
     hasActionOnPoint p (MoveTo p) dict
 
 
-getPlayer : Model -> Maybe Entities.Lord
-getPlayer m =
-    List.head m.lords
-
-
 buildAllMapSvgs : Model -> MapDrawer.MapClickAction
 buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
             (List.foldl
                 (EntitiesDrawer.drawSettlement testLord)
-                (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) m.lords)
+                (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) (Entities.flattenLordList m.lords))
                 (allSettlements m)
             )
         )
@@ -102,43 +97,39 @@ filterInteractables =
 
 buildPathSvgs : Model -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
 buildPathSvgs m mapDict =
+    let
+        player = Entities.getPlayer m.lords
+    in
     case getSelectedPath m of
         Nothing ->
             mapDict
 
         Just path ->
-            case getPlayer m of
-                Nothing ->
-                    mapDict
-
-                Just player ->
-                    PathDrawer.drawPath player.moveSpeed path mapDict
+            PathDrawer.drawPath player.moveSpeed path mapDict
 
 
 getSelectedPath : Model -> Maybe Pathfinder.Path
 getSelectedPath m =
-    case getPlayer m of
+    let
+        player = Entities.getPlayer m.lords
+    in
+    case m.selectedPoint of
         Nothing ->
             Nothing
 
-        Just player ->
-            case m.selectedPoint of
-                Nothing ->
-                    Nothing
+        Just point ->
+            if canMoveToPoint (drawnMap m.map) point then
+                Pathfinder.getPath
+                    player.entity.position
+                    (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
 
-                Just point ->
-                    if canMoveToPoint (drawnMap m.map) point then
-                        Pathfinder.getPath
-                            player.entity.position
-                            (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
-
-                    else
-                        Nothing
+            else
+                Nothing
 
 
 allSettlements : Model -> List Settlement
 allSettlements m =
-    List.concat (List.map .land m.lords)
+    List.concat (List.map .land (Entities.flattenLordList m.lords))
 
 
 
@@ -162,7 +153,7 @@ testWorldEntity =
 testSetelement : Settlement
 testSetelement =
     { entity = testWorldEntity
-    , settlementType = Entities.Village
+    , settlementType = Entities.Castle
     , income = 3.19
     , isSieged = False
     }
@@ -215,7 +206,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model [] (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
+    Model (Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
 
 
 startGame : Int -> Model
@@ -231,7 +222,7 @@ initPlayers m count =
                 (\i -> initPlayer i (2 * (toFloat i / toFloat count + 0.125)))
                 (List.range 0 (count - 1))
     in
-    { m | lords = lords }
+    { m | lords = (Cons testLord lords) }
 
 
 drawnMap : Map.Map -> MapDrawer.MapClickAction
@@ -318,7 +309,7 @@ updateMaptileAction model ma =
             { model | gameState = GameSetup (LordView lord) }
 
         SettlementMsg msg settlement ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) settlement Types.StandardView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) settlement Types.StandardView) }
 
         MoveTo _ ->
             model
@@ -328,7 +319,7 @@ updateSettlement : SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
         BuyTroops t s l ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
 
         StationTroops _ ->
             model
@@ -337,13 +328,13 @@ updateSettlement msg model =
             model
 
         ShowBuyTroops s ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.RecruitView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
 
         ShowStationTroops s ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StationView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StationView) }
 
         ShowSettlement s ->
-            { model | gameState = GameSetup (SettlementView (tempLordHead model.lords) s Types.StandardView) }
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
 
 
 view : Model -> Html Msg
@@ -438,12 +429,3 @@ addStylesheet : String -> String -> Html Msg
 addStylesheet tag href =
     Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
 
-
-tempLordHead : List Lord -> Lord
-tempLordHead l =
-    case List.head l of
-        Nothing ->
-            testLord
-
-        Just x ->
-            x
