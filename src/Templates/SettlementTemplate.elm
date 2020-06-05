@@ -67,22 +67,23 @@ settlementStateToAction lord settlement uistate =
         StationView -> 
             [div [Html.Attributes.class "settlement-troop-stationing"] 
                     (span [] [Html.text "Station troops"] ::
-                    List.map2 generateStationTroopContainer lord.entity.army settlement.entity.army ++
+                    List.map2 generateStationTroopContainer lord.entity.army (List.map (\x -> (x, settlement)) settlement.entity.army) ++
                     [button [onClick (SettlementAction (Types.ShowSettlement settlement))] [ span [] [Html.text "Back"]]])]
         _ ->
             []
+ 
 
 
-generateStationTroopContainer : Troop ->  Troop -> Html Msg
-generateStationTroopContainer lT sT = 
+generateStationTroopContainer : Troop ->  (Troop, Settlement) -> Html Msg
+generateStationTroopContainer lT (sT, sE) = 
     div [Html.Attributes.class "troop-stationing-container"] [
             img [src "./assets/images/knight_icon.png"] []
             , span [] [Html.text ("[" ++ String.fromInt lT.amount ++ "]")]
             , div [] [
                 span [] [Html.text ("[" ++ String.fromInt sT.amount ++ "]")]
             ]
-            , button [onClick (SettlementAction (Types.TakeTroops lT.troopType))] [ Html.text "O" ]
-            , button [onClick (SettlementAction (Types.StationTroops lT.troopType))] [ Html.text "I" ]
+            , div [onClick (SettlementAction (Types.TakeTroops lT.troopType sE))] [ Html.text "O" ]
+            , div [onClick (SettlementAction (Types.StationTroops lT.troopType sE))] [ Html.text "I" ]
     ]
 
 

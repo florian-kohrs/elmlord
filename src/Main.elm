@@ -173,7 +173,7 @@ testSetelement =
 testLordWorldEntity : WorldEntity
 testLordWorldEntity =
     { army = testTroopList
-    , faction = Faction.Faction2
+    , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
     , name = "Sir Quicknuss"
     }
@@ -318,15 +318,6 @@ updateMaptileAction model ma =
 updateSettlement : SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
-        BuyTroops t s l ->
-            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
-
-        StationTroops _ ->
-            model
-
-        TakeTroops _ ->
-            model
-
         ShowBuyTroops s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
 
@@ -335,6 +326,39 @@ updateSettlement msg model =
 
         ShowSettlement s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
+
+        _ -> 
+            updateSettlementWithData msg model
+
+-- very ugly refactore it, just for testing
+updateSettlementWithData : SettlementMsg -> Model -> Model
+updateSettlementWithData msg model =
+    case msg of
+        BuyTroops t s l ->
+            { model | lords = Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t), 
+                      gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
+
+        StationTroops t s ->
+            case Entities.getSettlement (Entities.getPlayer model.lords).land s.entity.name of
+                Nothing -> 
+                    model
+
+                (Just set) -> 
+                    { model | lords = Entities.updatePlayer model.lords (Entities.stationTroops (Entities.getPlayer model.lords) t s), 
+                            gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) set Types.StationView) }
+
+        TakeTroops t s->
+            case Entities.getSettlement (Entities.getPlayer model.lords).land s.entity.name of
+                Nothing -> 
+                    model
+
+                (Just set) -> 
+                    { model | lords = Entities.updatePlayer model.lords (Entities.takeTroops (Entities.getPlayer model.lords) t s), 
+                            gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) set Types.StationView) }
+
+        _ -> 
+            model
+
 
 
 view : Model -> Html Msg
@@ -345,7 +369,7 @@ view model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , Templates.HeaderTemplate.generateHeaderTemplate testLord model.date
+        , Templates.HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
             , generateMapActionTemplate model.selectedPoint allClickActions
@@ -356,7 +380,7 @@ view model =
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-            , span [] [ Html.text (gameStateToText model.gameState) ]
+            , span [] [ Html.text (gameStateToText model) ]
             ]
         ]
 
@@ -365,19 +389,9 @@ view model =
 -- temp to test
 
 
-gameStateToText : GameState -> String
+gameStateToText : Model -> String
 gameStateToText gs =
-    case gs of
-        GameSetup uistate ->
-            case uistate of
-                {- SettlementView _ ->
-                   "ja man"
-                -}
-                _ ->
-                    "[]"
-
-        _ ->
-            "[]"
+    String.fromFloat (getPlayer gs.lords).gold
 
 
 

@@ -6,8 +6,6 @@ import Vector
 
 
 
--- TODO: Combine ShowSettlement, ShowTroopRecruiting, ShowTroopStationing in 1 Msg
-
 
 type Msg
     = EndRound
@@ -74,12 +72,16 @@ showSettlementTileMsg msg =
 
 type SettlementMsg
     = BuyTroops Troops.TroopType Entities.Settlement Entities.Lord
-    | StationTroops Troops.TroopType
-    | TakeTroops Troops.TroopType
+    | StationTroops Troops.TroopType Entities.Settlement
+    | TakeTroops Troops.TroopType Entities.Settlement
     | ShowSettlement Entities.Settlement
     | ShowBuyTroops Entities.Settlement
     | ShowStationTroops Entities.Settlement
 
+{- type SettlementArmyMsg =
+    BuyTroops Troops.TroopType Entities.Settlement Entities.Lord
+    | StationTroops Troops.TroopType Entities.Settlement
+    | TakeTroops Troops.TroopType Entities.Settlement -}
 
 type UiSettlementState
     = StandardView

@@ -21,10 +21,38 @@ type alias Lord =
     }
 
 
+testTroopList : List Troop
+testTroopList =
+    [ { amount = 50, troopType = Troops.Sword }, { amount = 41, troopType = Troops.Spear }, { amount = 45, troopType = Troops.Archer }, { amount = 51, troopType = Troops.Knight } ]
+
+testLordWorldEntity : WorldEntity
+testLordWorldEntity =
+    { army = testTroopList
+    , faction = Faction.Faction1
+    , position = { x = 0, y = 0 }
+    , name = "Sir Quicknuss"
+    }
+
+-- temp before refactoring
+buyTroops : Lord -> TroopType -> Lord
+buyTroops l t =
+    { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
+
+stationTroops : Lord -> TroopType -> Settlement -> Lord
+stationTroops l t s =
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5}
+
+takeTroops : Lord -> TroopType -> Settlement -> Lord
+takeTroops l t s =
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
+
 updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
 updateEntitiesArmy l e = 
         {e | army = l}
 
+updateSettlementTroops : List Settlement -> String -> TroopType -> Int -> List Settlement
+updateSettlementTroops l s t a =
+        List.map (\x -> {x | entity = updateEntitiesArmy (Troops.updateTroops x.entity.army t a) x.entity }) (List.filter (\y -> y.entity.name == s) l)
 
 {- updateLord : Lord -> Lord
    updateLord s =
@@ -112,6 +140,19 @@ getPlayer : LordList -> Lord
 getPlayer (Cons p _) =
     p
 
+getSettlement : List Settlement -> String -> Maybe Settlement
+getSettlement l s =
+        case (List.filter (\x -> x.entity.name == s) l) of
+            [] -> 
+                Nothing
+
+            (x :: _) -> 
+                Just x
+
+updatePlayer : LordList -> Lord -> LordList
+updatePlayer (Cons _ ps) np =
+        Cons np ps
+
 flattenLordList : LordList -> List Lord
 flattenLordList (Cons p ps) =
         p :: ps
@@ -136,7 +177,6 @@ type alias Settlement =
     , isSieged : Bool
     }
 
-
 type alias WorldEntity =
     { army : List Troop
     , faction : Faction
@@ -144,6 +184,14 @@ type alias WorldEntity =
     , name : String
     }
 
+getSettlementByName : List Settlement -> String -> Maybe Settlement
+getSettlementByName l s = 
+        case List.filter (\x -> x.entity.name == s) l of
+            [] -> 
+                Nothing
+
+            (x :: _) -> 
+                Just x 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
 setPosition entity pos =

@@ -7,3 +7,4 @@ ternary bool op1 op2 =
         op1
     else 
         op2
+

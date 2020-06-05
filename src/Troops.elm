@@ -1,4 +1,5 @@
 module Troops exposing (..)
+import OperatorExt
 
 type alias Troop =
     {
@@ -107,5 +108,12 @@ troopName t =
             "Knight"
 
 
+updateTroops : List Troop -> TroopType -> Int -> List Troop
+updateTroops tr ty v =
+        case tr of 
+            [] ->
+                []
 
+            (x :: xs) -> 
+                OperatorExt.ternary (x.troopType == ty) {x | amount = x.amount + v} x :: updateTroops xs ty v
     
