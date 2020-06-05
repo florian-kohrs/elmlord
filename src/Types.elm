@@ -71,17 +71,19 @@ showSettlementTileMsg msg =
 
 
 type SettlementMsg
-    = BuyTroops Troops.TroopType Entities.Settlement Entities.Lord
-    | StationTroops Troops.TroopType Entities.Settlement
-    | TakeTroops Troops.TroopType Entities.Settlement
-    | ShowSettlement Entities.Settlement
+    = UIMsg SettlementUIMsg
+    | TroopMsg SettlementArmyMsg
+
+
+type SettlementUIMsg =
+    ShowSettlement Entities.Settlement
     | ShowBuyTroops Entities.Settlement
     | ShowStationTroops Entities.Settlement
 
-{- type SettlementArmyMsg =
-    BuyTroops Troops.TroopType Entities.Settlement Entities.Lord
+type SettlementArmyMsg =
+    BuyTroops Troops.TroopType Entities.Settlement
     | StationTroops Troops.TroopType Entities.Settlement
-    | TakeTroops Troops.TroopType Entities.Settlement -}
+    | TakeTroops Troops.TroopType Entities.Settlement
 
 type UiSettlementState
     = StandardView

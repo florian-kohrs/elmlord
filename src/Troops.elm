@@ -117,3 +117,15 @@ updateTroops tr ty v =
             (x :: xs) -> 
                 OperatorExt.ternary (x.troopType == ty) {x | amount = x.amount + v} x :: updateTroops xs ty v
     
+checkTroopTreshhold : List Troop -> TroopType -> Int -> Bool
+checkTroopTreshhold tr ty v =
+        case tr of 
+            [] ->
+                False
+
+            (x :: xs) -> 
+                x.amount - v >= 0 ||  checkTroopTreshhold xs ty v
+
+filterTroopList : List Troop -> TroopType -> List Troop
+filterTroopList l t =
+            List.filter (\x -> x.troopType == t) l

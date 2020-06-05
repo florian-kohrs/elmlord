@@ -26,7 +26,7 @@ import Templates.LordTemplate exposing (..)
 import Templates.MapActionTemplate exposing (..)
 import Templates.SettlementTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
-import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), UiSettlementState(..))
+import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), SettlementUIMsg(..), SettlementArmyMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 
 
@@ -318,6 +318,15 @@ updateMaptileAction model ma =
 updateSettlement : SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
+        (UIMsg umsg) -> 
+            updateSettlementUI umsg model
+
+        (TroopMsg tmsg) -> 
+            updateSettlementStats tmsg model
+
+updateSettlementUI : SettlementUIMsg -> Model -> Model
+updateSettlementUI msg model = 
+    case msg of
         ShowBuyTroops s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
 
@@ -327,37 +336,45 @@ updateSettlement msg model =
         ShowSettlement s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
 
-        _ -> 
-            updateSettlementWithData msg model
-
--- very ugly refactore it, just for testing
-updateSettlementWithData : SettlementMsg -> Model -> Model
-updateSettlementWithData msg model =
+-- will be refactored
+updateSettlementStats : SettlementArmyMsg -> Model -> Model
+updateSettlementStats msg model =
     case msg of
-        BuyTroops t s l ->
-            { model | lords = Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t), 
-                      gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
+        BuyTroops t s ->
+            updateMultipleTroopStats 
+                (Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t))
+                s
+                Types.RecruitView
+                model
 
         StationTroops t s ->
-            case Entities.getSettlement (Entities.getPlayer model.lords).land s.entity.name of
-                Nothing -> 
-                    model
-
-                (Just set) -> 
-                    { model | lords = Entities.updatePlayer model.lords (Entities.stationTroops (Entities.getPlayer model.lords) t s), 
-                            gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) set Types.StationView) }
+            updateMultipleTroopStats 
+                (Entities.updatePlayer model.lords (Entities.stationTroops (Entities.getPlayer model.lords) t s))
+                s
+                Types.StationView
+                model
+   
 
         TakeTroops t s->
-            case Entities.getSettlement (Entities.getPlayer model.lords).land s.entity.name of
-                Nothing -> 
-                    model
+            updateMultipleTroopStats 
+                (Entities.updatePlayer model.lords (Entities.takeTroops (Entities.getPlayer model.lords) t s))
+                s
+                Types.StationView
+                model
 
-                (Just set) -> 
-                    { model | lords = Entities.updatePlayer model.lords (Entities.takeTroops (Entities.getPlayer model.lords) t s), 
-                            gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) set Types.StationView) }
 
-        _ -> 
-            model
+updateMultipleTroopStats : LordList -> Settlement -> UiSettlementState -> Model -> Model
+updateMultipleTroopStats l s u m =
+                    let 
+                        newSettle = getSettlementByName (getPlayer l).land s.entity.name
+                    in
+                        case newSettle of
+                            Nothing ->
+                                m
+
+                            (Just x) -> 
+                                { m | lords = l, 
+                                        gameState = GameSetup (SettlementView (Entities.getPlayer l) x u) }
 
 
 

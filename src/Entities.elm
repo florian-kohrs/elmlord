@@ -21,30 +21,31 @@ type alias Lord =
     }
 
 
-testTroopList : List Troop
-testTroopList =
-    [ { amount = 50, troopType = Troops.Sword }, { amount = 41, troopType = Troops.Spear }, { amount = 45, troopType = Troops.Archer }, { amount = 51, troopType = Troops.Knight } ]
-
-testLordWorldEntity : WorldEntity
-testLordWorldEntity =
-    { army = testTroopList
-    , faction = Faction.Faction1
-    , position = { x = 0, y = 0 }
-    , name = "Sir Quicknuss"
-    }
 
 -- temp before refactoring
 buyTroops : Lord -> TroopType -> Lord
 buyTroops l t =
-    { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
+    if l.gold - Troops.troopCost t > 0 then
+        { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
+    else 
+        l
 
 stationTroops : Lord -> TroopType -> Settlement -> Lord
 stationTroops l t s =
-    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5}
+    if checkTroopTreshhold (Troops.filterTroopList l.entity.army t) t 5  then
+        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5}
+    else
+        l
+
 
 takeTroops : Lord -> TroopType -> Settlement -> Lord
 takeTroops l t s =
-    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
+    if checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5  then
+        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
+    else
+        l
+
+
 
 updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
 updateEntitiesArmy l e = 
@@ -142,7 +143,7 @@ getPlayer (Cons p _) =
 
 getSettlement : List Settlement -> String -> Maybe Settlement
 getSettlement l s =
-        case (List.filter (\x -> x.entity.name == s) l) of
+        case List.filter (\x -> x.entity.name == s) l of
             [] -> 
                 Nothing
 
