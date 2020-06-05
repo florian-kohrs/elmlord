@@ -9,6 +9,7 @@ import Types exposing (Msg(..))
 import Troops exposing (..)
 import Map exposing (Terrain)
 import Battle
+import OperatorExt
 
 
 generateBattleTemplate : BattleStats -> Html Msg
@@ -35,9 +36,17 @@ generateArmyOverview lord troops =
 generateTroopOverview : Troop -> Troop -> Html Msg
 generateTroopOverview troop casu = 
         div [Html.Attributes.class "battle-troop-container"] [
-            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
-            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType ++ " " ++ String.fromInt casu.amount ++ "  " ++ Troops.troopName casu.troopType) ]
+            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] []
+            , span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
+            , span [Html.Attributes.class "battle-troop-casualties"] 
+                [ Html.text 
+                    (OperatorExt.ternary (casu.amount < 0)
+                        ("( " ++ String.fromInt casu.amount ++ "  " ++ Troops.troopName casu.troopType ++ ")") 
+                         " ")
+                ]
         ]
+
+
 
 
 generateActionOverview : BattleStats -> Terrain -> Html Msg
