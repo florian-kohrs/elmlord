@@ -89,7 +89,7 @@ generateActionButtonsByState bS =
         else 
             [
                 button [onClick (Types.BattleAction (Types.StartSkirmish bS))] [span [] [Html.text "Start skirmish"]]
-                , button [] [span [] [Html.text "Skip skirmishes"]]
+                , button [onClick (Types.BattleAction (Types.SkipSkirmishes bS))] [span [] [Html.text "Skip skirmishes"]]
                 , button [onClick (Types.BattleAction (Types.FleeBattle bS))] [span [] [Html.text  "Flee battle"]]
             ]
 

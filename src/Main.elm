@@ -403,7 +403,7 @@ updateBattle msg model =
                 }
 
         SkipSkirmishes bS -> 
-            { model | gameState = GameSetup (BattleView  {bS | round = 0})}
+            { model | gameState = GameSetup (BattleView  (skipBattle bS))}
 
         FleeBattle bS -> 
             let
@@ -423,7 +423,21 @@ updateBattle msg model =
             in
             { model |  lords = lords, gameState = GameSetup GameMenue }
             
-            
+
+-- refactor       
+skipBattle : BattleStats -> BattleStats 
+skipBattle bS = 
+        let
+                newPlayer = Battle.evaluateBattle bS.player bS.enemy.entity.army
+                newEnemy = Battle.evaluateBattle bS.enemy bS.player.entity.army
+                playerCasualties = List.map2 Troops.troopDifferences bS.player.entity.army newPlayer.entity.army
+                enemyCasualties = List.map2 Troops.troopDifferences bS.enemy.entity.army newEnemy.entity.army
+                end = Battle.sumTroops newPlayer.entity.army == 0 || Battle.sumTroops newEnemy.entity.army == 0
+        in
+                if end then
+                        { bS | player = newPlayer, enemy = newEnemy, playerCasualties = playerCasualties, enemyCasualties = enemyCasualties, finished = True}
+                else 
+                       skipBattle { bS | player = newPlayer, enemy = newEnemy}
 
 view : Model -> Html Msg
 view model =

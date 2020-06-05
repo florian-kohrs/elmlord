@@ -14,7 +14,6 @@ evaluateBattle : Lord -> List Troop -> Lord
 evaluateBattle l t = 
             evaluateLordCasualities l (sumTroopsDamage t)
 
-
 -- check
 sumTroopsDamage : List Troop -> Float
 sumTroopsDamage t =
