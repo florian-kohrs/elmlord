@@ -108,6 +108,21 @@ troopName t =
             "Knight"
 
 
+battlefieldBonus : TroopType -> Float
+battlefieldBonus t = 
+    case t of 
+        Archer ->
+            1.15
+
+        Spear ->
+            1
+
+        Sword ->
+            1.2
+
+        Knight ->
+            1.2
+
 updateTroops : List Troop -> TroopType -> Int -> List Troop
 updateTroops tr ty v =
         case tr of 

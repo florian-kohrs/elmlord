@@ -96,5 +96,5 @@ type BattleMsg
     = StartBattle String
     | StartSkirmish Entities.BattleStats
     | SkipSkirmishes Entities.BattleStats
-    | FleeBattle 
-    | EndBattle
+    | FleeBattle Entities.BattleStats
+    | EndBattle Entities.BattleStats

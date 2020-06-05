@@ -617,7 +617,7 @@ span {
 
 .battle-modal {
     width: 900px;
-    height: 600px;
+    height: 700px;
     background: #b8bbc0;
     border-radius: 20px;
     position: absolute;
@@ -633,7 +633,7 @@ span {
 .battle-modal-main {
     grid-area: 2 / 1 / 3 / 2;
     display: grid;
-    grid-template-columns: 1fr 25% 1fr;
+    grid-template-columns: 1fr 30% 1fr;
 }
 
 .battle-army-overview {
@@ -689,7 +689,7 @@ span {
 
 .battle-action-container {
     display: grid;
-    grid-template-rows: 120px 80px 80px 1fr;
+    grid-template-rows: 200px 80px 80px 1fr;
     text-align: center;
     color: #49505c;
 }
@@ -718,7 +718,8 @@ span {
 
 .battle-terrain-info {
     display: grid;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: 25% 30% 1fr;
+    height: 70%;
 }
 
 .battle-terrain-info > span {
@@ -727,12 +728,43 @@ span {
 
 .battle-terrain-info > div{
     display: grid;
-    grid-template-columns: 40% 1fr;
+    grid-template-columns: 30% 1fr;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.battle-terrain-info > div > img{
+    width: 40px;
+    height: 40px;
+    display: block;
+    margin: 0 auto;
 }
 
 .battle-terrain-info > div > span {
     font-size: 20px;
+    display: block;
+    padding-top: 10px;
 }
+
+.battle-terrain-bonus {
+    display: grid;
+    grid-template-columns: 1fr 1fr !important;
+    width: 50%;
+    margin: 15px auto !important;
+    text-align: left !important;
+}
+
+.battle-terrain-bonus > img{
+    float: right !important;
+    width: 35px !important;
+    height: 35px !important;
+}
+
+.battle-terrain-bonus > span{
+    font-size: 18px !important;
+    padding: 5px !important;
+}
+
 
 
 /* Losing Modal */

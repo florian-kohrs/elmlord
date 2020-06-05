@@ -28,7 +28,7 @@ generateBattleTemplate bS =
 generateArmyOverview : Lord -> List Troop -> Html Msg
 generateArmyOverview lord troops =
         div [Html.Attributes.class "battle-army-overview"] [
-            img [src  "./assets/images/profiles/profile_lord.png"] []
+            img [src  ("./assets/images/profiles/" ++ factionToImage lord.entity.faction)] []
             , span [] [Html.text lord.entity.name]
             , div [] (List.map2 generateTroopOverview lord.entity.army troops)
         ]
@@ -53,17 +53,43 @@ generateActionOverview : BattleStats -> Terrain -> Html Msg
 generateActionOverview bS ter = 
         div [Html.Attributes.class "battle-action-container"] [
             div [Html.Attributes.class "battle-terrain-info"] [
-                span [] [Html.text "Battlefield-terrain"]
+                span [] [Html.text "Battlefield-Terrain"]
                 , div [] [
-                    span [] [Html.text (Map.terrainToName ter)]
-                    , span [] [Html.text "Archers +15%"]
+                    img [src  "./assets/images/map/tree_image_color.png"] []
+                    , span [] [Html.text (Map.terrainToName ter)]
+                ]
+                , div [Html.Attributes.class "battle-terrain-bonus"] [
+                    img [src  "./assets/images/troops/bow_icon_color.png"] []
+                    , span [] [Html.text "+15%"]
                 ] 
             ]
             , span [Html.Attributes.class "battle-versus-text"] [Html.text "VS."]
-            , span [Html.Attributes.class "battle-skirmish-text"] [ Html.text ("Skirmish-Round: " ++ String.fromInt bS.round)]
-            , div [] [
+            , generateStatusText bS
+            , div [] (generateActionButtonsByState bS)
+        ]
+
+
+generateStatusText : BattleStats -> Html Msg
+generateStatusText bS = 
+        if bS.finished then
+            span [Html.Attributes.class (OperatorExt.ternary (Battle.sumTroops bS.player.entity.army == 0) "negative-income battle-skirmish-text" "positive-income battle-skirmish-text")] 
+            [
+                Html.text (OperatorExt.ternary (Battle.sumTroops bS.player.entity.army == 0) "My lord, we have lost!" "My lord, we were victorious!")
+            ]
+        else
+            span [Html.Attributes.class "battle-skirmish-text"] [ Html.text ("Skirmish-Round: " ++ String.fromInt bS.round)]
+
+
+generateActionButtonsByState : BattleStats -> List (Html Msg)
+generateActionButtonsByState bS =
+        if bS.finished then
+            [
+                button [onClick (Types.BattleAction (Types.EndBattle bS))] [span [] [Html.text  "Leave battlefield"]]
+            ]
+        else 
+            [
                 button [onClick (Types.BattleAction (Types.StartSkirmish bS))] [span [] [Html.text "Start skirmish"]]
                 , button [] [span [] [Html.text "Skip skirmishes"]]
-                , button [onClick Types.CloseModal] [span [] [Html.text  "Flee battle"]]
+                , button [onClick (Types.BattleAction (Types.FleeBattle bS))] [span [] [Html.text  "Flee battle"]]
             ]
-        ]
+

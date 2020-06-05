@@ -14,6 +14,7 @@ evaluateBattle : Lord -> List Troop -> Lord
 evaluateBattle l t = 
             evaluateLordCasualities l (sumTroopsDamage t)
 
+
 -- check
 sumTroopsDamage : List Troop -> Float
 sumTroopsDamage t =
@@ -56,3 +57,4 @@ calcArmyShare l t =
 sumTroops : List Troop -> Float
 sumTroops l = 
         List.foldr (+) 0.0 (List.map (\x -> toFloat x.amount) l)
+

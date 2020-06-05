@@ -29,6 +29,7 @@ import Troops exposing (Troop, TroopType)
 import Types exposing (MapTileMsg(..), Msg(..), SettlementMsg(..), SettlementUIMsg(..), SettlementArmyMsg(..), BattleMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 import Battle
+import OperatorExt
 
 
 type alias Model =
@@ -163,9 +164,9 @@ testSetelement =
 testLordWorldEntity : WorldEntity
 testLordWorldEntity =
     { army = testTroopList
-    , faction = Faction.Faction1
+    , faction = Faction.Faction2
     , position = { x = 0, y = 0 }
-    , name = "Sir Quicknuss"
+    , name = "Jan von Haskell"
     }
 
 
@@ -241,7 +242,6 @@ initPlayer i rad =
 initSettlementsFor : Entities.WorldEntity -> List Entities.Settlement
 initSettlementsFor e =
     Entities.createCapitalFor e :: []
-
 
 
 --generateSettlementsFor : Lord ->
@@ -385,7 +385,7 @@ updateBattle msg model =
                         model
 
                     (Just x) -> 
-                        { model | gameState = GameSetup (BattleView  {player = getPlayer model.lords, enemy = x, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops})}
+                        { model | gameState = GameSetup (BattleView  {player = getPlayer model.lords, enemy = x, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False})}
 
         StartSkirmish bS -> 
             let
@@ -398,19 +398,33 @@ updateBattle msg model =
                                                                 , enemyCasualties = List.map2 Troops.troopDifferences bS.enemy.entity.army newEnemy.entity.army
                                                                 , player = newPlayer
                                                                 , enemy = newEnemy
+                                                                , finished = Battle.sumTroops newPlayer.entity.army == 0 || Battle.sumTroops newEnemy.entity.army == 0
                                                                 })
                 }
 
         SkipSkirmishes bS -> 
             { model | gameState = GameSetup (BattleView  {bS | round = 0})}
 
-        FleeBattle -> 
-            { model | gameState = GameSetup GameMenue }
+        FleeBattle bS -> 
+            let
+                newEnemyLords = OperatorExt.mapFilter (\_ -> bS.enemy) OperatorExt.const (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+                newPlayer = Entities.updatePlayerArmy bS.player (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.player.entity.army)
 
-        EndBattle -> 
-            { model | gameState = GameSetup GameMenue }
+                lords = Cons newPlayer newEnemyLords
+
+            in
+            
+            { model | lords = lords, gameState = GameSetup GameMenue }
+
+        EndBattle bS-> 
+            let 
+             newEnemyLords = OperatorExt.mapFilter (\_ -> bS.enemy) OperatorExt.const (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+             lords = Cons bS.player newEnemyLords
+            in
+            { model |  lords = lords, gameState = GameSetup GameMenue }
             
             
+
 view : Model -> Html Msg
 view model =
     let

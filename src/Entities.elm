@@ -51,6 +51,10 @@ updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
 updateEntitiesArmy l e = 
         {e | army = l}
 
+updatePlayerArmy : Lord -> List Troop -> Lord
+updatePlayerArmy l t =
+        { l | entity = updateEntitiesArmy t l.entity}
+
 updateSettlementTroops : List Settlement -> String -> TroopType -> Int -> List Settlement
 updateSettlementTroops l s t a =
         List.map (\x -> {x | entity = updateEntitiesArmy (Troops.updateTroops x.entity.army t a) x.entity }) (List.filter (\y -> y.entity.name == s) l)
@@ -63,6 +67,10 @@ updateSettlementTroops l s t a =
        in
        { s | gold = s.gold + goldIncome }
 -}
+
+
+
+
 -- https://www.fantasynamegenerators.com/town_names.php
 -- around 15 Castle names
 
@@ -153,6 +161,15 @@ getSettlement l s =
 updatePlayer : LordList -> Lord -> LordList
 updatePlayer (Cons _ ps) np =
         Cons np ps
+
+tailLordList : LordList -> List Lord
+tailLordList (Cons _ ps) = 
+            ps
+
+updateEnemyLord : LordList -> List Lord -> LordList
+updateEnemyLord (Cons p _) pss =
+        Cons p pss
+        
 
 flattenLordList : LordList -> List Lord
 flattenLordList (Cons p ps) =
@@ -298,6 +315,22 @@ type alias BattleStats =
         , round: Int
         , playerCasualties: List Troop
         , enemyCasualties: List Troop
+        , finished: Bool
     }
+
+factionToImage : Faction -> String
+factionToImage fac = 
+    case fac of
+        Faction.Faction1 -> 
+            "faction1.png"
+
+        Faction.Faction2 -> 
+            "faction2.png"
+
+        Faction.Faction3 -> 
+            "faction3.png"
+
+        Faction.Faction4 -> 
+            "faction4.png"
 
 
