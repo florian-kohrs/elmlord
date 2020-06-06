@@ -12,3 +12,4 @@ import Troops exposing (..)
 troopsToIntList : Troop ->  Int
 troopsToIntList troop =
             troop.amount
+

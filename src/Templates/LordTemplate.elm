@@ -23,7 +23,7 @@ generateLordTemplate l =
                         span [] [Html.text l.entity.name]
                     ]
                     , div [Html.Attributes.class "lord-image"] [
-                        img [src  "./assets/images/profiles/profile_lord.png"] []
+                        img [src  ("./assets/images/profiles/" ++ factionToImage l.entity.faction)] []
                     ]
                     , div [Html.Attributes.class "lord-stats"] [
                         div [Html.Attributes.class "lord-data"] [
@@ -45,6 +45,6 @@ generateLordTemplate l =
 troopToHtml : Troop -> Html Msg
 troopToHtml troop =
         div [Html.Attributes.class "lord-troop-container"] [
-            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
+            img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] [],
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]

@@ -13,6 +13,7 @@ type TroopType
     | Sword
     | Knight
 
+
 troopTypeList : List TroopType
 troopTypeList = [Sword, Spear, Archer, Knight]
 
@@ -115,7 +116,7 @@ battlefieldBonus t =
             1.15
 
         Spear ->
-            1
+            1.25
 
         Sword ->
             1.2

@@ -128,7 +128,7 @@ revenueToSpan ( name, value ) =
 generateTroopTooltip : Troop -> Troop -> Html Msg
 generateTroopTooltip aT sT =
     div [ Html.Attributes.class "troop-container" ]
-        [ img [ src ("./assets/images/" ++ String.toLower (Troops.troopName aT.troopType) ++ "_icon.png") ] []
+        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName aT.troopType) ++ ".png") ] []
         , span [] [ Html.text (String.fromInt aT.amount ++ "  " ++ Troops.troopName aT.troopType) ]
         , span [] [ Html.text (String.fromInt sT.amount ++ "  " ++ Troops.troopName sT.troopType) ]
         ]

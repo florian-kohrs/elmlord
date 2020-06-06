@@ -164,7 +164,7 @@ testSetelement =
 testLordWorldEntity : WorldEntity
 testLordWorldEntity =
     { army = testTroopList
-    , faction = Faction.Faction2
+    , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
     , name = "Jan von Haskell"
     }

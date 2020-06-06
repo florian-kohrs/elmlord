@@ -568,7 +568,7 @@ span {
     color: #fff;
     margin-top: 20px;
     margin-left: -160px;
-    opacity: 0.925;
+    opacity: 1;
     display: grid;
     grid-template-rows: 30px 30px 1fr;
 }
@@ -750,7 +750,7 @@ span {
     display: grid;
     grid-template-columns: 1fr 1fr !important;
     width: 50%;
-    margin: 15px auto !important;
+    margin: 5px auto !important;
     text-align: left !important;
 }
 

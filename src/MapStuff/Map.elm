@@ -17,7 +17,7 @@ import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Types
 import Vector exposing (..)
-
+import Troops
 
 type alias Map =
     Dict.Dict Int MapTile
@@ -273,3 +273,19 @@ generateHexagonPoints v r =
             Vector.add (Vector.flipOnX bottomLeft) v
     in
     [ tl, ml, bl, br, mr, tr ]
+
+
+terrainToBonus : Terrain -> List Troops.TroopType
+terrainToBonus ter = 
+    case ter of
+        Grass -> 
+            [Troops.Knight, Troops.Sword]
+
+        Forest -> 
+            [Troops.Archer]
+        
+        Mountain -> 
+            [Troops.Spear]
+
+        Water -> 
+            []

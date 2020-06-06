@@ -10,6 +10,7 @@ import Troops exposing (..)
 import Map exposing (Terrain)
 import Battle
 import OperatorExt
+import Map exposing (Map)
 
 
 generateBattleTemplate : BattleStats -> Html Msg
@@ -18,7 +19,7 @@ generateBattleTemplate bS =
         div [Html.Attributes.class "battle-modal"] [
             div [Html.Attributes.class "battle-modal-main"] [
                 generateArmyOverview bS.player bS.playerCasualties
-                , generateActionOverview bS Map.Forest
+                , generateActionOverview bS Map.Grass
                 , generateArmyOverview bS.enemy bS.enemyCasualties
             ]
         ]
@@ -36,7 +37,7 @@ generateArmyOverview lord troops =
 generateTroopOverview : Troop -> Troop -> Html Msg
 generateTroopOverview troop casu = 
         div [Html.Attributes.class "battle-troop-container"] [
-            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] []
+            img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] []
             , span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
             , span [Html.Attributes.class "battle-troop-casualties"] 
                 [ Html.text 
@@ -52,22 +53,26 @@ generateTroopOverview troop casu =
 generateActionOverview : BattleStats -> Terrain -> Html Msg
 generateActionOverview bS ter = 
         div [Html.Attributes.class "battle-action-container"] [
-            div [Html.Attributes.class "battle-terrain-info"] [
+            div [Html.Attributes.class "battle-terrain-info"] ([
                 span [] [Html.text "Battlefield-Terrain"]
                 , div [] [
                     img [src  "./assets/images/map/tree_image_color.png"] []
                     , span [] [Html.text (Map.terrainToName ter)]
-                ]
-                , div [Html.Attributes.class "battle-terrain-bonus"] [
-                    img [src  "./assets/images/troops/bow_icon_color.png"] []
-                    , span [] [Html.text "+15%"]
                 ] 
-            ]
+            ] ++ List.map generateTerrainBonuses (Map.terrainToBonus ter))
             , span [Html.Attributes.class "battle-versus-text"] [Html.text "VS."]
             , generateStatusText bS
             , div [] (generateActionButtonsByState bS)
         ]
 
+
+
+generateTerrainBonuses : TroopType -> Html Msg
+generateTerrainBonuses t = 
+            div [Html.Attributes.class "battle-terrain-bonus"] [
+                    img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png")] []
+                    , span [] [Html.text ("+" ++ String.fromFloat (Troops.battlefieldBonus t) ++ "%")]
+            ] 
 
 generateStatusText : BattleStats -> Html Msg
 generateStatusText bS = 

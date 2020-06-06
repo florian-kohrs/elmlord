@@ -24,7 +24,7 @@ generateSettlementModalTemplate lord settlement uistate=
             ]
             , div [Html.Attributes.class "settlement-lordship"] [
                 div [] [
-                    img [src  "./assets/images/profiles/profile_lord.png", Html.Attributes.class "settlement-lord-icon"] []
+                    img [src  ("./assets/images/profiles/" ++ factionToImage lord.entity.faction), Html.Attributes.class "settlement-lord-icon"] []
                 ]
                 , div [] [
                     span [Html.Attributes.class "settlement-lord-text"] [Html.text lord.entity.name]
@@ -74,7 +74,7 @@ settlementStateToAction lord settlement uistate =
 generateStationTroopContainer : Troop ->  (Troop, Settlement) -> Html Msg
 generateStationTroopContainer lT (sT, sE) = 
     div [Html.Attributes.class "troop-stationing-container"] [
-            img [src ("./assets/images/" ++ String.toLower (Troops.troopName lT.troopType) ++ "_icon.png")] []
+            img [src ("./assets/images/troops/" ++ String.toLower (Troops.troopName lT.troopType) ++ ".png")] []
             , span [] [Html.text ("[" ++ String.fromInt lT.amount ++ "]")]
             , div [] [
                 span [] [Html.text ("[" ++ String.fromInt sT.amount ++ "]")]
@@ -97,7 +97,7 @@ mapSettlement li s =
 generateRecruitTroopContainer : Troop -> Settlement -> Html Msg
 generateRecruitTroopContainer troop s = 
     div [Html.Attributes.class "troop-recruiting-container"] [
-            img [src ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] []
+            img [src ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] []
             , span [] [Html.text ("[" ++ String.fromInt troop.amount ++ "]")]
             , div [] [
                 span [] [Html.text (String.fromFloat (Troops.troopCost troop.troopType))]
@@ -115,14 +115,15 @@ generateRecruitTroopContainer troop s =
 getSettlementActionsByType : SettlementType -> List (Html Msg)
 getSettlementActionsByType settle =
     if settle == Entities.Castle then
-        [button [] [ span [] [Html.text "Upgrade Buildings"]]]
+        []
+        --[button [] [ span [] [Html.text "Upgrade Buildings"]]]
     else
         []
 
 troopToHtml : Troop -> Html Msg
 troopToHtml troop =
         div [Html.Attributes.class "stationed-troop-container troop-container"] [
-            img [src  ("./assets/images/" ++ String.toLower (Troops.troopName troop.troopType) ++ "_icon.png")] [],
+            img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] [],
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]
 
