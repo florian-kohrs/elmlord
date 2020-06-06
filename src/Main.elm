@@ -331,7 +331,6 @@ updateSettlementUI msg model =
         ShowSettlement s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
 
--- will be refactored
 updateSettlementStats : SettlementArmyMsg -> Model -> Model
 updateSettlementStats msg model =
     case msg of
@@ -424,7 +423,6 @@ updateBattle msg model =
             { model |  lords = lords, gameState = GameSetup GameMenue }
             
 
--- refactor       
 skipBattle : BattleStats -> BattleStats 
 skipBattle bS = 
         let
@@ -464,18 +462,16 @@ view model =
 
 
 
--- temp to test
 
-
+-- Just for testing, will be removed (TOREMOVE)
 gameStateToText : Model -> String
 gameStateToText gs =
     String.fromFloat (getPlayer gs.lords).gold
 
 
 
---temp
 
-
+-- Get the right modal-window by the current Model-Menue-State
 findModalWindow : Model -> Html Msg
 findModalWindow model =
     case model.gameState of
@@ -487,13 +483,6 @@ findModalWindow model =
                 LordView l ->
                     generateLordTemplate l
 
-                {- case sView of
-                   BuildingView ->
-                       div [] []
-
-                   _ ->
-                       generateSettlementModalTemplate testLord testSetelement sView
-                -}
                 BattleView bS->
                     generateBattleTemplate bS
 
@@ -523,48 +512,7 @@ addStylesheet tag href =
 
 -- testLordData For Battlesimulation
 
-firstLordTroops : List Troop
-firstLordTroops =
-    [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
-
-
 secondLordTroops : List Troop
 secondLordTroops =
     [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
 
-fristLordEntity : WorldEntity
-fristLordEntity =
-    { army = firstLordTroops
-    , faction = Faction.Faction1
-    , position = { x = 0, y = 0 }
-    , name = "Malaca"
-    }
-
-
-secondLordEntity : WorldEntity
-secondLordEntity =
-    { army = secondLordTroops
-    , faction = Faction.Faction1
-    , position = { x = 0, y = 0 }
-    , name = "Sir Quicknuss"
-    }
-
-
-fristLord : Lord
-fristLord =
-    { entity = fristLordEntity
-    , gold = 250
-    , action = testActionType
-    , land = []
-    , moveSpeed = 1.0
-    }
-
-
-secondLord : Lord
-secondLord =
-    { entity = secondLordEntity
-    , gold = 250
-    , action = testActionType
-    , land = []
-    , moveSpeed = 1.0
-    }

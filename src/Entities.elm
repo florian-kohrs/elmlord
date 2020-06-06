@@ -6,6 +6,7 @@ import Pathfinder
 import RedundantDataManager
 import Troops exposing (..)
 import Vector exposing (..)
+import OperatorExt exposing (ternary)
 
 
 type alias Gold =
@@ -25,26 +26,30 @@ type alias Lord =
 -- temp before refactoring
 buyTroops : Lord -> TroopType -> Lord
 buyTroops l t =
-    if l.gold - Troops.troopCost t > 0 then
+    handleTroopInteraction
+        (l.gold - Troops.troopCost t > 0)
         { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
-    else 
         l
 
 stationTroops : Lord -> TroopType -> Settlement -> Lord
 stationTroops l t s =
-    if checkTroopTreshhold (Troops.filterTroopList l.entity.army t) t 5  then
+    handleTroopInteraction 
+        (checkTroopTreshhold (Troops.filterTroopList l.entity.army t) t 5)
         { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5}
-    else
         l
 
 
 takeTroops : Lord -> TroopType -> Settlement -> Lord
 takeTroops l t s =
-    if checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5  then
-        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
-    else
-        l
+    handleTroopInteraction 
+            (checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5)
+            { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
+            l
 
+
+handleTroopInteraction : Bool -> Lord -> Lord -> Lord 
+handleTroopInteraction bool l1 l2 =
+        ternary bool l1 l2
 
 
 updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
