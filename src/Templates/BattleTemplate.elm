@@ -1,3 +1,4 @@
+module Templates.BattleTemplate exposing (..)
 
 import Battle
 import Entities exposing (..)

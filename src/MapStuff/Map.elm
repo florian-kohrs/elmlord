@@ -1,3 +1,4 @@
+module Map exposing (..)
 
 import BasicDrawing
 import Browser
