@@ -2,11 +2,11 @@ module Entities exposing (..)
 
 import Faction exposing (..)
 import List exposing (..)
+import OperatorExt exposing (ternary)
 import Pathfinder
 import RedundantDataManager
 import Troops exposing (..)
 import Vector exposing (..)
-import OperatorExt exposing (ternary)
 
 
 type alias Gold =
@@ -22,8 +22,20 @@ type alias Lord =
     }
 
 
+type alias BattleStats =
+    { player : Lord
+    , enemy : Lord
+    , round : Int
+    , playerCasualties : List Troop
+    , enemyCasualties : List Troop
+    , finished : Bool
+    }
+
+
 
 -- temp before refactoring
+
+
 buyTroops : Lord -> TroopType -> Lord
 buyTroops l t =
     handleTroopInteraction
@@ -31,38 +43,43 @@ buyTroops l t =
         { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
         l
 
+
 stationTroops : Lord -> TroopType -> Settlement -> Lord
 stationTroops l t s =
-    handleTroopInteraction 
+    handleTroopInteraction
         (checkTroopTreshhold (Troops.filterTroopList l.entity.army t) t 5)
-        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5}
+        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5 }
         l
 
 
 takeTroops : Lord -> TroopType -> Settlement -> Lord
 takeTroops l t s =
-    handleTroopInteraction 
-            (checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5)
-            { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5}
-            l
+    handleTroopInteraction
+        (checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5)
+        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5 }
+        l
 
 
-handleTroopInteraction : Bool -> Lord -> Lord -> Lord 
+handleTroopInteraction : Bool -> Lord -> Lord -> Lord
 handleTroopInteraction bool l1 l2 =
-        ternary bool l1 l2
+    ternary bool l1 l2
 
 
 updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
-updateEntitiesArmy l e = 
-        {e | army = l}
+updateEntitiesArmy l e =
+    { e | army = l }
+
 
 updatePlayerArmy : Lord -> List Troop -> Lord
 updatePlayerArmy l t =
-        { l | entity = updateEntitiesArmy t l.entity}
+    { l | entity = updateEntitiesArmy t l.entity }
+
 
 updateSettlementTroops : List Settlement -> String -> TroopType -> Int -> List Settlement
 updateSettlementTroops l s t a =
-        List.map (\x -> {x | entity = updateEntitiesArmy (Troops.updateTroops x.entity.army t a) x.entity }) (List.filter (\y -> y.entity.name == s) l)
+    List.map (\x -> { x | entity = updateEntitiesArmy (Troops.updateTroops x.entity.army t a) x.entity }) (List.filter (\y -> y.entity.name == s) l)
+
+
 
 {- updateLord : Lord -> Lord
    updateLord s =
@@ -72,10 +89,6 @@ updateSettlementTroops l s t a =
        in
        { s | gold = s.gold + goldIncome }
 -}
-
-
-
-
 -- https://www.fantasynamegenerators.com/town_names.php
 -- around 15 Castle names
 
@@ -143,51 +156,59 @@ type alias Action =
     { actionType : ActionType, actionMotive : ActionMotive }
 
 
-type LordList 
-    =  Cons Lord (List Lord)
+type LordList
+    = Cons Lord (List Lord)
+
 
 mapLordList : (Lord -> Lord) -> LordList -> LordList
 mapLordList f (Cons p ps) =
     Cons (f p) (List.map f ps)
 
+
 getPlayer : LordList -> Lord
 getPlayer (Cons p _) =
     p
 
+
 getSettlement : List Settlement -> String -> Maybe Settlement
 getSettlement l s =
-        case List.filter (\x -> x.entity.name == s) l of
-            [] -> 
-                Nothing
+    case List.filter (\x -> x.entity.name == s) l of
+        [] ->
+            Nothing
 
-            (x :: _) -> 
-                Just x
+        x :: _ ->
+            Just x
+
 
 updatePlayer : LordList -> Lord -> LordList
 updatePlayer (Cons _ ps) np =
-        Cons np ps
+    Cons np ps
+
 
 tailLordList : LordList -> List Lord
-tailLordList (Cons _ ps) = 
-            ps
+tailLordList (Cons _ ps) =
+    ps
+
 
 updateEnemyLord : LordList -> List Lord -> LordList
 updateEnemyLord (Cons p _) pss =
-        Cons p pss
-        
+    Cons p pss
+
 
 flattenLordList : LordList -> List Lord
 flattenLordList (Cons p ps) =
-        p :: ps
+    p :: ps
+
 
 getLordByName : LordList -> String -> Maybe Lord
-getLordByName l str = 
-        case List.filter (\x -> x.entity.name == str) (flattenLordList l) of
-            [] ->
-                Nothing
-            
-            (x :: _) -> 
-                Just x
+getLordByName l str =
+    case List.filter (\x -> x.entity.name == str) (flattenLordList l) of
+        [] ->
+            Nothing
+
+        x :: _ ->
+            Just x
+
 
 type ActionMotive
     = AttackLord
@@ -208,6 +229,7 @@ type alias Settlement =
     , isSieged : Bool
     }
 
+
 type alias WorldEntity =
     { army : List Troop
     , faction : Faction
@@ -215,14 +237,16 @@ type alias WorldEntity =
     , name : String
     }
 
-getSettlementByName : List Settlement -> String -> Maybe Settlement
-getSettlementByName l s = 
-        case List.filter (\x -> x.entity.name == s) l of
-            [] -> 
-                Nothing
 
-            (x :: _) -> 
-                Just x 
+getSettlementByName : List Settlement -> String -> Maybe Settlement
+getSettlementByName l s =
+    case List.filter (\x -> x.entity.name == s) l of
+        [] ->
+            Nothing
+
+        x :: _ ->
+            Just x
+
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
 setPosition entity pos =
@@ -313,29 +337,17 @@ flattenTroops troops types =
             { amount = List.foldr (\t v -> t.amount + v) 0 (List.filter (\x -> x.troopType == y) troops), troopType = y } :: flattenTroops troops ys
 
 
-type alias BattleStats =
-    {
-        player: Lord
-        , enemy: Lord
-        , round: Int
-        , playerCasualties: List Troop
-        , enemyCasualties: List Troop
-        , finished: Bool
-    }
-
 factionToImage : Faction -> String
-factionToImage fac = 
+factionToImage fac =
     case fac of
-        Faction.Faction1 -> 
+        Faction.Faction1 ->
             "faction1.png"
 
-        Faction.Faction2 -> 
+        Faction.Faction2 ->
             "faction2.png"
 
-        Faction.Faction3 -> 
+        Faction.Faction3 ->
             "faction3.png"
 
-        Faction.Faction4 -> 
+        Faction.Faction4 ->
             "faction4.png"
-
-

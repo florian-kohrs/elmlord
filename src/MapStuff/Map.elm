@@ -1,4 +1,3 @@
-module Map exposing (..)
 
 import BasicDrawing
 import Browser
@@ -15,9 +14,10 @@ import Pathfinder exposing (NavigatableMap)
 import String exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
+import Troops
 import Types
 import Vector exposing (..)
-import Troops
+
 
 type alias Map =
     Dict.Dict Int MapTile
@@ -83,6 +83,11 @@ type Terrain
     | Water
     | Forest
     | Mountain
+
+
+getTerrainForPoint : Vector.Point -> Map -> Terrain
+getTerrainForPoint p map =
+    MaybeExt.foldMaybe .terrain Grass (Dict.get (MapData.hashMapPoint p) map)
 
 
 type TerrainMoveType
@@ -276,16 +281,16 @@ generateHexagonPoints v r =
 
 
 terrainToBonus : Terrain -> List Troops.TroopType
-terrainToBonus ter = 
+terrainToBonus ter =
     case ter of
-        Grass -> 
-            [Troops.Knight, Troops.Sword]
+        Grass ->
+            [ Troops.Knight, Troops.Sword ]
 
-        Forest -> 
-            [Troops.Archer]
-        
-        Mountain -> 
-            [Troops.Spear]
+        Forest ->
+            [ Troops.Archer ]
 
-        Water -> 
+        Mountain ->
+            [ Troops.Spear ]
+
+        Water ->
             []
