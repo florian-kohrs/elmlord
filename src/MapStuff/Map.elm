@@ -52,11 +52,9 @@ tileToClickAction tile =
         :: MaybeExt.foldMaybe (\img -> [ MapDrawer.InteractableSvg img [] ]) [] (getImageItemForTile tile)
 
 
-
-{-
-   getClosestFreeFieldAt : Vector.Point -> Map -> Vector.Point
-   getClosestFreeFieldAt p =
--}
+getClosestFreeFieldAt : Vector.Point -> Map -> Vector.Point
+getClosestFreeFieldAt p m =
+    p
 
 
 setSettlement : MapTile -> Maybe Settlement -> MapTile

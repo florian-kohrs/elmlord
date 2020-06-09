@@ -4,7 +4,6 @@ import Faction exposing (..)
 import List exposing (..)
 import OperatorExt exposing (ternary)
 import Pathfinder
-import RedundantDataManager
 import Troops exposing (..)
 import Vector exposing (..)
 
@@ -271,12 +270,13 @@ createCapitalFor e =
 type alias SettlementInfo =
     { sType : SettlementType
     , position : Vector.Point
+    , faction : Faction
     }
 
 
-getSettlementFor : Lord -> SettlementInfo -> Settlement
-getSettlementFor l info =
-    { entity = { army = [], faction = l.entity.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.0, isSieged = False }
+getSettlementFor : SettlementInfo -> Settlement
+getSettlementFor info =
+    { entity = { army = [], faction = info.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.0, isSieged = False }
 
 
 combineSettlementName : Settlement -> String

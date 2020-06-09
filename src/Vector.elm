@@ -86,6 +86,20 @@ y v =
     v.y
 
 
+rotateVector : Vector -> Float -> Vector
+rotateVector v rad =
+    let
+        cosV =
+            cos (rad * pi)
+
+        sinV =
+            sin (rad * pi)
+    in
+    Vector
+        (cosV * v.x - sinV * v.y)
+        (sinV * v.x + cosV * v.y)
+
+
 zero : Vector
 zero =
     Vector 0 0

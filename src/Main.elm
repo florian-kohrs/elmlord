@@ -212,7 +212,7 @@ initPlayers m count =
     let
         lords =
             List.map
-                (\i -> initPlayer i (2 * (toFloat i / toFloat count + 0.125)))
+                (\i -> initPlayer m.map i (2 * (toFloat i / toFloat count + 0.125)))
                 (List.range 0 (count - 1))
     in
     { m | lords = Cons testLord lords }
@@ -223,8 +223,8 @@ drawnMap map =
     Map.drawMap map
 
 
-initPlayer : Int -> Float -> Lord
-initPlayer i rad =
+initPlayer : Map.Map -> Int -> Float -> Lord
+initPlayer m i rad =
     let
         entity =
             WorldEntity
@@ -237,13 +237,46 @@ initPlayer i rad =
         entity
         250
         (Entities.Action Entities.Wait Entities.Defend)
-        (initSettlementsFor entity)
+        (initSettlementsFor m entity i)
         5
 
 
-initSettlementsFor : Entities.WorldEntity -> List Entities.Settlement
-initSettlementsFor e =
-    Entities.createCapitalFor e :: []
+villagesPerLord : Int
+villagesPerLord =
+    3
+
+
+initSettlementsFor : Map.Map -> Entities.WorldEntity -> Int -> List Entities.Settlement
+initSettlementsFor m e i =
+    Entities.createCapitalFor e
+        :: List.map Entities.getSettlementFor (getVillagesInQuadrant m e i villagesPerLord)
+
+
+getVillagesInQuadrant : Map.Map -> Entities.WorldEntity -> Int -> Int -> List Entities.SettlementInfo
+getVillagesInQuadrant m e q i =
+    List.map
+        (\index -> Entities.SettlementInfo Village (Map.getClosestFreeFieldAt (getVillagesPosition i q index e.position) m) e.faction)
+        (List.range 1 i)
+
+
+getVillagesPosition : Int -> Int -> Int -> Vector.Point -> Vector.Point
+getVillagesPosition max q {- quadrant -} i p =
+    let
+        distanceFromCapital =
+            7
+
+        rad =
+            0.5 * pi * (toFloat i / toFloat max + toFloat (-q + 2))
+
+        x =
+            sin rad * distanceFromCapital
+
+        y =
+            cos rad * distanceFromCapital
+
+        -- should be divided by playerCount
+    in
+    Vector.addPoints p (Vector.toPoint (Vector.Vector x y))
 
 
 
@@ -422,7 +455,7 @@ updateBattle msg model =
         FleeBattle bS ->
             let
                 newEnemyLords =
-                    OperatorExt.mapFilter (\_ -> bS.enemy) OperatorExt.const (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+                    OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
 
                 newPlayer =
                     Entities.updatePlayerArmy bS.player (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.player.entity.army)
@@ -435,7 +468,7 @@ updateBattle msg model =
         EndBattle bS ->
             let
                 newEnemyLords =
-                    OperatorExt.mapFilter (\_ -> bS.enemy) OperatorExt.const (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+                    OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
 
                 lords =
                     Cons bS.player newEnemyLords

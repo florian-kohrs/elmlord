@@ -41,7 +41,7 @@ mapScale =
 
 seed : Int
 seed =
-    9
+    3
 
 
 noiseScale : Float
