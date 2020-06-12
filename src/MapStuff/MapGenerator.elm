@@ -69,7 +69,9 @@ getNav map =
 
                 yDiff =
                     Basics.max 0
-                        (toFloat (abs (p1.y - p2.y)) - xDiff / 2)
+                        ((toFloat (abs (p1.y - p2.y)) - xDiff / 2)
+                            - toFloat (modBy 2 (round xDiff))
+                        )
             in
             xDiff + yDiff
     }
