@@ -122,13 +122,18 @@ getSelectedPath m =
             Nothing
 
         Just point ->
-            if canMoveToPoint (drawnMap m.map) point then
-                Pathfinder.getPath
-                    player.entity.position
-                    (Pathfinder.PathInfo (MapGenerator.getNav m.map) point)
+            getPathTo player.entity.position point m.map
 
-            else
-                Nothing
+
+getPathTo : Vector.Point -> Vector.Point -> Map.Map -> Maybe Pathfinder.Path
+getPathTo from to map =
+    if canMoveToPoint (drawnMap map) to then
+        Pathfinder.getPath
+            from
+            (Pathfinder.PathInfo (MapGenerator.getNav map) to)
+
+    else
+        Nothing
 
 
 allSettlements : Model -> List Settlement
@@ -186,6 +191,7 @@ testLord =
     , action = testActionType
     , land = [ testSetelement ]
     , moveSpeed = 1.0
+    , usedMovement = 0
     }
 
 
@@ -239,6 +245,7 @@ initPlayer m i rad =
         (Entities.Action Entities.Wait Entities.Defend)
         (initSettlementsFor m entity i)
         5
+        0
 
 
 villagesPerLord : Int
@@ -303,16 +310,26 @@ getVillagesPosition max q {- quadrant -} i p =
 -}
 
 
-updateLordsAfterRound : LordList -> LordList
+updateLordsAfterRound : List Entities.Lord -> List Entities.Lord
 updateLordsAfterRound lords =
-    Entities.mapLordList Entities.updateLordOnRoundEnd lords
+    List.map (\l -> updateLord l |> endRoundForLord) lords
+
+
+updateLord : Lord -> Lord
+updateLord lord =
+    lord
+
+
+endRoundForLord : Lord -> Lord
+endRoundForLord l =
+    applyLordGoldIncome l |> Entities.resetUsedMovement
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            { model | date = DateExt.addMonths 1 model.date, lords = updateLordsAfterRound model.lords }
+            { model | date = DateExt.addMonths 1 model.date, lords = Cons (endRoundForLord (getPlayer model)) (updateLordsAfterRound (npcs model.lords)) }
 
         EndGame bool ->
             { model | gameState = GameOver bool }
@@ -340,10 +357,31 @@ updateMaptileAction model ma =
             { model | gameState = GameSetup (LordView lord) }
 
         SettlementMsg msg settlement ->
-            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) settlement Types.StandardView) }
+            { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
 
-        MoveTo _ ->
-            model
+        MoveTo p ->
+            let
+                player =
+                    getPlayer model
+            in
+            case getPathTo player.entity.position p model.map of
+                Nothing ->
+                    model
+
+                Just path ->
+                    let
+                        ( remainingMove, point ) =
+                            Pathfinder.moveAlongPath path (getLordRemainingMovement player)
+
+                        newPlayer =
+                            { player | usedMovement = player.moveSpeed - remainingMove, entity = Entities.setPosition player.entity point }
+                    in
+                    { model | lords = Cons newPlayer (npcs model.lords) }
+
+
+getPlayer : Model -> Entities.Lord
+getPlayer model =
+    Entities.getPlayer model.lords
 
 
 updateSettlement : SettlementMsg -> Model -> Model
@@ -398,7 +436,7 @@ updateMultipleTroopStats : LordList -> Settlement -> UiSettlementState -> Model 
 updateMultipleTroopStats l s u m =
     let
         newSettle =
-            getSettlementByName (getPlayer l).land s.entity.name
+            getSettlementByName (Entities.getPlayer l).land s.entity.name
     in
     case newSettle of
         Nothing ->
@@ -424,7 +462,7 @@ updateBattle msg model =
                     model
 
                 Just x ->
-                    { model | gameState = GameSetup (BattleView { player = getPlayer model.lords, enemy = x, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
+                    { model | gameState = GameSetup (BattleView { player = getPlayer model, enemy = x, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
 
         StartSkirmish bS ->
             let
@@ -530,8 +568,8 @@ view model =
 
 
 gameStateToText : Model -> String
-gameStateToText gs =
-    String.fromFloat (getPlayer gs.lords).gold
+gameStateToText m =
+    String.fromFloat (getPlayer m).gold
 
 
 

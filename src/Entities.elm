@@ -18,6 +18,7 @@ type alias Lord =
     , action : Action
     , land : List Settlement
     , moveSpeed : Float
+    , usedMovement : Float
     }
 
 
@@ -159,6 +160,11 @@ type LordList
     = Cons Lord (List Lord)
 
 
+npcs : LordList -> List Lord
+npcs (Cons _ ls) =
+    ls
+
+
 mapLordList : (Lord -> Lord) -> LordList -> LordList
 mapLordList f (Cons p ps) =
     Cons (f p) (List.map f ps)
@@ -167,6 +173,16 @@ mapLordList f (Cons p ps) =
 getPlayer : LordList -> Lord
 getPlayer (Cons p _) =
     p
+
+
+resetUsedMovement : Lord -> Lord
+resetUsedMovement lord =
+    { lord | usedMovement = 0 }
+
+
+getLordRemainingMovement : Lord -> Float
+getLordRemainingMovement l =
+    l.moveSpeed - l.usedMovement
 
 
 getSettlement : List Settlement -> String -> Maybe Settlement
@@ -252,8 +268,8 @@ setPosition entity pos =
     { entity | position = pos }
 
 
-updateLordOnRoundEnd : Lord -> Lord
-updateLordOnRoundEnd lord =
+applyLordGoldIncome : Lord -> Lord
+applyLordGoldIncome lord =
     { lord | gold = lord.gold + calculateRoundIncome lord }
 
 

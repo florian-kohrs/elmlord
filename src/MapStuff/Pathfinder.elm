@@ -31,6 +31,20 @@ type alias PathTile =
     }
 
 
+moveAlongPath : Path -> Float -> ( Float, Vector.Point )
+moveAlongPath p distance =
+    case p.path of
+        [] ->
+            ( distance, p.target )
+
+        part :: parts ->
+            if distance < part.timeLoss then
+                ( distance, part.indices )
+
+            else
+                moveAlongPath (Path p.target parts) (distance - part.timeLoss)
+
+
 pathToPoints : Path -> List Vector.Point
 pathToPoints path =
     List.map .indices path.path
