@@ -114,10 +114,10 @@ terrainToMove t =
             CantWalkOn
 
         Forest ->
-            CanWalkOn 0.5
+            CanWalkOn 0.8
 
         Mountain ->
-            CanWalkOn 0.1
+            CanWalkOn 0.5
 
 
 terrainToColor : Terrain -> String

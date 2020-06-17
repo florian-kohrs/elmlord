@@ -73,7 +73,7 @@ buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
             (List.foldl
-                (EntitiesDrawer.drawSettlement testLord)
+                (EntitiesDrawer.drawSettlement (getPlayer m))
                 (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) (Entities.flattenLordList m.lords))
                 (allSettlements m)
             )
@@ -186,7 +186,7 @@ testLord =
     { entity = testLordWorldEntity
     , gold = 250
     , land = [ testSetelement ]
-    , agent = PathAgent.getAgent 30
+    , agent = PathAgent.getAgent 6
     }
 
 

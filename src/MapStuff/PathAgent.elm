@@ -27,12 +27,12 @@ setUsedMovement f a =
 
 
 type alias MoveSimulator =
-    { turn : Int, turnDistance : Float, turnUsedMove : Float, maxMove : Float }
+    { turn : Int, turnUsedMove : Float, maxMove : Float }
 
 
 newMoveSimulator : Float -> Float -> MoveSimulator
 newMoveSimulator move usedMove =
-    { turn = 1, turnDistance = 0.0, turnUsedMove = usedMove, maxMove = move }
+    { turn = 1, turnUsedMove = usedMove, maxMove = move }
 
 
 moveSimulatorFromAgent : Agent -> MoveSimulator
@@ -63,11 +63,11 @@ getAgent speed =
 
 simulateDistance : Float -> MoveSimulator -> MoveSimulator
 simulateDistance f sim =
-    if canReachInRound sim.maxMove sim.turnUsedMove sim.turnDistance then
-        { sim | turnDistance = sim.turnDistance + f }
+    if canReachInRound sim.maxMove sim.turnUsedMove f then
+        { sim | turnUsedMove = sim.turnUsedMove + f }
 
     else
-        { sim | turn = sim.turn + 1, turnDistance = f, turnUsedMove = f }
+        { sim | turn = sim.turn + 1, turnUsedMove = f }
 
 
 moveAlongPath : Pathfinder.Path -> Vector.Point -> Agent -> ( Float, Vector.Point )
