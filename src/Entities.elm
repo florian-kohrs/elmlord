@@ -3,6 +3,7 @@ module Entities exposing (..)
 import Faction exposing (..)
 import List exposing (..)
 import OperatorExt exposing (ternary)
+import PathAgent
 import Pathfinder
 import Troops exposing (..)
 import Vector exposing (..)
@@ -15,10 +16,8 @@ type alias Gold =
 type alias Lord =
     { entity : WorldEntity
     , gold : Gold
-    , action : Action
     , land : List Settlement
-    , moveSpeed : Float
-    , usedMovement : Float
+    , agent : PathAgent.Agent
     }
 
 
@@ -152,10 +151,6 @@ villageNames =
     ]
 
 
-type alias Action =
-    { actionType : ActionType, actionMotive : ActionMotive }
-
-
 type LordList
     = Cons Lord (List Lord)
 
@@ -177,12 +172,12 @@ getPlayer (Cons p _) =
 
 resetUsedMovement : Lord -> Lord
 resetUsedMovement lord =
-    { lord | usedMovement = 0 }
+    { lord | agent = PathAgent.resetUsedMovement lord.agent }
 
 
 getLordRemainingMovement : Lord -> Float
 getLordRemainingMovement l =
-    l.moveSpeed - l.usedMovement
+    PathAgent.remainingMovement l.agent
 
 
 getSettlement : List Settlement -> String -> Maybe Settlement
@@ -223,18 +218,6 @@ getLordByName l str =
 
         x :: _ ->
             Just x
-
-
-type ActionMotive
-    = AttackLord
-    | Siege
-    | Defend
-    | Flee
-
-
-type ActionType
-    = Wait
-    | Travel Point (Maybe Pathfinder.Path)
 
 
 type alias Settlement =
