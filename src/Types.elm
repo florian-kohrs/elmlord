@@ -1,11 +1,8 @@
 module Types exposing (..)
 
-import Entities
+import Entities exposing (BattleStats)
 import Troops exposing (..)
 import Vector
-import Entities exposing (BattleStats)
-
-
 
 
 type Msg
@@ -76,15 +73,17 @@ type SettlementMsg
     | TroopMsg SettlementArmyMsg
 
 
-type SettlementUIMsg =
-    ShowSettlement Entities.Settlement
+type SettlementUIMsg
+    = ShowSettlement Entities.Settlement
     | ShowBuyTroops Entities.Settlement
     | ShowStationTroops Entities.Settlement
 
-type SettlementArmyMsg =
-    BuyTroops Troops.TroopType Entities.Settlement
+
+type SettlementArmyMsg
+    = BuyTroops Troops.TroopType Entities.Settlement
     | StationTroops Troops.TroopType Entities.Settlement
     | TakeTroops Troops.TroopType Entities.Settlement
+
 
 type UiSettlementState
     = StandardView
@@ -92,7 +91,8 @@ type UiSettlementState
     | StationView
     | BuildingView
 
-type BattleMsg 
+
+type BattleMsg
     = StartBattle String
     | StartSkirmish Entities.BattleStats
     | SkipSkirmishes Entities.BattleStats

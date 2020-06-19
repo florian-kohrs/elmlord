@@ -64,8 +64,18 @@ settlementZIndex =
     7
 
 
+settlementBorderZIndex : Int
+settlementBorderZIndex =
+    6
+
+
 pathZIndex : Int
 pathZIndex =
+    5
+
+
+settlementStrokeWidth : Int
+settlementStrokeWidth =
     5
 
 
