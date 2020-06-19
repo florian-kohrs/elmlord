@@ -3,7 +3,8 @@
     "source-directories": [
         "src",
         "src/MapStuff",
-	      "src/Drawers",
+        "src/Drawers",
+	      "src/AI",
         "src/Exts"
     ],
     "elm-version": "0.19.1",

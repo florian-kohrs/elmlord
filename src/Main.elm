@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import AI
 import Battle
 import Browser
 import DateExt
@@ -43,7 +44,7 @@ type alias Model =
 
 type GameState
     = GameSetup UiState
-    | InGame Int -- int = playerCount
+    | InGame Int Int -- playerCount, playersTurn
     | GameOver Bool -- true = gewonnen, false = verloren
 
 
@@ -284,30 +285,6 @@ getVillagesPosition max q {- quadrant -} i p =
         -- should be divided by playerCount
     in
     Vector.addPoints p (Vector.toPoint (Vector.Vector x y))
-
-
-
---generateSettlementsFor : Lord ->
-{-
-   addSettlementsTo : Entities.Lord -> List Entities.SettlementInfo -> Model -> Model
-   addSettlementsTo l sInfos m =
-       let
-           mLord =
-               List.head (List.filter ((==) l) m.lords)
-       in
-       case mLord of
-           Nothing ->
-               m
-
-           Just lord ->
-               List.map (Entities.getSettlementFor lord) sInfos
-
-
-   initField : Map.MapTile -> Map.MapTile
-   initField t =
-       t
-
--}
 
 
 updateLordsAfterRound : List Entities.Lord -> List Entities.Lord

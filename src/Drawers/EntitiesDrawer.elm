@@ -3,13 +3,14 @@ module EntitiesDrawer exposing (..)
 import BasicDrawing
 import Dict
 import Entities
+import Faction
 import ListExt
 import Map
 import MapData
 import MapDrawer
 import MaybeExt
 import Svg
-import Svg.Attributes
+import Svg.Attributes exposing (..)
 import Svg.Events
 import Types
 import Vector
@@ -25,12 +26,16 @@ drawLord player l =
 
 
 drawSettlement : Entities.Lord -> Entities.Settlement -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawSettlement player s =
+drawSettlement player s dict =
     let
         drawnSettlement =
             MapDrawer.InteractableSvg (showSettlement s) (getSettlementAction player s)
+
+        drawnSettlementBorder =
+            MapDrawer.InteractableSvg (showSettlementBorder s) []
     in
-    MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement
+    MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement dict
+        |> MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlementBorder
 
 
 getLordAction : Entities.Lord -> Entities.Lord -> List Types.MapTileMsg
@@ -82,12 +87,30 @@ showSettlement s =
     MapDrawer.SvgItem MapData.settlementZIndex (getSvgForSettlement s)
 
 
+showSettlementBorder : Entities.Settlement -> MapDrawer.SvgItem
+showSettlementBorder s =
+    MapDrawer.SvgItem MapData.settlementBorderZIndex (getSvgBorderForSettlement s)
+
+
 getSvgForLord : Entities.Lord -> Svg.Svg Types.Msg
 getSvgForLord l =
     BasicDrawing.getImage
         "Lord1.png"
         l.entity.position
         1
+
+
+getSvgBorderForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
+getSvgBorderForSettlement s =
+    Svg.polygon
+        [ Svg.Events.onClick (Types.Click s.entity.position)
+        , overflow "visible"
+        , stroke (Faction.factionColor s.entity.faction)
+        , strokeWidth (String.fromInt MapData.settlementStrokeWidth ++ "px")
+        , points (Map.pointsToHexagonPoints (Map.generateHexagonPoints (MapData.mapPositionForIndex s.entity.position) MapData.hexRadius))
+        , opacity "0.8"
+        ]
+        []
 
 
 getSvgForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
