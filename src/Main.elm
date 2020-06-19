@@ -18,6 +18,7 @@ import MapDrawer
 import MapGenerator exposing (createMap)
 import MaybeExt
 import OperatorExt
+import PathAgent
 import PathDrawer
 import Pathfinder
 import Svg exposing (..)
@@ -73,7 +74,7 @@ buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
             (List.foldl
-                (EntitiesDrawer.drawSettlement testLord)
+                (EntitiesDrawer.drawSettlement (getPlayer m))
                 (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) (Entities.flattenLordList m.lords))
                 (allSettlements m)
             )
@@ -109,7 +110,10 @@ buildPathSvgs m mapDict =
             mapDict
 
         Just path ->
-            PathDrawer.drawPath player.moveSpeed path mapDict
+            PathDrawer.drawPath
+                player.agent
+                (Pathfinder.cutFirstStepFromPath path)
+                mapDict
 
 
 getSelectedPath : Model -> Maybe Pathfinder.Path
@@ -178,21 +182,12 @@ testLordWorldEntity =
     }
 
 
-testActionType : Action
-testActionType =
-    { actionType = Wait
-    , actionMotive = Flee
-    }
-
-
 testLord : Lord
 testLord =
     { entity = testLordWorldEntity
     , gold = 250
-    , action = testActionType
     , land = [ testSetelement ]
-    , moveSpeed = 1.0
-    , usedMovement = 0
+    , agent = PathAgent.getAgent 6
     }
 
 
@@ -243,10 +238,8 @@ initPlayer m i rad =
     Lord
         entity
         250
-        (Entities.Action Entities.Wait Entities.Defend)
         (initSettlementsFor m entity i)
-        5
-        0
+        (PathAgent.getAgent 5)
 
 
 villagesPerLord : Int
@@ -347,11 +340,14 @@ updateMaptileAction model ma =
 
                 Just path ->
                     let
-                        ( remainingMove, point ) =
-                            Pathfinder.moveAlongPath path (getLordRemainingMovement player)
+                        ( usedMove, point ) =
+                            PathAgent.moveAlongPath path player.entity.position player.agent
 
                         newPlayer =
-                            { player | usedMovement = player.moveSpeed - remainingMove, entity = Entities.setPosition player.entity point }
+                            { player
+                                | agent = PathAgent.setUsedMovement usedMove player.agent
+                                , entity = Entities.setPosition player.entity point
+                            }
                     in
                     { model | lords = Cons newPlayer (npcs model.lords) }
 

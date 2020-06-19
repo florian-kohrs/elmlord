@@ -3,6 +3,7 @@ module PathDrawer exposing (..)
 import BasicDrawing
 import MapData
 import MapDrawer
+import PathAgent
 import Pathfinder
 import Svg
 import Svg.Attributes
@@ -11,38 +12,34 @@ import Types
 import Vector
 
 
-drawPath : Float -> Pathfinder.Path -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawPath moveSpeed path dict =
-    Tuple.first
-        (List.foldl
-            (\tile ( newDict, dist ) ->
-                ( drawPathPart
-                    (min 9 (max 1 (ceiling (dist / moveSpeed))))
-                    tile
-                    newDict
-                , dist + tile.timeLoss
-                )
-            )
-            ( dict, 0 )
-            path.path
+drawPath : PathAgent.Agent -> Pathfinder.Path -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawPath agent path dict =
+    List.foldl
+        (\( t, turns ) newDict ->
+            drawPathPart
+                (min 9 turns)
+                t.indices
+                newDict
         )
+        dict
+        (PathAgent.pathPartsToTime agent path.path)
 
 
-drawPathPart : Int -> Pathfinder.PathTile -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
-drawPathPart i tile =
+drawPathPart : Int -> Vector.Point -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawPathPart i p =
     MapDrawer.addToMap
-        (MapData.hashMapPoint tile.indices)
-        (MapDrawer.InteractableSvg (showPathPart i tile) (getPathPartAction tile))
+        (MapData.hashMapPoint p)
+        (MapDrawer.InteractableSvg (showPathPart i p) (getPathPartAction p))
 
 
-getPathPartAction : Pathfinder.PathTile -> List Types.MapTileMsg
+getPathPartAction : Vector.Point -> List Types.MapTileMsg
 getPathPartAction _ =
     []
 
 
-showPathPart : Int -> Pathfinder.PathTile -> MapDrawer.SvgItem
-showPathPart i tile =
-    MapDrawer.SvgItem MapData.pathZIndex (getSvgForPathPart i tile.indices)
+showPathPart : Int -> Vector.Point -> MapDrawer.SvgItem
+showPathPart i p =
+    MapDrawer.SvgItem MapData.pathZIndex (getSvgForPathPart i p)
 
 
 getSvgForPathPart : Int -> Vector.Point -> Svg.Svg Types.Msg

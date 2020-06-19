@@ -31,20 +31,6 @@ type alias PathTile =
     }
 
 
-moveAlongPath : Path -> Float -> ( Float, Vector.Point )
-moveAlongPath p distance =
-    case p.path of
-        [] ->
-            ( distance, p.target )
-
-        part :: parts ->
-            if distance < part.timeLoss then
-                ( distance, part.indices )
-
-            else
-                moveAlongPath (Path p.target parts) (distance - part.timeLoss)
-
-
 pathToPoints : Path -> List Vector.Point
 pathToPoints path =
     List.map .indices path.path
@@ -89,12 +75,10 @@ toPath p =
 
 toPath_ : PathPart -> List PathTile -> List PathTile
 toPath_ (PathPart p) ps =
-    case p.parent of
-        Nothing ->
-            pathPartToTile (PathPart p) :: ps
-
-        Just parent ->
-            toPath_ parent (pathPartToTile (PathPart p) :: ps)
+    MaybeExt.foldMaybe
+        (\parent -> toPath_ parent (pathPartToTile (PathPart p) :: ps))
+        (pathPartToTile (PathPart p) :: ps)
+        p.parent
 
 
 totalDistance : PathPart -> Float
@@ -105,6 +89,15 @@ totalDistance (PathPart p) =
 getPath : Vector.Point -> PathInfo -> Maybe Path
 getPath from info =
     buildPath (createPathPart from Nothing info) [] (Dict.singleton (MapData.hashMapPoint from) ()) info
+
+
+cutFirstStepFromPath : Path -> Path
+cutFirstStepFromPath p =
+    Path p.target
+        (Maybe.withDefault
+            []
+            (List.tail p.path)
+        )
 
 
 buildPath : PathPart -> PathTails -> PathTailLookup -> PathInfo -> Maybe Path
