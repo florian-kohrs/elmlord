@@ -273,6 +273,11 @@ type alias SettlementInfo =
     }
 
 
+editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
+editSettlmentInfoPosition p i =
+    { i | position = p }
+
+
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
     { entity = { army = [], faction = info.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.0, isSieged = False }

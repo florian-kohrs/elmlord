@@ -23,17 +23,17 @@ getNav map =
         \p ->
             case Dict.get (MapData.hashMapPoint p) map of
                 Nothing ->
-                    9000
+                    Nothing
 
                 Just t ->
                     case Map.terrainToMove t.terrain of
                         Map.CantWalkOn ->
-                            9000
+                            Nothing
 
                         Map.CanWalkOn speedFactor ->
-                            1 / speedFactor
+                            Just (1 / speedFactor)
     , getCircumjacentFields =
-        \p ->
+        \p useEveryTile ->
             let
                 sign =
                     if modBy 2 p.x == 0 then
@@ -48,7 +48,7 @@ getNav map =
                             False
 
                         Just t ->
-                            Map.canMoveOnTile t
+                            useEveryTile || Map.canMoveOnTile t
             in
             List.filter (\point -> abs point.x <= mapSize && abs point.y <= mapSize && canUseTile point)
                 [ Vector.Point p.x (p.y + 1)

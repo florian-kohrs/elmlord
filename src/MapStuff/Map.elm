@@ -52,11 +52,6 @@ tileToClickAction tile =
         :: MaybeExt.foldMaybe (\img -> [ MapDrawer.InteractableSvg img [] ]) [] (getImageItemForTile tile)
 
 
-getClosestFreeFieldAt : Vector.Point -> Map -> Vector.Point
-getClosestFreeFieldAt p m =
-    p
-
-
 setSettlement : MapTile -> Maybe Settlement -> MapTile
 setSettlement t s =
     { t | settlement = s }
@@ -64,7 +59,7 @@ setSettlement t s =
 
 heighProgressToTerrain : Float -> Terrain
 heighProgressToTerrain f =
-    if f < 0.15 then
+    if f < 0.2 then
         Water
 
     else if f < 0.5 then
@@ -228,22 +223,9 @@ getImageForTile t =
         (terrainToImageName t.terrain)
 
 
-
---    ++ MaybeExt.foldMaybe (\s -> [ getSvgForSettlement tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) s ]) [] tile.settlement
---    ++ List.foldl (\l r -> getSvgForLord tile.point (Vector.scale (Vector.Vector MapData.hexRadius MapData.hexRadius) 1.5) l :: r) [] tile.lords
-
-
 pointsToHexagonPoints : List Vector.Vector -> String
 pointsToHexagonPoints =
     List.foldl (\v r -> r ++ String.fromFloat v.x ++ "," ++ String.fromFloat v.y ++ " ") ""
-
-
-
-{-
-   intialSettlementMapSetup : List Entities.Settlement -> Map -> Map
-   intialSettlementMapSetup settlements =
-       List.map (\( k, tile ) ->  setSettlement tile (List.head (List.filter (\s -> Vector.pointEqual tile.indices s.entity.position) settlements)))
--}
 
 
 generateHexagonPoints : Vector -> Float -> List Vector.Vector

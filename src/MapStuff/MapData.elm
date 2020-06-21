@@ -98,6 +98,20 @@ hashMapPoint p =
     Bitwise.shiftLeftBy 16 shiftedP.x + shiftedP.y
 
 
+
+{-
+   hashToPoint : Int -> Vector.Point
+   hashToPoint i =
+       let
+           x =
+               Bitwise.shiftRightBy 16 i
+       in
+       Vector.addPoints
+           (Vector.Point x (i - Bitwise.shiftLeftBy 16 x))
+           (Vector.Point -mapWidth -mapHeight)
+-}
+
+
 mapPositionForIndex : Vector.Point -> Vector.Vector
 mapPositionForIndex p =
     let

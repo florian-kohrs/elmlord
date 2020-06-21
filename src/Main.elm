@@ -232,13 +232,13 @@ initPlayer m i rad =
             WorldEntity
                 secondLordTroops
                 (Faction.getFaction i)
-                (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad))
+                (Pathfinder.getClosestFreeFieldAt (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad)) (MapGenerator.getNav m) Dict.empty)
                 ("Lord " ++ String.fromInt i)
     in
     Lord
         entity
         250
-        (initSettlementsFor m entity i)
+        (initSettlementsFor m Dict.empty entity i)
         (PathAgent.getAgent 5)
 
 
@@ -247,17 +247,45 @@ villagesPerLord =
     3
 
 
-initSettlementsFor : Map.Map -> Entities.WorldEntity -> Int -> List Entities.Settlement
-initSettlementsFor m e i =
+getAllSettlementPositions : Entities.LordList -> List Vector.Point
+getAllSettlementPositions lordListEntities =
+    []
+
+
+initSettlementsFor : Map.Map -> Dict.Dict Int () -> Entities.WorldEntity -> Int -> List Entities.Settlement
+initSettlementsFor m usedFields e i =
     Entities.createCapitalFor e
-        :: List.map Entities.getSettlementFor (getVillagesInQuadrant m e i villagesPerLord)
+        :: List.map
+            Entities.getSettlementFor
+            (getVillagesInQuadrant m e i villagesPerLord |> getSafeSettlementInfos m usedFields)
 
 
 getVillagesInQuadrant : Map.Map -> Entities.WorldEntity -> Int -> Int -> List Entities.SettlementInfo
 getVillagesInQuadrant m e q i =
     List.map
-        (\index -> Entities.SettlementInfo Village (Map.getClosestFreeFieldAt (getVillagesPosition i q index e.position) m) e.faction)
+        (\index -> Entities.SettlementInfo Village (getVillagesPosition i q index e.position) e.faction)
         (List.range 1 i)
+
+
+getSafeSettlementInfos : Map.Map -> Dict.Dict Int () -> List Entities.SettlementInfo -> List Entities.SettlementInfo
+getSafeSettlementInfos m usedFields infos =
+    Tuple.first
+        (List.foldl
+            (\info ( result, usedFields2 ) ->
+                let
+                    newInfo =
+                        getSafeSettlementInfo info m usedFields2
+                in
+                ( newInfo :: result, Dict.insert (MapData.hashMapPoint newInfo.position) () usedFields2 )
+            )
+            ( [], usedFields )
+            infos
+        )
+
+
+getSafeSettlementInfo : Entities.SettlementInfo -> Map.Map -> Dict.Dict Int () -> Entities.SettlementInfo
+getSafeSettlementInfo i m dict =
+    Entities.editSettlmentInfoPosition (Pathfinder.getClosestFreeFieldAt i.position (MapGenerator.getNav m) dict) i
 
 
 getVillagesPosition : Int -> Int -> Int -> Vector.Point -> Vector.Point
