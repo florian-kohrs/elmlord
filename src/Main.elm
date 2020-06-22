@@ -617,7 +617,7 @@ villagesPerLord =
     3
 
 
-villageCaptialDistance : Int
+villageCaptialDistance : Float
 villageCaptialDistance =
     7
 
