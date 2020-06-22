@@ -147,12 +147,21 @@ allSettlements m =
 
 
 
--- STATIC TEST DATA
+-- begin STATIC TEST DATA
 
 
 testTroopList : List Troop
 testTroopList =
     [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
+
+
+
+-- testLordData For Battlesimulation
+
+
+secondLordTroops : List Troop
+secondLordTroops =
+    [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
 
 
 testWorldEntity : WorldEntity
@@ -192,7 +201,13 @@ testLord =
 
 
 
--- STATIC TEST DATA --
+-- end STATIC TEST DATA
+-- begin initialization
+
+
+startGame : Int -> Model
+startGame playerCount =
+    initPlayers initialModel playerCount
 
 
 initialModel : Model
@@ -204,11 +219,6 @@ initialModel =
     Model (Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
 
 
-startGame : Int -> Model
-startGame playerCount =
-    initPlayers initialModel playerCount
-
-
 initPlayers : Model -> Int -> Model
 initPlayers m count =
     let
@@ -218,11 +228,6 @@ initPlayers m count =
                 (List.range 0 (count - 1))
     in
     { m | lords = Cons testLord lords }
-
-
-drawnMap : Map.Map -> MapDrawer.MapClickAction
-drawnMap map =
-    Map.drawMap map
 
 
 initPlayer : Map.Map -> Int -> Float -> Lord
@@ -242,16 +247,6 @@ initPlayer m i rad =
         (PathAgent.getAgent 5)
 
 
-villagesPerLord : Int
-villagesPerLord =
-    3
-
-
-getAllSettlementPositions : Entities.LordList -> List Vector.Point
-getAllSettlementPositions lordListEntities =
-    []
-
-
 initSettlementsFor : Map.Map -> Dict.Dict Int () -> Entities.WorldEntity -> Int -> List Entities.Settlement
 initSettlementsFor m usedFields e i =
     Entities.createCapitalFor e
@@ -265,6 +260,26 @@ getVillagesInQuadrant m e q i =
     List.map
         (\index -> Entities.SettlementInfo Village (getVillagesPosition i q index e.position) e.faction)
         (List.range 1 i)
+
+
+getVillagesPosition : Int -> Int -> Int -> Vector.Point -> Vector.Point
+getVillagesPosition max q {- quadrant -} i p =
+    let
+        distanceFromCapital =
+            villageCaptialDistance
+
+        rad =
+            0.5 * pi * (toFloat i / toFloat max + toFloat (-q + 2))
+
+        x =
+            sin rad * distanceFromCapital
+
+        y =
+            cos rad * distanceFromCapital
+
+        -- should be divided by playerCount
+    in
+    Vector.addPoints p (Vector.toPoint (Vector.Vector x y))
 
 
 getSafeSettlementInfos : Map.Map -> Dict.Dict Int () -> List Entities.SettlementInfo -> List Entities.SettlementInfo
@@ -288,39 +303,81 @@ getSafeSettlementInfo i m dict =
     Entities.editSettlmentInfoPosition (Pathfinder.getClosestFreeFieldAt i.position (MapGenerator.getNav m) dict) i
 
 
-getVillagesPosition : Int -> Int -> Int -> Vector.Point -> Vector.Point
-getVillagesPosition max q {- quadrant -} i p =
+
+-- end initialization
+-- begin drawing
+
+
+view : Model -> Html Msg
+view model =
     let
-        distanceFromCapital =
-            7
-
-        rad =
-            0.5 * pi * (toFloat i / toFloat max + toFloat (-q + 2))
-
-        x =
-            sin rad * distanceFromCapital
-
-        y =
-            cos rad * distanceFromCapital
-
-        -- should be divided by playerCount
+        allClickActions =
+            buildAllMapSvgs model
     in
-    Vector.addPoints p (Vector.toPoint (Vector.Vector x y))
+    div [ Html.Attributes.class "page-container" ]
+        [ findModalWindow model
+        , Templates.HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
+        , div [ Html.Attributes.class "page-map" ]
+            [ addStylesheet "link" "./assets/styles/main_styles.css"
+            , generateMapActionTemplate model.selectedPoint allClickActions
+            , div []
+                [ Svg.svg
+                    [ Svg.Attributes.viewBox "0 0 850 1000"
+                    , Svg.Attributes.fill "none"
+                    ]
+                    (MapDrawer.allSvgs allClickActions)
+                ]
+            , span [] [ Html.text (gameStateToText model) ]
+            ]
+        ]
 
 
-updateLordsAfterRound : List Entities.Lord -> List Entities.Lord
-updateLordsAfterRound lords =
-    List.map (\l -> updateLord l |> endRoundForLord) lords
+drawnMap : Map.Map -> MapDrawer.MapClickAction
+drawnMap map =
+    Map.drawMap map
 
 
-updateLord : Lord -> Lord
-updateLord lord =
-    lord
+
+-- Get the right modal-window by the current Model-Menue-State
 
 
-endRoundForLord : Lord -> Lord
-endRoundForLord l =
-    applyLordGoldIncome l |> Entities.resetUsedMovement
+findModalWindow : Model -> Html Msg
+findModalWindow model =
+    case model.gameState of
+        GameSetup uistate ->
+            case uistate of
+                SettlementView l s u ->
+                    generateSettlementModalTemplate l s u
+
+                LordView l ->
+                    generateLordTemplate l
+
+                BattleView bS ->
+                    generateBattleTemplate bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+
+                _ ->
+                    div [] []
+
+        GameOver bool ->
+            generateEndTemplate bool
+
+        _ ->
+            div [] []
+
+
+addStylesheet : String -> String -> Html Msg
+addStylesheet tag href =
+    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
+
+
+gameStateToText : Model -> String
+gameStateToText m =
+    String.fromFloat (getPlayer m).gold
+
+
+
+-- end drawing
+--begin update
 
 
 update : Msg -> Model -> Model
@@ -346,6 +403,21 @@ update msg model =
 
         Click p ->
             { model | selectedPoint = Just p }
+
+
+updateLordsAfterRound : List Entities.Lord -> List Entities.Lord
+updateLordsAfterRound lords =
+    List.map (\l -> updateLord l |> endRoundForLord) lords
+
+
+updateLord : Lord -> Lord
+updateLord lord =
+    lord
+
+
+endRoundForLord : Lord -> Lord
+endRoundForLord l =
+    applyLordGoldIncome l |> Entities.resetUsedMovement
 
 
 updateMaptileAction : Model -> MapTileMsg -> Model
@@ -378,11 +450,6 @@ updateMaptileAction model ma =
                             }
                     in
                     { model | lords = Cons newPlayer (npcs model.lords) }
-
-
-getPlayer : Model -> Entities.Lord
-getPlayer model =
-    Entities.getPlayer model.lords
 
 
 updateSettlement : SettlementMsg -> Model -> Model
@@ -540,86 +607,30 @@ skipBattle bS =
         skipBattle { bS | player = newPlayer, enemy = newEnemy }
 
 
-view : Model -> Html Msg
-view model =
-    let
-        allClickActions =
-            buildAllMapSvgs model
-    in
-    div [ Html.Attributes.class "page-container" ]
-        [ findModalWindow model
-        , Templates.HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
-        , div [ Html.Attributes.class "page-map" ]
-            [ addStylesheet "link" "./assets/styles/main_styles.css"
-            , generateMapActionTemplate model.selectedPoint allClickActions
-            , div []
-                [ Svg.svg
-                    [ Svg.Attributes.viewBox "0 0 850 1000"
-                    , Svg.Attributes.fill "none"
-                    ]
-                    (MapDrawer.allSvgs allClickActions)
-                ]
-            , span [] [ Html.text (gameStateToText model) ]
-            ]
-        ]
+
+-- end update
+-- begin config
+
+
+villagesPerLord : Int
+villagesPerLord =
+    3
+
+
+villageCaptialDistance : Int
+villageCaptialDistance =
+    7
 
 
 
--- Just for testing, will be removed (TOREMOVE)
+-- end config
 
 
-gameStateToText : Model -> String
-gameStateToText m =
-    String.fromFloat (getPlayer m).gold
-
-
-
--- Get the right modal-window by the current Model-Menue-State
-
-
-findModalWindow : Model -> Html Msg
-findModalWindow model =
-    case model.gameState of
-        GameSetup uistate ->
-            case uistate of
-                SettlementView l s u ->
-                    generateSettlementModalTemplate l s u
-
-                LordView l ->
-                    generateLordTemplate l
-
-                BattleView bS ->
-                    generateBattleTemplate bS (Map.getTerrainForPoint bS.player.entity.position model.map)
-
-                _ ->
-                    div [] []
-
-        GameOver bool ->
-            generateEndTemplate bool
-
-        _ ->
-            div [] []
-
-
-pointToMsg : Vector.Point -> Msg
-pointToMsg p =
-    Click p
+getPlayer : Model -> Entities.Lord
+getPlayer model =
+    Entities.getPlayer model.lords
 
 
 main : Program () Model Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }
-
-
-addStylesheet : String -> String -> Html Msg
-addStylesheet tag href =
-    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
-
-
-
--- testLordData For Battlesimulation
-
-
-secondLordTroops : List Troop
-secondLordTroops =
-    [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]

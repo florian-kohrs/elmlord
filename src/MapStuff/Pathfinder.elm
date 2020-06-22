@@ -32,6 +32,25 @@ type alias PathTile =
     }
 
 
+type alias PathInfo =
+    { nav : NavigatableMap, target : Vector.Point }
+
+
+type alias NavigatableMap =
+    { timeToCrossField : Vector.Point -> Maybe Float
+    , getCircumjacentFields : Vector.Point -> Bool -> List Vector.Point
+    , getMinDistanceBetween : Vector.Point -> Vector.Point -> Float
+    }
+
+
+type alias PathTailLookup =
+    Dict Int ()
+
+
+type alias PathTails =
+    List PathPart
+
+
 getClosestFreeFieldAt : Vector.Point -> NavigatableMap -> Dict Int () -> Vector.Point
 getClosestFreeFieldAt p nav invalidDict =
     Maybe.withDefault (Vector.Point 0 0) (getClosestFreeFieldAt_ p p [] nav invalidDict Dict.empty)
@@ -84,17 +103,6 @@ pathPartToTile (PathPart p) =
 pathTimeLoss : PathPart -> Float
 pathTimeLoss (PathPart p) =
     MaybeExt.foldMaybe (\(PathPart parent) -> p.previousDistance - parent.previousDistance) 0 p.parent
-
-
-type alias PathInfo =
-    { nav : NavigatableMap, target : Vector.Point }
-
-
-type alias NavigatableMap =
-    { timeToCrossField : Vector.Point -> Maybe Float
-    , getCircumjacentFields : Vector.Point -> Bool -> List Vector.Point
-    , getMinDistanceBetween : Vector.Point -> Vector.Point -> Float
-    }
 
 
 createPathPart : Vector.Point -> Maybe PathPart -> PathInfo -> PathPart
@@ -180,10 +188,6 @@ buildPath (PathPart closest) tails dict info =
                     info
 
 
-type alias PathTails =
-    List PathPart
-
-
 closestPath : PathTails -> PathTailLookup -> ( PathTails, Maybe PathPart )
 closestPath tails dict =
     case tails of
@@ -196,10 +200,6 @@ closestPath tails dict =
 
             else
                 ( ps, Just (PathPart p) )
-
-
-type alias PathTailLookup =
-    Dict Int ()
 
 
 addSortedPathTail : PathTails -> PathPart -> PathTails
