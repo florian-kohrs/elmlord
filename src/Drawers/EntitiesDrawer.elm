@@ -47,6 +47,7 @@ getLordAction player lord =
                     == lord.entity.position
                     && lord.entity.name
                     /= player.entity.name
+                    && not (Entities.isLordInOwnSettlement lord)
             then
                 Just Types.EngageLord
 
