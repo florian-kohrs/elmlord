@@ -75,7 +75,7 @@ buildAllMapSvgs m =
         (buildPathSvgs m
             (List.foldl
                 (EntitiesDrawer.drawSettlement (getPlayer m))
-                (List.foldl (EntitiesDrawer.drawLord testLord) (drawnMap m.map) (Entities.flattenLordList m.lords))
+                (List.foldl (EntitiesDrawer.drawLord (getPlayer m)) (drawnMap m.map) (Entities.flattenLordList m.lords))
                 (allSettlements m)
             )
         )
@@ -384,7 +384,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         EndRound ->
-            { model | date = DateExt.addMonths 1 model.date, lords = Cons (endRoundForLord (getPlayer model)) (updateLordsAfterRound (npcs model.lords)) }
+            { model | date = DateExt.addMonths 1 model.date, lords = Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (npcs model.lords)) }
 
         EndGame bool ->
             { model | gameState = GameOver bool }
@@ -405,14 +405,14 @@ update msg model =
             { model | selectedPoint = Just p }
 
 
-updateLordsAfterRound : List Entities.Lord -> List Entities.Lord
-updateLordsAfterRound lords =
-    List.map (\l -> updateLord l |> endRoundForLord) lords
+updateAIsAfterPlayerRound : List Entities.Lord -> List Entities.Lord
+updateAIsAfterPlayerRound lords =
+    List.map (\l -> updateAI l |> endRoundForLord) lords
 
 
-updateLord : Lord -> Lord
-updateLord lord =
-    lord
+updateAI : Lord -> Lord
+updateAI lord =
+    { lord | entity = Entities.setPosition lord.entity (Vector.addPoints (Vector.Point 1 1) lord.entity.position) }
 
 
 endRoundForLord : Lord -> Lord
@@ -423,13 +423,14 @@ endRoundForLord l =
 updateMaptileAction : Model -> MapTileMsg -> Model
 updateMaptileAction model ma =
     case ma of
-        LordMsg msg lord ->
-            { model | gameState = GameSetup (LordView lord) }
+        Types.LordMsg msg lord ->
+            updateLordAction msg lord model
 
-        SettlementMsg msg settlement ->
+        --{ model | gameState = GameSetup (LordView lord) }
+        Types.SettlementMsg msg settlement ->
             { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
 
-        MoveTo p ->
+        Types.MoveTo p ->
             let
                 player =
                     getPlayer model
@@ -450,6 +451,16 @@ updateMaptileAction model ma =
                             }
                     in
                     { model | lords = Cons newPlayer (npcs model.lords) }
+
+
+updateLordAction : Types.LordTileMsg -> Entities.Lord -> Model -> Model
+updateLordAction msg lord m =
+    case msg of
+        Types.ViewLord ->
+            { m | gameState = GameSetup (LordView lord) }
+
+        Types.EngageLord ->
+            { m | gameState = GameSetup (BattleView { player = getPlayer m, enemy = lord, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
 
 
 updateSettlement : SettlementMsg -> Model -> Model
@@ -520,17 +531,8 @@ updateMultipleTroopStats l s u m =
 updateBattle : BattleMsg -> Model -> Model
 updateBattle msg model =
     case msg of
-        StartBattle str ->
-            let
-                enemyLord =
-                    getLordByName model.lords str
-            in
-            case enemyLord of
-                Nothing ->
-                    model
-
-                Just x ->
-                    { model | gameState = GameSetup (BattleView { player = getPlayer model, enemy = x, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
+        StartBattle lord ->
+            { model | gameState = GameSetup (BattleView { player = getPlayer model, enemy = lord, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
 
         StartSkirmish bS ->
             let
