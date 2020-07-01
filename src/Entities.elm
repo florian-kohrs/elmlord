@@ -31,6 +31,38 @@ type alias BattleStats =
     }
 
 
+type LordList
+    = Cons Lord (List Lord)
+
+
+type alias Settlement =
+    { entity : WorldEntity
+    , settlementType : SettlementType
+    , income : Float
+    , isSieged : Bool
+    }
+
+
+type alias WorldEntity =
+    { army : List Troop
+    , faction : Faction
+    , position : Point
+    , name : String
+    }
+
+
+type SettlementType
+    = Village
+    | Castle
+
+
+type alias SettlementInfo =
+    { sType : SettlementType
+    , position : Vector.Point
+    , faction : Faction
+    }
+
+
 
 -- temp before refactoring
 
@@ -151,10 +183,6 @@ villageNames =
     ]
 
 
-type LordList
-    = Cons Lord (List Lord)
-
-
 npcs : LordList -> List Lord
 npcs (Cons _ ls) =
     ls
@@ -225,22 +253,6 @@ getLordByName l str =
             Just x
 
 
-type alias Settlement =
-    { entity : WorldEntity
-    , settlementType : SettlementType
-    , income : Float
-    , isSieged : Bool
-    }
-
-
-type alias WorldEntity =
-    { army : List Troop
-    , faction : Faction
-    , position : Point
-    , name : String
-    }
-
-
 getSettlementByName : List Settlement -> String -> Maybe Settlement
 getSettlementByName l s =
     case List.filter (\x -> x.entity.name == s) l of
@@ -261,21 +273,9 @@ applyLordGoldIncome lord =
     { lord | gold = lord.gold + calculateRoundIncome lord }
 
 
-type SettlementType
-    = Village
-    | Castle
-
-
 createCapitalFor : WorldEntity -> Settlement
 createCapitalFor e =
     { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital" }, settlementType = Castle, income = 1.0, isSieged = False }
-
-
-type alias SettlementInfo =
-    { sType : SettlementType
-    , position : Vector.Point
-    , faction : Faction
-    }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
