@@ -198,6 +198,11 @@ getPlayer (Cons p _) =
     p
 
 
+isLordInOwnSettlement : Lord -> Bool
+isLordInOwnSettlement lord =
+    List.any ((==) lord.entity.position) (List.map (\s -> s.entity.position) lord.land)
+
+
 resetUsedMovement : Lord -> Lord
 resetUsedMovement lord =
     { lord | agent = PathAgent.resetUsedMovement lord.agent }
