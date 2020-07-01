@@ -327,7 +327,7 @@ view model =
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-            , span [] [ Html.text (gameStateToText model) ]
+            {- , span [] [ Html.text (gameStateToText model) ] -}
             ]
         ]
 

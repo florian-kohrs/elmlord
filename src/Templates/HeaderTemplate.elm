@@ -10,16 +10,11 @@ import Troops exposing (..)
 import Types exposing (Msg(..))
 
 
-testRevenueList : List ( String, Float )
-testRevenueList =
-    [ ( "Castles:", 2.5 ), ( "Village:", 1.9 ), ( "Army:", -3.3 ) ]
-
-
 generateHeaderTemplate : Lord -> DateExt.Date -> Html Msg
 generateHeaderTemplate lord date =
     let
         value =
-            revenueToSpan ( "", List.foldr (+) 0 (List.map Tuple.second testRevenueList) )
+            revenueToSpan ( "", List.foldr (+) 0 (List.map Tuple.second (lordToRevenues lord)) )
     in
     div [ Html.Attributes.class "page-header" ]
         [ div [ Html.Attributes.class "page-turn-header" ] (headerTurnTemplate date)
@@ -37,9 +32,8 @@ generateHeaderTemplate lord date =
 headerTurnTemplate : DateExt.Date -> List (Html Msg)
 headerTurnTemplate date =
     [ div [ Html.Attributes.class "page-turn-handler-header" ]
-        [ div [ Html.Attributes.class "page-turn-button" ]
-            [ span [ onClick EndRound ] [ Html.text "End turn" ]
-            ]
+        [ div [ Html.Attributes.class "page-turn-button", onClick EndRound ]
+            [ span [ ] [ Html.text "End turn" ]]
         ]
     , div [ Html.Attributes.class "page-turn-date-header" ]
         [ span [ Html.Attributes.class "page-header-span" ] [ Html.text (DateExt.showDate date) ]
@@ -52,14 +46,14 @@ headerGoldTemplate lord value =
     [ img [ onClick (EndGame True), src "./assets/images/ducats_icon.png", Html.Attributes.class "page-header-images" ] []
     , div [ Html.Attributes.class "tooltip" ]
         [ span [ Html.Attributes.class "page-header-span" ]
-            [ Html.text (String.fromFloat lord.gold ++ " Ducats")
+            [ Html.text (roundGold lord.gold ++ " Ducats")
             , value
             ]
         , div [ Html.Attributes.class "tooltiptext gold-tooltip" ]
             [ span [] [ Html.text "Monthly revenue" ]
-            , div [] (List.map revenuesToTemplate testRevenueList)
+            , div [] (List.map revenuesToTemplate (lordToRevenues lord))
             , div [ Html.Attributes.class "revenue-result-container" ]
-                [ revenueToSpan ( "Revenue", List.foldr (+) 0 (List.map Tuple.second testRevenueList) )
+                [ revenueToSpan ( "Revenue", List.foldr (+) 0 (List.map Tuple.second (lordToRevenues lord)) )
                 ]
             ]
         ]
@@ -84,6 +78,14 @@ headerTroopTemplate lord =
     ]
 
 
+generateTroopTooltip : Troop -> Troop -> Html Msg
+generateTroopTooltip aT sT =
+    div [ Html.Attributes.class "troop-container" ]
+        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName aT.troopType) ++ ".png") ] []
+        , span [] [ Html.text (String.fromInt aT.amount ++ "  " ++ Troops.troopName aT.troopType) ]
+        , span [] [ Html.text (String.fromInt sT.amount ++ "  " ++ Troops.troopName sT.troopType) ]
+        ]
+
 headerSettingsTemplate : List (Html Msg)
 headerSettingsTemplate =
     [ div [ Html.Attributes.class "page-setting-container tooltip" ]
@@ -106,6 +108,26 @@ headerSettingsTemplate =
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+roundGold : Float -> String
+roundGold v =
+    let 
+        parts = String.split "." (String.fromFloat v)
+    in
+        case parts of 
+            [] -> 
+                "0.00"
+            
+            (x :: []) -> 
+                x ++ ".00"
+
+            (x :: (xs :: _)) -> 
+                x ++ "." ++ String.left 2 xs
+
+
+lordToRevenues : Lord -> List (String, Float) 
+lordToRevenues l =
+        [("Settlements:", Entities.sumSettlementsIncome l.land), ("Armies:", Entities.sumTroopWages (Entities.sumLordTroops l) * -1)]
+
 revenuesToTemplate : ( String, Float ) -> Html Msg
 revenuesToTemplate rev =
     div [ Html.Attributes.class "revenue-container" ] [ revenueToSpan rev ]
@@ -118,18 +140,4 @@ revenueToSpan ( name, value ) =
 
     else
         span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ String.fromFloat value ++ " Ducats") ]
-
-
-
--- Troop WIRD AUSGELAGERT (Sobald MSG ausgelagert ist)
-------------------------------------------------------------------------------------------------------------------------------------
-
-
-generateTroopTooltip : Troop -> Troop -> Html Msg
-generateTroopTooltip aT sT =
-    div [ Html.Attributes.class "troop-container" ]
-        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName aT.troopType) ++ ".png") ] []
-        , span [] [ Html.text (String.fromInt aT.amount ++ "  " ++ Troops.troopName aT.troopType) ]
-        , span [] [ Html.text (String.fromInt sT.amount ++ "  " ++ Troops.troopName sT.troopType) ]
-        ]
 
