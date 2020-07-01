@@ -200,6 +200,10 @@ span {
     text-align: center;
 }
 
+.lord-modal-close-btn {
+    margin-left: 90% !important;
+}
+
 .settlement-modal-close-btn > span {
     font-size: 25px;
     display: block;
@@ -231,9 +235,9 @@ span {
     background: #a1a4ab;
     border-radius: 10px;
 
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .settlement-lord-text {
@@ -291,6 +295,10 @@ span {
     text-align: center;
     color: #49505c;
     grid-area: 4 / 1 / 5 / 2;
+
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .settlement-info > .header-span {
@@ -331,6 +339,10 @@ span {
     grid-area: 3 / 2 / 5 / 3;
     border-radius: 25px;
     border: 1px solid #49505c;
+
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .settlement-illustration-container > img {
@@ -826,17 +838,17 @@ span {
 
 .map-action-menu {
     width: 95%;
-    height: 300px;
+    height: 450px;
     border-radius: 10px;
     background: #deb887;
     margin-top: 5px;
     text-align: center;
     display: grid;
-    grid-template-rows: 50px 1fr 1fr 1fr;
+    grid-template-rows: 50px 1fr 1fr 1fr 1fr 1fr 1fr 10px;
 
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .map-action-menu > span {
@@ -867,7 +879,7 @@ span {
 /* ---------------------------------------------------------------------------- */
 
 .lord-modal {
-    width: 600px;
+    width: 550px;
     height: 800px;
     background: #b8bbc0;
     border-radius: 20px;
@@ -905,6 +917,9 @@ span {
     margin: 0 auto;
     border: 2px solid #49505c;
     border-radius: 10px;
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .lord-stats {
@@ -922,6 +937,10 @@ span {
     color: #49505c;
     width: 250px;
     margin: 0 auto;
+
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .lord-stats > .lord-data > img {
@@ -947,6 +966,10 @@ span {
     width: 250px;
     height: 90%;
     margin: 0 auto;
+
+    -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
 }
 
 .lord-stats > div > .lord-troop-container {

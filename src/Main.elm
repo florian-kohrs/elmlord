@@ -427,7 +427,15 @@ updateMaptileAction model ma =
             { model | gameState = GameSetup (LordView lord) }
 
         SettlementMsg msg settlement ->
-            { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
+            case msg of 
+                Types.ViewSettlement -> 
+                    { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.RestrictedView) }
+
+                Types.EnterSettlement -> 
+                    { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
+
+                _ -> 
+                    { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.RecruitView) }    
 
         MoveTo p ->
             let

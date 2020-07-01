@@ -15,7 +15,7 @@ generateLordTemplate l =
         div [Html.Attributes.class "modal-background"] [
             div [Html.Attributes.class "lord-modal"] [
                 div [Html.Attributes.class "settlement-modal-close-container"] [
-                    div [onClick Types.CloseModal, Html.Attributes.class "settlement-modal-close-btn"] [
+                    div [onClick Types.CloseModal, Html.Attributes.class "settlement-modal-close-btn lord-modal-close-btn"] [
                         span [] [Html.text "X"]
                     ]
                 ]

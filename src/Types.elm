@@ -87,6 +87,7 @@ type SettlementArmyMsg
 
 type UiSettlementState
     = StandardView
+    | RestrictedView
     | RecruitView
     | StationView
     | BuildingView

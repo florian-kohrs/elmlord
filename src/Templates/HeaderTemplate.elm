@@ -136,8 +136,8 @@ revenuesToTemplate rev =
 revenueToSpan : ( String, Float ) -> Html Msg
 revenueToSpan ( name, value ) =
     if value > 0 then
-        span [ Html.Attributes.class "positive-income" ] [ Html.text (name ++ "  +" ++ String.fromFloat value ++ " Ducats") ]
+        span [ Html.Attributes.class "positive-income" ] [ Html.text (name ++ "  +" ++ roundGold value ++ " Ducats") ]
 
     else
-        span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ String.fromFloat value ++ " Ducats") ]
+        span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ roundGold value ++ " Ducats") ]
 

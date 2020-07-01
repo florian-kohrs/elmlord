@@ -43,9 +43,11 @@ settlementStateToAction : Lord -> Settlement -> UiSettlementState -> List (Html 
 settlementStateToAction lord settlement uistate = 
     case uistate of 
         StandardView -> 
-            (getSettlementActionsByType settlement.settlementType ++ validateSettlement lord settlement ++
-                [ div [Html.Attributes.class "settlement-info"] [
-                    span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
+            getSettlementActionsByType settlement.settlementType ++
+                [ button [onClick (SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement)))] 
+                [ span [] [Html.text "Recruit troops"]], button [onClick (SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement)))] [ span [] [Html.text "Station troops"]]
+                    ,div [Html.Attributes.class "settlement-info"] [
+                        span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
                     , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
                     , div [Html.Attributes.class "stationed-troops-overview"] [
                         span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
@@ -53,7 +55,7 @@ settlementStateToAction lord settlement uistate =
                         
                     ]
                 ]
-            ])
+            ]
         
         RecruitView -> 
             [div [Html.Attributes.class "settlement-troop-recruiting"] 
@@ -66,7 +68,20 @@ settlementStateToAction lord settlement uistate =
                     (span [] [Html.text "Station troops"] ::
                     List.map2 generateStationTroopContainer lord.entity.army (List.map (\x -> (x, settlement)) settlement.entity.army) ++
                     [button [onClick (SettlementAction (Types.UIMsg (Types.ShowSettlement settlement)))] [ span [] [Html.text "Back"]]])]
-        _ ->
+                    
+        RestrictedView ->
+            (validateSettlement lord settlement ++
+                [ div [Html.Attributes.class "settlement-info"] [
+                    span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
+                    , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
+                    , div [Html.Attributes.class "stationed-troops-overview"] [
+                        span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
+                        , div [] (List.map troopToHtml settlement.entity.army)
+                    ]
+                ]
+            ])
+
+        _ -> 
             []
  
 
@@ -129,10 +144,7 @@ troopToHtml troop =
 
 validateSettlement : Lord -> Settlement -> List (Html Msg)
 validateSettlement l s =
-        if l.entity.faction == s.entity.faction then
-            [button [onClick (SettlementAction (Types.UIMsg (Types.ShowBuyTroops s)))] [ span [] [Html.text "Recruit troops"]], button [onClick (SettlementAction (Types.UIMsg (Types.ShowStationTroops s)))] [ span [] [Html.text "Station troops"]]]
-        else 
-            [div [Html.Attributes.class "settlement-enemy-overview"] [
-                span [] [Html.text "This is an enemy castle!"]
-            ]]
+        [div [Html.Attributes.class "settlement-enemy-overview"] [
+            span [] [Html.text (OperatorExt.ternary (l.entity.faction == s.entity.faction) "This is our settlement!" "This is an enemy settlement!")]
+        ]]
 
