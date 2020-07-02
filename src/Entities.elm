@@ -203,6 +203,11 @@ isLordInOwnSettlement lord =
     List.any ((==) lord.entity.position) (List.map (\s -> s.entity.position) lord.land)
 
 
+isLordOnSettlement : Lord -> Settlement -> Bool
+isLordOnSettlement lord s =
+    lord.entity.position == s.entity.position
+
+
 resetUsedMovement : Lord -> Lord
 resetUsedMovement lord =
     { lord | agent = PathAgent.resetUsedMovement lord.agent }
