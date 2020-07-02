@@ -94,8 +94,8 @@ type UiSettlementState
 
 
 type BattleMsg
-    = StartBattle Entities.Lord
-    | StartSkirmish Entities.BattleStats
+    = 
+    StartSkirmish Entities.BattleStats
     | SkipSkirmishes Entities.BattleStats
     | FleeBattle Entities.BattleStats
     | EndBattle Entities.BattleStats

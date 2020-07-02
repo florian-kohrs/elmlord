@@ -27,6 +27,8 @@ type alias BattleStats =
     , round : Int
     , playerCasualties : List Troop
     , enemyCasualties : List Troop
+    , attacker: Bool
+    , siege: Bool
     , finished : Bool
     }
 
@@ -303,8 +305,12 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = [], faction = info.faction, position = info.position, name = "Mein Dorf :)" }, settlementType = info.sType, recruitLimits = [], income = 1.5, isSieged = False }
+    { entity = { army = secondLordTroops, faction = info.faction, position = info.position, name = "Mein Dorf :)" }, settlementType = info.sType, recruitLimits = [], income = 1.5, isSieged = False }
 
+
+secondLordTroops : List Troop
+secondLordTroops =
+    [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
 
 combineSettlementName : Settlement -> String
 combineSettlementName settlement =

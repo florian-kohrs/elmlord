@@ -10,11 +10,18 @@ evaluateBattle : Lord -> List Troop -> Lord
 evaluateBattle l t =
     evaluateLordCasualities l (sumTroopsDamage t)
 
+evaluateBattle2 : WorldEntity -> List Troop -> WorldEntity
+evaluateBattle2 w t =
+    evaluateLordCasualities2 w (sumTroopsDamage t)
+
 
 evaluateLordCasualities : Lord -> Float -> Lord
 evaluateLordCasualities lord d =
     { lord | entity = Entities.updateEntitiesArmy (calcTroopCasualties lord.entity.army d (sumTroops lord.entity.army)) lord.entity }
 
+evaluateLordCasualities2 : WorldEntity -> Float -> WorldEntity
+evaluateLordCasualities2 w d =
+    { w | army = calcTroopCasualties w.army d (sumTroops w.army) }
 
 calcTroopCasualties : List Troop -> Float -> Float -> List Troop
 calcTroopCasualties t d a =

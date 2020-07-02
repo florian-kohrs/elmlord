@@ -505,7 +505,16 @@ updateLordAction msg lord m =
             { m | gameState = GameSetup (LordView lord) }
 
         Types.EngageLord ->
-            { m | gameState = GameSetup (BattleView { player = getPlayer m, enemy = lord, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
+            { m | gameState = GameSetup 
+                                (BattleView 
+                                    { player = getPlayer m
+                                    , enemy = lord
+                                    , round = 1
+                                    , playerCasualties = Troops.emptyTroops
+                                    , enemyCasualties = Troops.emptyTroops
+                                    , attacker = True
+                                    , siege = False
+                                    , finished = False }) }
 
 
 updateSettlement : SettlementMsg -> Model -> Model
@@ -576,8 +585,6 @@ updateMultipleTroopStats l s u m =
 updateBattle : BattleMsg -> Model -> Model
 updateBattle msg model =
     case msg of
-        StartBattle lord ->
-            { model | gameState = GameSetup (BattleView { player = getPlayer model, enemy = lord, round = 1, playerCasualties = Troops.emptyTroops, enemyCasualties = Troops.emptyTroops, finished = False }) }
 
         StartSkirmish bS ->
             let
