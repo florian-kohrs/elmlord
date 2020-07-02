@@ -40,6 +40,7 @@ type alias Model =
     , selectedPoint : Maybe Point
     , date : DateExt.Date
     , map : Map.Map --used for pathfinding
+    , errorMsg : String
     }
 
 
@@ -253,7 +254,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model (Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map
+    Model (Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map ""
 
 
 initPlayers : Model -> Int -> Model

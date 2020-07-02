@@ -356,6 +356,19 @@ sumLordTroops lord =
     lord.entity.army ++ foldr (\x y -> x.entity.army ++ y) [] lord.land
 
 
+findLordWithSettlement : Settlement -> List Lord -> Maybe Lord
+findLordWithSettlement settlement =
+    List.foldr
+        (\l r ->
+            if l.entity.position == settlement.entity.position then
+                Just l
+
+            else
+                r
+        )
+        Nothing
+
+
 
 -- refactor it
 
