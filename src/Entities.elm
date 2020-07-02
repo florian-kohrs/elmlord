@@ -346,6 +346,26 @@ flattenTroops troops types =
             { amount = List.foldr (\t v -> t.amount + v) 0 (List.filter (\x -> x.troopType == y) troops), troopType = y } :: flattenTroops troops ys
 
 
+lordToMapIcon : Lord -> String
+lordToMapIcon l =
+    let
+        fileName =
+            case l.entity.faction of
+                Faction.Faction1 ->
+                    "mini1.png"
+
+                Faction.Faction2 ->
+                    "mini2.png"
+
+                Faction.Faction3 ->
+                    "mini3.png"
+
+                Faction.Faction4 ->
+                    "mini4.png"
+    in
+    "profiles/" ++ fileName
+
+
 factionToImage : Faction -> String
 factionToImage fac =
     case fac of
