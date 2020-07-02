@@ -38,6 +38,7 @@ type LordList
 type alias Settlement =
     { entity : WorldEntity
     , settlementType : SettlementType
+    , recruitLimits: List Troop
     , income : Float
     , isSieged : Bool
     }
@@ -67,13 +68,9 @@ type alias SettlementInfo =
 -- temp before refactoring
 
 
-buyTroops : Lord -> TroopType -> Lord
-buyTroops l t =
-    handleTroopInteraction
-        (l.gold - Troops.troopCost t > 0)
-        { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity }
-        l
-
+buyTroops : Lord -> TroopType -> Settlement -> Lord
+buyTroops l t s =
+    { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementRecruits l.land s.entity.name t 5 }
 
 stationTroops : Lord -> TroopType -> Settlement -> Lord
 stationTroops l t s =
@@ -99,7 +96,7 @@ handleTroopInteraction bool l1 l2 =
 updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
 updateEntitiesArmy l e =
     { e | army = l }
-
+    
 
 updatePlayerArmy : Lord -> List Troop -> Lord
 updatePlayerArmy l t =
@@ -110,7 +107,15 @@ updateSettlementTroops : List Settlement -> String -> TroopType -> Int -> List S
 updateSettlementTroops l s t a =
     List.map (\x -> { x | entity = updateEntitiesArmy (Troops.updateTroops x.entity.army t a) x.entity }) (List.filter (\y -> y.entity.name == s) l)
 
-
+updateSettlementRecruits : List Settlement -> String -> TroopType -> Int -> List Settlement
+updateSettlementRecruits l s t v = 
+    List.map 
+        (\x -> { x | recruitLimits = List.map (\z -> { amount = OperatorExt.ternary (z.troopType == t) (z.amount - v) z.amount, troopType = z.troopType}) x.recruitLimits }) 
+        (List.filter (\y -> y.entity.name == s) l)
+{-     List.map 
+        (\x -> { x | recruitLimits = List.map (\z -> { amount = OperatorExt.ternary (z.troopType == t) (z.amount - v) z.amount, troopType = t}) x.recruitLimits }) 
+        (List.filter (\y -> y.entity.name == s) l)
+ -}
 
 {- updateLord : Lord -> Lord
    updateLord s =
@@ -272,10 +277,18 @@ applyLordGoldIncome : Lord -> Lord
 applyLordGoldIncome lord =
     { lord | gold = lord.gold + calculateRoundIncome lord }
 
+applyLordNewRecruits : Lord -> Lord
+applyLordNewRecruits lord =
+    { lord | land = applySettlementNewRecruits lord.land }
+
+applySettlementNewRecruits : List Settlement -> List Settlement 
+applySettlementNewRecruits ls =
+    List.map (\x -> { x | recruitLimits = List.map (\y -> {y | amount = y.amount + 5}) x.recruitLimits }) ls
+
 
 createCapitalFor : WorldEntity -> Settlement
 createCapitalFor e =
-    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital" }, settlementType = Castle, income = 1.0, isSieged = False }
+    { entity = { army = [], faction = e.faction, position = e.position, name = "Mallaca" }, settlementType = Castle, recruitLimits = [], income = 5.0, isSieged = False }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
@@ -285,7 +298,7 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = [], faction = info.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.0, isSieged = False }
+    { entity = { army = [], faction = info.faction, position = info.position, name = "Mein Dorf :)" }, settlementType = info.sType, recruitLimits = [], income = 1.5, isSieged = False }
 
 
 combineSettlementName : Settlement -> String

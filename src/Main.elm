@@ -32,7 +32,7 @@ import Templates.SettlementTemplate exposing (..)
 import Troops exposing (Troop, TroopType)
 import Types exposing (BattleMsg(..), MapTileMsg(..), Msg(..), SettlementArmyMsg(..), SettlementMsg(..), SettlementUIMsg(..), UiSettlementState(..))
 import Vector exposing (..)
-
+import Random
 
 type alias Model =
     { lords : LordList
@@ -149,6 +149,42 @@ allSettlements m =
 
 -- begin STATIC TEST DATA
 
+-- https://cp-algorithms.com/string/string-hashing.html
+hashMultiplicator : Int
+hashMultiplicator = 31
+
+hashModulo : Int 
+hashModulo = 79119
+
+createSimplePseudoSeed : List Char -> Int
+createSimplePseudoSeed l =
+        modBy (List.foldr (\x y -> (Char.toCode x * hashMultiplicator) + y) 0 l) hashModulo
+
+getPseudoRandomElement : Random.Seed -> List a -> Maybe a 
+getPseudoRandomElement s l = 
+    let
+        (x, _) = Random.step (Random.int 0 (List.length l - 1)) s
+    in
+        case l of
+            [] -> 
+                Nothing
+
+            v -> 
+                getIndexedElement v x
+
+getIndexedElement : List a -> Int -> Maybe a
+getIndexedElement l i =
+    case l of
+        [] -> 
+            Nothing
+
+        (x :: xs) ->          
+            if i > 0 then
+                getIndexedElement xs (i - 1)
+            else 
+                Just x
+ 
+
 
 testTroopList : List Troop
 testTroopList =
@@ -177,6 +213,7 @@ testSetelement : Settlement
 testSetelement =
     { entity = testWorldEntity
     , settlementType = Entities.Castle
+    , recruitLimits = secondLordTroops
     , income = 3.19
     , isSieged = False
     }
@@ -194,7 +231,7 @@ testLordWorldEntity =
 testLord : Lord
 testLord =
     { entity = testLordWorldEntity
-    , gold = 250
+    , gold = 450
     , land = [ testSetelement ]
     , agent = PathAgent.getAgent 6
     }
@@ -327,7 +364,8 @@ view model =
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-            {- , span [] [ Html.text (gameStateToText model) ] -}
+            --, span [] [ Html.text (gameStateToText model) ]
+            , span [] [ Html.text ( Debug.toString (getPseudoRandomElement (Random.initialSeed (createSimplePseudoSeed (String.toList "sadaasdas"))) Entities.villageNames)) ]
             ]
         ]
 
@@ -417,7 +455,7 @@ updateAI lord =
 
 endRoundForLord : Lord -> Lord
 endRoundForLord l =
-    applyLordGoldIncome l |> Entities.resetUsedMovement
+    Entities.applyLordGoldIncome l |> Entities.resetUsedMovement |> Entities.applyLordNewRecruits
 
 
 updateMaptileAction : Model -> MapTileMsg -> Model
@@ -498,7 +536,7 @@ updateSettlementStats msg model =
     case msg of
         BuyTroops t s ->
             updateMultipleTroopStats
-                (Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t))
+                (Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t s))
                 s
                 Types.RecruitView
                 model

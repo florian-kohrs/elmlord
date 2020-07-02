@@ -11,7 +11,7 @@ import OperatorExt exposing (..)
 
 
 generateSettlementModalTemplate : Lord -> Settlement -> UiSettlementState -> Html Msg
-generateSettlementModalTemplate lord settlement uistate=
+generateSettlementModalTemplate lord settlement uistate =
     div [Html.Attributes.class "modal-background"] [
         div [Html.Attributes.class "settlement-modal"] [
             div [Html.Attributes.class "settlement-modal-close-container"] [
@@ -43,7 +43,6 @@ settlementStateToAction : Lord -> Settlement -> UiSettlementState -> List (Html 
 settlementStateToAction lord settlement uistate = 
     case uistate of 
         StandardView -> 
-            getSettlementActionsByType settlement.settlementType ++
                 [ button [onClick (SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement)))] 
                 [ span [] [Html.text "Recruit troops"]], button [onClick (SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement)))] [ span [] [Html.text "Station troops"]]
                     ,div [Html.Attributes.class "settlement-info"] [
@@ -60,7 +59,7 @@ settlementStateToAction lord settlement uistate =
         RecruitView -> 
             [div [Html.Attributes.class "settlement-troop-recruiting"] 
                     (span [] [Html.text "Recruit troops"] ::
-                    mapSettlement lord.entity.army settlement  ++
+                    mapSettlement (List.map2 Tuple.pair lord.entity.army settlement.recruitLimits) settlement lord ++
                     [button [onClick (SettlementAction (Types.UIMsg (Types.ShowSettlement settlement)))] [ span [] [Html.text "Back"]]])]
 
         StationView -> 
@@ -99,41 +98,40 @@ generateStationTroopContainer lT (sT, sE) =
     ]
 
 
-mapSettlement : List Troop -> Settlement -> List (Html Msg)
-mapSettlement li s =
+mapSettlement : List (Troop, Troop) -> Settlement -> Lord -> List (Html Msg)
+mapSettlement li s l =
         case li of 
             [] -> 
                 []
 
             (x :: xs) ->
-                 generateRecruitTroopContainer x s :: mapSettlement xs s
+                 generateRecruitTroopContainer x s l :: mapSettlement xs s l
 
 
-generateRecruitTroopContainer : Troop -> Settlement -> Html Msg
-generateRecruitTroopContainer troop s = 
+generateRecruitTroopContainer : (Troop, Troop) -> Settlement -> Lord -> Html Msg
+generateRecruitTroopContainer (aT,sT) s l = 
     div [Html.Attributes.class "troop-recruiting-container"] [
-            img [src ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] []
-            , span [] [Html.text ("[" ++ String.fromInt troop.amount ++ "]")]
+            img [src ("./assets/images/troops/" ++ String.toLower (Troops.troopName aT.troopType) ++ ".png")] []
+            , span [] [Html.text ("[" ++ String.fromInt aT.amount ++ "]")]
+            , span [] [Html.text ("[" ++ String.fromInt sT.amount ++ "]")]
             , div [] [
-                span [] [Html.text (String.fromFloat (Troops.troopCost troop.troopType))]
+                span [] [Html.text (String.fromFloat (Troops.troopCost aT.troopType))]
                 , img [src  "./assets/images/ducats_icon.png"] []
             ]
-            , button [onClick (SettlementAction (Types.TroopMsg (Types.BuyTroops troop.troopType s))), Html.Attributes.class "tooltip"] [ 
-                span [] [Html.text "+"]
+            , button [onClick (SettlementAction (Types.TroopMsg (Types.BuyTroops aT.troopType s))), 
+                    Html.Attributes.class (OperatorExt.ternary (validateBuyTroops aT.troopType s l) "troop-disabled-button" "tooltip") , 
+                    disabled (validateBuyTroops aT.troopType s l)]
+                [span [] [Html.text "+"]
                 , div [Html.Attributes.class "tooltiptext troop-recruiting-tooltip"] [
-                    span [] [Html.text "Monthly wage"]
-                    , span [Html.Attributes.class "negative-income"] [Html.text ("- " ++ String.fromFloat (Troops.troopWage troop.troopType) ++ " Ducats")]
-                ] 
-            ]
+                        span [] [Html.text "Monthly wage"]
+                        , span [Html.Attributes.class "negative-income"] [Html.text ("- " ++ String.fromFloat (Troops.troopWage aT.troopType) ++ " Ducats")]
+                    ] 
+                ]
     ]
 
-getSettlementActionsByType : SettlementType -> List (Html Msg)
-getSettlementActionsByType settle =
-    if settle == Entities.Castle then
-        []
-        --[button [] [ span [] [Html.text "Upgrade Buildings"]]]
-    else
-        []
+validateBuyTroops : TroopType -> Settlement -> Lord -> Bool 
+validateBuyTroops t s l = 
+        not ((l.gold - Troops.troopCost t > 0) && (Maybe.withDefault {amount = 0, troopType = t} (List.head (List.filter (\x -> x.troopType == t) s.recruitLimits))).amount > 0)
 
 troopToHtml : Troop -> Html Msg
 troopToHtml troop =
