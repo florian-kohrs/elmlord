@@ -472,7 +472,7 @@ updateMaptileAction model ma =
                 Types.EnterSettlement -> 
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
 
-                _ -> 
+                Types.SiegeSettlement -> 
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.RecruitView) }    
 
         Types.MoveTo p ->
