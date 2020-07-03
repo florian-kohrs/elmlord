@@ -61,6 +61,7 @@ type SettlementType
 type alias SettlementInfo =
     { sType : SettlementType
     , position : Vector.Point
+    , name : String
     , faction : Faction
     }
 
@@ -311,7 +312,7 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = secondLordTroops, faction = info.faction, position = info.position, name = "Mein Dorf :)" }, settlementType = info.sType, recruitLimits = [], income = 1.5, isSieged = False }
+    { entity = { army = secondLordTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = [], income = 1.5, isSieged = False }
 
 
 secondLordTroops : List Troop
