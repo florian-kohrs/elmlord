@@ -8,7 +8,6 @@ import Pathfinder
 import Troops exposing (..)
 import Vector exposing (..)
 
-
 type alias Gold =
     Float
 
@@ -27,7 +26,7 @@ type alias BattleStats =
     , round : Int
     , playerCasualties : List Troop
     , enemyCasualties : List Troop
-    , attacker: Bool
+    , settlement: Maybe Settlement
     , siege: Bool
     , finished : Bool
     }
@@ -100,6 +99,10 @@ updateEntitiesArmy l e =
     { e | army = l }
     
 
+updateEntityFaction : Faction -> WorldEntity -> WorldEntity
+updateEntityFaction fa we = 
+    {we | faction = fa}
+
 updatePlayerArmy : Lord -> List Troop -> Lord
 updatePlayerArmy l t =
     { l | entity = updateEntitiesArmy t l.entity }
@@ -114,6 +117,9 @@ updateSettlementRecruits l s t v =
     List.map 
         (\x -> { x | recruitLimits = List.map (\z -> { amount = OperatorExt.ternary (z.troopType == t) (z.amount - v) z.amount, troopType = z.troopType}) x.recruitLimits }) 
         (List.filter (\y -> y.entity.name == s) l)
+    
+
+
 {-     List.map 
         (\x -> { x | recruitLimits = List.map (\z -> { amount = OperatorExt.ternary (z.troopType == t) (z.amount - v) z.amount, troopType = t}) x.recruitLimits }) 
         (List.filter (\y -> y.entity.name == s) l)
@@ -212,7 +218,7 @@ isLordInOwnSettlement lord =
 
 isLordOnSettlement : Lord -> Settlement -> Bool
 isLordOnSettlement lord s =
-    lord.entity.position == s.entity.position
+    lord.entity.position == s.entity.position && lord.entity.faction == s.entity.faction
 
 
 resetUsedMovement : Lord -> Lord
@@ -327,6 +333,18 @@ getSettlementNameByType s =
             "Castle"
 
 
+getLordCapital : List Settlement -> Maybe Settlement
+getLordCapital l =
+    case l of
+        [] -> 
+            Nothing
+
+        (x :: xs) -> 
+            if x.settlementType == Castle then
+                Just x
+            else 
+                getLordCapital xs
+
 settlementImageName : SettlementType -> String
 settlementImageName s =
     getSettlementNameByType s ++ ".png"
@@ -360,7 +378,7 @@ findLordWithSettlement : Settlement -> List Lord -> Maybe Lord
 findLordWithSettlement settlement =
     List.foldr
         (\l r ->
-            if l.entity.position == settlement.entity.position then
+            if l.entity.faction == settlement.entity.faction then
                 Just l
 
             else

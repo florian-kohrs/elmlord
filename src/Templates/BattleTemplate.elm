@@ -16,21 +16,35 @@ generateBattleTemplate : BattleStats -> Terrain -> Html Msg
 generateBattleTemplate bS t =
     div [ Html.Attributes.class "modal-background" ]
         [ div [ Html.Attributes.class "battle-modal" ]
-            [ div [ Html.Attributes.class "battle-modal-main" ]
-                [ generateArmyOverview bS.player bS.playerCasualties
-                , generateActionOverview bS t
-                , generateArmyOverview bS.enemy bS.enemyCasualties
-                ]
-            ]
+            [ div [ Html.Attributes.class "battle-modal-main" ] (determineBattleMap bS t)] 
         ]
 
+determineBattleMap : BattleStats -> Terrain -> List (Html Msg)
+determineBattleMap bS t =
+        if bS.siege then
+            case bS.settlement of
+                Nothing ->
+                        []
+                
+                Just settle -> 
+                    [ generateArmyOverview bS.player.entity bS.playerCasualties
+                    , generateActionOverview bS t
+                    , generateArmyOverview settle.entity bS.enemyCasualties
+                    ]
 
-generateArmyOverview : Lord -> List Troop -> Html Msg
-generateArmyOverview lord troops =
+        else 
+                [ generateArmyOverview bS.player.entity bS.playerCasualties
+                , generateActionOverview bS t
+                , generateArmyOverview bS.enemy.entity bS.enemyCasualties
+                ]
+
+
+generateArmyOverview : WorldEntity -> List Troop -> Html Msg
+generateArmyOverview we troops =
     div [ Html.Attributes.class "battle-army-overview" ]
-        [ img [ src ("./assets/images/profiles/" ++ factionToImage lord.entity.faction) ] []
-        , span [] [ Html.text lord.entity.name ]
-        , div [] (List.map2 generateTroopOverview lord.entity.army troops)
+        [ img [ src ("./assets/images/profiles/" ++ factionToImage we.faction) ] []
+        , span [] [ Html.text we.name ]
+        , div [] (List.map2 generateTroopOverview we.army troops)
         ]
 
 
@@ -95,5 +109,6 @@ generateActionButtonsByState bS =
     else
         [ button [ onClick (Types.BattleAction (Types.StartSkirmish bS)) ] [ span [] [ Html.text "Start skirmish" ] ]
         , button [ onClick (Types.BattleAction (Types.SkipSkirmishes bS)) ] [ span [] [ Html.text "Skip skirmishes" ] ]
-        , button [ onClick (Types.BattleAction (Types.FleeBattle bS)) ] [ span [] [ Html.text "Flee battle" ] ]
+        , button [ onClick (Types.BattleAction (Types.FleeBattle bS))] 
+                 [ span [] [ Html.text "Flee battle" ] ]
         ]

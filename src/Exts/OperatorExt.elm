@@ -17,4 +17,7 @@ mapFilter func esc fil l =
             []
 
         x :: xs ->
-            ternary (fil x) (func x :: mapFilter func esc fil xs) (esc x :: mapFilter func esc fil xs)
+            if fil x then
+                func x :: mapFilter func esc fil xs
+            else 
+                esc x :: mapFilter func esc fil xs

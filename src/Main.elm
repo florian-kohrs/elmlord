@@ -189,7 +189,7 @@ getIndexedElement l i =
 
 testTroopList : List Troop
 testTroopList =
-    [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
+    [ { amount = 5, troopType = Troops.Sword }, { amount = 5, troopType = Troops.Spear }, { amount = 5, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
 
 
 
@@ -228,6 +228,22 @@ testLordWorldEntity =
     , name = "Jan von Haskell"
     }
 
+
+testLordWorldEntity2 : WorldEntity
+testLordWorldEntity2 =
+    { army = secondLordTroops
+    , faction = Faction.Faction1
+    , position = { x = 0, y = 0 }
+    , name = "Peter von Haskell"
+    }
+
+testLord2 : Lord
+testLord2 =
+    { entity = testLordWorldEntity2
+    , gold = 450
+    , land = [ testSetelement ]
+    , agent = PathAgent.getAgent 6
+    } 
 
 testLord : Lord
 testLord =
@@ -474,7 +490,24 @@ updateMaptileAction model ma =
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
 
                 Types.SiegeSettlement -> 
-                    { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.RecruitView) }    
+                    let
+                        enemy = findLordWithSettlement settlement (Entities.flattenLordList model.lords)
+                    in
+                        case enemy of
+                            Nothing -> 
+                                model
+
+                            Just l -> 
+                                { model | gameState = GameSetup 
+                                            (BattleView 
+                                                { player = getPlayer model
+                                                , enemy = l
+                                                , round = 1
+                                                , playerCasualties = Troops.emptyTroops
+                                                , enemyCasualties = Troops.emptyTroops
+                                                , settlement = Just settlement
+                                                , siege = True
+                                                , finished = False }) }
 
         Types.MoveTo p ->
             let
@@ -513,7 +546,7 @@ updateLordAction msg lord m =
                                     , round = 1
                                     , playerCasualties = Troops.emptyTroops
                                     , enemyCasualties = Troops.emptyTroops
-                                    , attacker = True
+                                    , settlement = Nothing
                                     , siege = False
                                     , finished = False }) }
 
@@ -589,24 +622,13 @@ updateBattle msg model =
 
         StartSkirmish bS ->
             let
-                newPlayer =
-                    Battle.evaluateBattle bS.player bS.enemy.entity.army
-
-                newEnemy =
-                    Battle.evaluateBattle bS.enemy bS.player.entity.army
+                newBattleStats = Battle.evaluateBattleResult bS
             in
             { model
                 | gameState =
                     GameSetup
                         (BattleView
-                            { bS
-                                | round = bS.round + 1
-                                , playerCasualties = List.map2 Troops.troopDifferences bS.player.entity.army newPlayer.entity.army
-                                , enemyCasualties = List.map2 Troops.troopDifferences bS.enemy.entity.army newEnemy.entity.army
-                                , player = newPlayer
-                                , enemy = newEnemy
-                                , finished = Battle.sumTroops newPlayer.entity.army == 0 || Battle.sumTroops newEnemy.entity.army == 0
-                            }
+                            newBattleStats
                         )
             }
 
@@ -627,14 +649,27 @@ updateBattle msg model =
             { model | lords = lords, gameState = GameSetup GameMenue }
 
         EndBattle bS ->
-            let
-                newEnemyLords =
-                    OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+            case bS.settlement of 
+                Nothing -> 
+                    let
+                        newEnemyLords =
+                            OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
 
-                lords =
-                    Cons bS.player newEnemyLords
-            in
-            { model | lords = lords, gameState = GameSetup GameMenue }
+                        lords =
+                            Cons bS.player newEnemyLords
+                    in
+                        { model | lords = lords, gameState = GameSetup GameMenue }
+
+                Just settle -> 
+                    let
+                        (tempPlayer, tempEnemyLord) = Battle.siegeBattleAftermath bS settle
+                        newEnemyLords =
+                            OperatorExt.mapFilter (\_ -> tempEnemyLord) identity (\x -> x.entity.name == tempEnemyLord.entity.name) (tailLordList model.lords)
+
+                        lords =
+                            Cons tempPlayer newEnemyLords
+                    in
+                        { model | lords = lords, gameState = GameSetup GameMenue }
 
 
 skipBattle : BattleStats -> BattleStats
