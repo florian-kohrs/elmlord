@@ -300,7 +300,7 @@ applySettlementNewRecruits ls =
     List.map (\x -> { x | recruitLimits = List.map (\y -> {y | amount = y.amount + 5}) x.recruitLimits }) ls
 
 
-createCapitalFor : WorldEntity ->  String -> Settlement
+createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
     { entity = { army = [], faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = [], income = 5.0, isSieged = False }
 

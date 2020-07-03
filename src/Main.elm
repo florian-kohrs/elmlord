@@ -33,6 +33,7 @@ import Troops exposing (Troop, TroopType)
 import Types exposing (BattleMsg(..), MapTileMsg(..), Msg(..), SettlementArmyMsg(..), SettlementMsg(..), SettlementUIMsg(..), UiSettlementState(..))
 import Vector exposing (..)
 import Random
+import OperatorExt exposing (ternary)
 
 type alias Model =
     { lords : LordList
@@ -189,7 +190,7 @@ getIndexedElement l i =
 
 testTroopList : List Troop
 testTroopList =
-    [ { amount = 5, troopType = Troops.Sword }, { amount = 5, troopType = Troops.Spear }, { amount = 5, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
+    [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
 
 
 
@@ -675,9 +676,14 @@ updateBattle msg model =
 
                 Just settle -> 
                     let
-                        (tempPlayer, tempEnemyLord) = Battle.siegeBattleAftermath bS settle
+                        (tempPlayer, tempEnemyLord, lordKilled) = Battle.siegeBattleAftermath bS settle
+
+
                         newEnemyLords =
-                            OperatorExt.mapFilter (\_ -> tempEnemyLord) identity (\x -> x.entity.name == tempEnemyLord.entity.name) (tailLordList model.lords)
+                            checkLordLost
+                            lordKilled
+                            tempEnemyLord.entity.name
+                            (OperatorExt.mapFilter (\_ -> tempEnemyLord) identity (\x -> x.entity.name == tempEnemyLord.entity.name) (tailLordList model.lords))
 
                         lords =
                             Cons tempPlayer newEnemyLords
@@ -685,29 +691,23 @@ updateBattle msg model =
                         { model | lords = lords, gameState = GameSetup GameMenue }
 
 
+checkLordLost : Bool -> String -> List Lord -> List Lord
+checkLordLost k n l = 
+    if k then
+        List.filter (\x -> x.entity.name /= n) l
+    else 
+        l
+
 skipBattle : BattleStats -> BattleStats
 skipBattle bS =
     let
-        newPlayer =
-            Battle.evaluateBattle bS.player bS.enemy.entity.army
-
-        newEnemy =
-            Battle.evaluateBattle bS.enemy bS.player.entity.army
-
-        playerCasualties =
-            List.map2 Troops.troopDifferences bS.player.entity.army newPlayer.entity.army
-
-        enemyCasualties =
-            List.map2 Troops.troopDifferences bS.enemy.entity.army newEnemy.entity.army
-
-        end =
-            Battle.sumTroops newPlayer.entity.army == 0 || Battle.sumTroops newEnemy.entity.army == 0
+        newBattleStats = Battle.evaluateBattleResult bS
     in
-    if end then
-        { bS | player = newPlayer, enemy = newEnemy, playerCasualties = playerCasualties, enemyCasualties = enemyCasualties, finished = True }
+    if newBattleStats.finished then
+        newBattleStats
 
     else
-        skipBattle { bS | player = newPlayer, enemy = newEnemy }
+        skipBattle newBattleStats
 
 
 

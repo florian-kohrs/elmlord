@@ -24,8 +24,8 @@ evaluateSiegeBattle bS settle =
             let
                 (tEnemy, tSettle) = transferTroops bS.enemy settle
                 tempPlayer = bS.player
-                newPlayer = { tempPlayer | entity = evaluateBattle2 tempPlayer.entity tSettle.entity.army}
-                newSettle = { tSettle | entity = evaluateBattle2 tSettle.entity bS.player.entity.army}
+                newPlayer = { tempPlayer | entity = evaluateBattle tempPlayer.entity tSettle.entity.army}
+                newSettle = { tSettle | entity = evaluateBattle tSettle.entity bS.player.entity.army}
             in
                     { bS
                         | round = bS.round + 1
@@ -39,8 +39,8 @@ evaluateSiegeBattle bS settle =
         else   
             let
                 tempPlayer = bS.player
-                newPlayer = {tempPlayer | entity = evaluateBattle2 tempPlayer.entity settle.entity.army}
-                newSettle = {settle | entity = evaluateBattle2 settle.entity bS.player.entity.army}
+                newPlayer = {tempPlayer | entity = evaluateBattle tempPlayer.entity settle.entity.army}
+                newSettle = {settle | entity = evaluateBattle settle.entity bS.player.entity.army}
             in
                 { bS
                         | round = bS.round + 1
@@ -58,8 +58,8 @@ calcSiegeBattle : Lord -> Lord -> Settlement -> (Lord, Lord, Settlement)
 calcSiegeBattle attacker defender settle = 
     let
         (dLord, dSettle) = transferTroops defender settle
-        newAttacker = { attacker | entity = evaluateBattle2 attacker.entity settle.entity.army}
-        newSettle = { dSettle | entity = evaluateBattle2 dSettle.entity attacker.entity.army}
+        newAttacker = { attacker | entity = evaluateBattle attacker.entity settle.entity.army}
+        newSettle = { dSettle | entity = evaluateBattle dSettle.entity attacker.entity.army}
     in
         (newAttacker, dLord, newSettle)
     
@@ -71,36 +71,84 @@ evaluateLordBattle bS =
     let
         tempPlayer = bS.player
         tempEnemy = bS.enemy
-        newPlayer = {tempPlayer | entity = evaluateBattle2 tempPlayer.entity bS.enemy.entity.army}
-        newEnemy = {tempEnemy | entity = evaluateBattle2 tempEnemy.entity bS.player.entity.army}
+        newPlayer = {tempPlayer | entity = evaluateBattle tempPlayer.entity bS.enemy.entity.army}
+        newEnemy = {tempEnemy | entity = evaluateBattle tempEnemy.entity bS.player.entity.army}
     in
         { bS
             | round = bS.round + 1
             , playerCasualties = List.map2 Troops.troopDifferences bS.player.entity.army newPlayer.entity.army
             , enemyCasualties = List.map2 Troops.troopDifferences bS.enemy.entity.army newEnemy.entity.army
-            , player = newPlayer
-            , enemy = newEnemy
+            , player = lordBattleAftermath newPlayer newPlayer.land
+            , enemy = lordBattleAftermath newEnemy newEnemy.land
             , settlement = bS.settlement
             , finished = sumTroops newPlayer.entity.army == 0 || sumTroops newEnemy.entity.army == 0
         }
 
+lordBattleAftermath : Lord -> List Settlement -> Lord
+lordBattleAftermath lord settlements = 
+        if sumTroops lord.entity.army == 0 then
+            case getLordCapital settlements of
+                Nothing -> 
+                    lord
+                
+                Just settle ->
+                    {lord | entity = Entities.setPosition lord.entity settle.entity.position}
+
+        else 
+            lord
+
+    
+siegeBattleAftermath : BattleStats -> Settlement -> (Lord, Lord, Bool) 
+siegeBattleAftermath bS s = 
+        let
+            tempPlayer = bS.player
+            tempEnemy = bS.enemy
+            tempSettle = {s | entity = Entities.updateEntitiesArmy s.entity.army (Entities.updateEntityFaction tempPlayer.entity.faction s.entity)}
+        in
+            if sumTroops tempPlayer.entity.army > 0 then
+                if tempSettle.settlementType == Entities.Castle then
+                    handleSettlementTransfer tempPlayer tempEnemy
+                else 
+                (
+                    {tempPlayer | land = tempSettle :: tempPlayer.land}
+                    , {tempEnemy | land = List.filter (\x -> x.entity.name /= s.entity.name) tempEnemy.land}
+                    , False
+                )
+            else 
+                case getLordCapital tempPlayer.land of
+                    Nothing -> 
+                        (
+                            tempPlayer
+                            , {tempEnemy | land = OperatorExt.mapFilter (\v -> {v | entity = Entities.updateEntitiesArmy s.entity.army v.entity}) identity (\x -> x.entity.name == s.entity.name) tempEnemy.land }
+                            , False
+                        )
+                    Just settle -> 
+                        (
+                            { tempPlayer | entity = Entities.setPosition tempPlayer.entity settle.entity.position}
+                            , {tempEnemy | land = OperatorExt.mapFilter (\v -> {v | entity = Entities.updateEntitiesArmy s.entity.army v.entity}) identity (\x -> x.entity.name == s.entity.name) tempEnemy.land }
+                            , False
+                        )
 
 
-evaluateBattle : Lord -> List Troop -> Lord
-evaluateBattle l t =
-    evaluateLordCasualities l (sumTroopsDamage t)
+handleSettlementTransfer : Lord -> Lord -> (Lord, Lord, Bool)
+handleSettlementTransfer player enemy = 
+            (
+                {player | land = List.map (\x -> {x | entity = Entities.updateEntityFaction player.entity.faction x.entity}) 
+                              (List.filter (\y -> y.settlementType /= Entities.Castle) enemy.land)
+                               ++ player.land}
+                , {enemy | land = []}
+                , True
+            )
 
-evaluateBattle2 : WorldEntity -> List Troop -> WorldEntity
-evaluateBattle2 w t =
-    evaluateLordCasualities2 w (sumTroopsDamage t)
 
+-- TODO: Combine the aftermath parts of normal and sieged battles
 
-evaluateLordCasualities : Lord -> Float -> Lord
-evaluateLordCasualities lord d =
-    { lord | entity = Entities.updateEntitiesArmy (calcTroopCasualties lord.entity.army d (sumTroops lord.entity.army)) lord.entity }
+evaluateBattle : WorldEntity -> List Troop -> WorldEntity
+evaluateBattle w t =
+    evaluateLordCasualities w (sumTroopsDamage t)
 
-evaluateLordCasualities2 : WorldEntity -> Float -> WorldEntity
-evaluateLordCasualities2 w d =
+evaluateLordCasualities : WorldEntity -> Float -> WorldEntity
+evaluateLordCasualities w d =
     { w | army = calcTroopCasualties w.army d (sumTroops w.army) }
 
 calcTroopCasualties : List Troop -> Float -> Float -> List Troop
@@ -129,7 +177,7 @@ sumTroops l =
 
 
 
--- check
+-- checksumTroopsDamage
 
 
 sumTroopsDamage : List Troop -> Float
@@ -145,31 +193,3 @@ transferTroops l s =
         newSettlement = { s | entity = Entities.updateEntitiesArmy newArmy s.entity}
     in
         (newLord, newSettlement)
-        
-
-siegeBattleAftermath : BattleStats -> Settlement -> (Lord, Lord) 
-siegeBattleAftermath bS s = 
-        let
-            tempPlayer = bS.player
-            tempEnemy = bS.enemy
-            tempSettle = {s | entity = Entities.updateEntitiesArmy s.entity.army (Entities.updateEntityFaction tempPlayer.entity.faction s.entity)}
-        in
-            if sumTroops tempPlayer.entity.army > 0 then
-                (
-                    {tempPlayer | land = tempSettle :: tempPlayer.land}
-                    , {tempEnemy | land = List.filter (\x -> x.entity.name /= s.entity.name) tempEnemy.land}
-                )
-            else 
-                case getLordCapital tempPlayer.land of
-                    Nothing -> 
-                        (
-                            tempPlayer
-                            , {tempEnemy | land = OperatorExt.mapFilter (\v -> {v | entity = Entities.updateEntitiesArmy s.entity.army v.entity}) identity (\x -> x.entity.name == s.entity.name) tempEnemy.land }
-                        )
-                    Just settle -> 
-                        (
-                            { tempPlayer | entity = Entities.setPosition tempPlayer.entity settle.entity.position}
-                            , {tempEnemy | land = OperatorExt.mapFilter (\v -> {v | entity = Entities.updateEntitiesArmy s.entity.army v.entity}) identity (\x -> x.entity.name == s.entity.name) tempEnemy.land }
-                        )
-
-        
