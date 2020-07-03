@@ -251,6 +251,10 @@ initPlayer m i rad =
 initSettlementsFor : Map.Map -> Dict.Dict Int () -> Entities.WorldEntity -> Int -> List Entities.Settlement
 initSettlementsFor m usedFields e i =
     Entities.createCapitalFor e
+        (Maybe.withDefault
+            (e.name ++ "`s Capital`")
+            (ListExt.getElementAt i Entities.castleNames)
+        )
         :: List.map
             Entities.getSettlementFor
             (getVillagesInQuadrant m e i villagesPerLord |> getSafeSettlementInfos m usedFields)
@@ -259,7 +263,16 @@ initSettlementsFor m usedFields e i =
 getVillagesInQuadrant : Map.Map -> Entities.WorldEntity -> Int -> Int -> List Entities.SettlementInfo
 getVillagesInQuadrant m e q i =
     List.map
-        (\index -> Entities.SettlementInfo Village (getVillagesPosition i q index e.position) e.faction)
+        (\index ->
+            Entities.SettlementInfo
+                Village
+                (getVillagesPosition i q index e.position)
+                (Maybe.withDefault
+                    (e.name ++ " " ++ String.fromInt i ++ "th Village`")
+                    (ListExt.getElementAt (q * 4 + index) Entities.villageNames)
+                )
+                e.faction
+        )
         (List.range 1 i)
 
 
