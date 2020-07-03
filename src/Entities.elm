@@ -59,6 +59,7 @@ type SettlementType
 type alias SettlementInfo =
     { sType : SettlementType
     , position : Vector.Point
+    , name : String
     , faction : Faction
     }
 
@@ -278,9 +279,9 @@ applyLordGoldIncome lord =
     { lord | gold = lord.gold + calculateRoundIncome lord }
 
 
-createCapitalFor : WorldEntity -> Settlement
-createCapitalFor e =
-    { entity = { army = [], faction = e.faction, position = e.position, name = e.name ++ "`s Capital" }, settlementType = Castle, income = 1.0, isSieged = False }
+createCapitalFor : WorldEntity -> String -> Settlement
+createCapitalFor e name =
+    { entity = { army = [], faction = e.faction, position = e.position, name = name }, settlementType = Castle, income = 1.0, isSieged = False }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
@@ -290,7 +291,7 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = [], faction = info.faction, position = info.position, name = "" }, settlementType = info.sType, income = 1.0, isSieged = False }
+    { entity = { army = [], faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, income = 1.0, isSieged = False }
 
 
 combineSettlementName : Settlement -> String
