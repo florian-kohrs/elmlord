@@ -108,7 +108,7 @@ headerSettingsTemplate : List (Html Types.Msg)
 headerSettingsTemplate =
     [ div [ Html.Attributes.class "page-setting-container tooltip" ]
         [img [ src "./assets/images/general/audio_on_icon.png", Html.Attributes.class "page-image-settings" ] []
-        , audio [ src "./assets/sounds/title.mp3", id "audio-player", controls True] []   
+        {- , audio [ src "./assets/sounds/title.mp3", id "audio-player", controls True] [] -}   
         , div [ Html.Attributes.class "tooltip" ]
             [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Mute or unmute the gamesounds" ]
             ]

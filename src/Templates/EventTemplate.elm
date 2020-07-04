@@ -4,9 +4,8 @@ import Event
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import MapDrawer
+import OperatorExt
 import Types
-import Vector
 
 
 {-| Returns the layout for the map actions, in dependence to the chosen point (in the model)
@@ -21,7 +20,7 @@ generateEventOverview l =
         [ div [ Html.Attributes.class "event-logs-header" ]
             [ span [] [ Html.text "Events" ]
             ]
-        , div [ Html.Attributes.class "event-logs-body" ] []
+        , div [ Html.Attributes.class "event-logs-body" ] (List.map generateEventComponent l)
         ]
 
 
@@ -32,8 +31,8 @@ generateEventOverview l =
 -}
 generateEventComponent : Event.Event -> Html Types.Msg
 generateEventComponent e =
-    div [] [
-        div [] [Html.text e.header] 
-        div [] [Html.text x]
-        div [] [Html.text e.text]
-    ]
+    div [Html.Attributes.class ("event-logs-component " ++ OperatorExt.ternary (e.eventType == Event.Important) "important-log" "minor-log")]
+        [ div [] [ span [] [ Html.text e.header ] ]
+        , div [ onClick (Types.EventAction (Types.DeleteEvent e.index)) ,Html.Attributes.class "event-logs-close"] [ Html.text "x" ]
+        , div [] [ span [] [ Html.text e.text ] ]
+        ]

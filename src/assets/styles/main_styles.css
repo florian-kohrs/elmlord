@@ -1052,7 +1052,7 @@ span {
     border-radius: 20px;
     height: 90%;
     margin: 10px 0;
-    opacity: 0.6;
+    opacity: 0.9;
 
     display: grid;
     grid-template-rows: 50px 1fr;
@@ -1064,16 +1064,47 @@ span {
     text-align: center;
 }
 
-.event-logs-component {
-    color: white;
-    font-size: 25px;
-    text-align: center;
-}
-
 .event-logs-header > span {
     padding-top: 20px;
     display: block;
 }
+
+.event-logs-body {
+    overflow-y: scroll;
+}
+
+.event-logs-component {
+    display: grid;
+    grid-template-columns: 1fr 20px;
+    grid-template-rows: 35% 1fr;
+    height: 80px;
+    width: 95%;
+    border: 15px;
+    margin: 10px auto;
+    border-radius: 5px;
+    background: white;
+    text-align: center;
+    cursor: pointer;
+}
+
+.important-log {
+    background: #a44a4a !important;
+}
+
+.minor-log {
+    background: #bebebe;
+}
+
+.event-logs-component > div > span {
+    display: block;
+    padding-top: 9px;
+    font-size: 15px;
+}
+
+.event-logs-close {
+    font-size: 20px;
+}
+
 
 @media only screen and (min-width: 1250px) and (max-height: 800px){
     .page-map {

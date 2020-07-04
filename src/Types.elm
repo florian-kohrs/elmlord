@@ -15,6 +15,7 @@ type Msg
     | BattleAction BattleMsg
     | SettlementAction SettlementMsg
     | MapTileAction MapTileMsg
+    | EventAction EventMsg
     | Click Vector.Point
 
 
@@ -59,6 +60,8 @@ type UiSettlementState
     | StationView
     | BuildingView
 
+type EventMsg = 
+    DeleteEvent Int
 
 type BattleMsg
     = 
