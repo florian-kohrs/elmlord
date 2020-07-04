@@ -4,7 +4,6 @@ import Faction exposing (..)
 import List exposing (..)
 import OperatorExt exposing (ternary)
 import PathAgent
-import Pathfinder
 import Troops exposing (..)
 import Vector exposing (..)
 
@@ -430,3 +429,11 @@ factionToImage fac =
 
         Faction.Faction4 ->
             "faction4.png"
+
+getSettlementBonus : Settlement -> List Settlement -> Float
+getSettlementBonus s l =
+    if s.settlementType == Village then
+        1.1
+
+    else
+        List.foldr (\_ y -> 0.1 + y) 1 l

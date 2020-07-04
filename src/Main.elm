@@ -8,15 +8,13 @@ import Dict
 import Entities exposing (..)
 import EntitiesDrawer
 import Faction exposing (..)
-import Html exposing (Html, button, div, img, span, text)
+import Html exposing (Html, div, span, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
 import ListExt
 import Map exposing (Map, MapTile)
 import MapData exposing (..)
 import MapDrawer
 import MapGenerator exposing (createMap)
-import MaybeExt
 import OperatorExt
 import PathAgent
 import PathDrawer

@@ -1,11 +1,13 @@
 module Troops exposing (..)
+
 import OperatorExt
 
+
 type alias Troop =
-    {
-        amount: Int
-        , troopType: TroopType
+    { amount : Int
+    , troopType : TroopType
     }
+
 
 type TroopType
     = Archer
@@ -15,7 +17,47 @@ type TroopType
 
 
 troopTypeList : List TroopType
-troopTypeList = [Sword, Spear, Archer, Knight]
+troopTypeList =
+    [ Sword, Spear, Archer, Knight ]
+
+
+updateTroops : List Troop -> TroopType -> Int -> List Troop
+updateTroops tr ty v =
+    case tr of
+        [] ->
+            []
+
+        x :: xs ->
+            OperatorExt.ternary (x.troopType == ty) { x | amount = x.amount + v } x :: updateTroops xs ty v
+
+
+
+troopDifferences : Troop -> Troop -> Troop
+troopDifferences t1 t2 =
+    { amount = t2.amount - t1.amount
+    , troopType = t1.troopType
+    }
+
+
+emptyTroops : List Troop
+emptyTroops =
+    [ { amount = 0, troopType = Sword }
+    , { amount = 0, troopType = Spear }
+    , { amount = 0, troopType = Archer }
+    , { amount = 0, troopType = Knight }
+    ]
+
+
+sumTroops : List Troop -> Float
+sumTroops l =
+    List.foldr (+) 0.0 (List.map (\x -> toFloat x.amount) l)
+
+
+
+-- Resolve a troop type to different, for values like
+-- wages, costs, fighting-stats, etc.
+----------------------------------------------------------
+
 
 troopCost : TroopType -> Float
 troopCost t =
@@ -32,6 +74,7 @@ troopCost t =
         Knight ->
             120
 
+
 troopWage : TroopType -> Float
 troopWage t =
     case t of
@@ -47,6 +90,7 @@ troopWage t =
         Knight ->
             1.0
 
+
 troopDamage : TroopType -> Float
 troopDamage t =
     case t of
@@ -61,6 +105,7 @@ troopDamage t =
 
         Knight ->
             25
+
 
 troopDefense : TroopType -> Float
 troopDefense t =
@@ -93,6 +138,7 @@ troopPriority t =
         Knight ->
             0.3
 
+
 troopName : TroopType -> String
 troopName t =
     case t of
@@ -110,8 +156,8 @@ troopName t =
 
 
 battlefieldBonus : TroopType -> Float
-battlefieldBonus t = 
-    case t of 
+battlefieldBonus t =
+    case t of
         Archer ->
             1.15
 
@@ -123,41 +169,3 @@ battlefieldBonus t =
 
         Knight ->
             1.2
-
-updateTroops : List Troop -> TroopType -> Int -> List Troop
-updateTroops tr ty v =
-        case tr of 
-            [] ->
-                []
-
-            (x :: xs) -> 
-                OperatorExt.ternary (x.troopType == ty) {x | amount = x.amount + v} x :: updateTroops xs ty v
-    
-checkTroopTreshhold : List Troop -> TroopType -> Int -> Bool
-checkTroopTreshhold tr ty v =
-        case tr of 
-            [] ->
-                False
-
-            (x :: xs) -> 
-                x.amount - v >= 0 ||  checkTroopTreshhold xs ty v
-
-filterTroopList : List Troop -> TroopType -> List Troop
-filterTroopList l t =
-            List.filter (\x -> x.troopType == t) l
-
-troopDifferences : Troop -> Troop -> Troop
-troopDifferences t1 t2 =
-    {
-        amount = t2.amount - t1.amount
-        , troopType = t1.troopType
-    }
-
-emptyTroops : List Troop 
-emptyTroops = 
-    [
-        { amount = 0, troopType = Sword }
-        , { amount = 0, troopType = Spear }
-        , { amount = 0, troopType = Archer }
-        , { amount = 0, troopType = Knight }
-    ]
