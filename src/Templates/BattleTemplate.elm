@@ -10,7 +10,14 @@ import Map exposing (Map, Terrain)
 import OperatorExt
 import Troops exposing (..)
 import Types exposing (Msg(..))
+import Templates.HelperTemplate as Helper
 
+
+{-| Returns the layout for the battle modal (Engage [Lord] / Siege [Settlement])
+
+    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
+    @param {Terrain}: Takes terrain on which the battle takes place on
+-}
 
 generateBattleTemplate : BattleStats -> Terrain -> Html Msg
 generateBattleTemplate bS t =
@@ -18,6 +25,14 @@ generateBattleTemplate bS t =
         [ div [ Html.Attributes.class "battle-modal" ]
             [ div [ Html.Attributes.class "battle-modal-main" ] (determineBattleMap bS t)] 
         ]
+
+
+{-| Determines which kind of battle this is (player vs player or player vs settlement)
+    and with this information displays different layouts / elements
+
+    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
+    @param {Terrain}: Takes terrain on which the battle takes place on
+-}
 
 determineBattleMap : BattleStats -> Terrain -> List (Html Msg)
 determineBattleMap bS t =
@@ -39,6 +54,13 @@ determineBattleMap bS t =
                 ]
 
 
+{-| Displays the army (all troops) of an entity
+
+    @param {WorldEntity}: Takes the entity to which the troops belong (lord or settlement)
+    @param {String}: Takes the url for the image that have to be displayed
+    @param {List Troop}: Takes the current casualities of this entity
+-}
+
 generateArmyOverview : WorldEntity -> String -> List Troop -> Html Msg
 generateArmyOverview we image troops =
     div [ Html.Attributes.class "battle-army-overview" ]
@@ -46,6 +68,13 @@ generateArmyOverview we image troops =
         , span [] [ Html.text we.name ]
         , div [] (List.map2 generateTroopOverview we.army troops)
         ]
+
+
+{-| Displays the current troops and casualties of an entity
+
+    @param {Troop}: Takes the current army troop of the entity
+    @param {Troop}: Takes the current army troop casualties of the entity
+-}
 
 generateTroopOverview : Troop -> Troop -> Html Msg
 generateTroopOverview troop casu =
@@ -61,6 +90,11 @@ generateTroopOverview troop casu =
             ]
         ]
 
+{-| Displays the terrian premiums (bonuses) and possible player actions
+
+    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
+    @param {Terrain}: Takes terrain on which the battle takes place on
+-}
 
 generateActionOverview : BattleStats -> Terrain -> Html Msg
 generateActionOverview bS ter =
@@ -81,6 +115,12 @@ generateActionOverview bS ter =
         ]
 
 
+
+{-| Displays the terrain bonus for a troop type (archer, swordsman, etc.)
+
+    @param {TroopType}: Takes the troop type for which the bonus has to be determined
+-}
+
 generateTerrainBonuses : TroopType -> Html Msg
 generateTerrainBonuses t =
     div [ Html.Attributes.class "battle-terrain-bonus" ]
@@ -88,6 +128,10 @@ generateTerrainBonuses t =
         , span [] [ Html.text ("+" ++ String.fromFloat (Troops.battlefieldBonus t * 100 - 100) ++ "%") ]
         ]
 
+{-| Displays the terrain bonus for the settlement
+
+    @param {BattleStats}: Takes information about the battle to get the settlement
+-}
 
 generateSettlementBonus : BattleStats -> Html Msg
 generateSettlementBonus bS =
@@ -98,8 +142,14 @@ generateSettlementBonus bS =
         Just settle -> 
             div [ Html.Attributes.class "battle-terrain-bonus" ]
                 [ img [ src (Entities.getSettlementImage settle) ] []
-                , span [] [ Html.text (roundPercentage (String.fromFloat (Battle.getSettlementBonus settle bS.enemy.land * 100 - 100)) ++ "%") ]
+                    , span [] [ Html.text (Helper.roundDigits (Battle.getSettlementBonus settle bS.enemy.land * 100 - 100) ++ "%") ]
                 ]
+
+
+{-| Displays the status text about the ongoing battle
+
+    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
+-}
 
 generateStatusText : BattleStats -> Html Msg
 generateStatusText bS =
@@ -112,6 +162,10 @@ generateStatusText bS =
         span [ Html.Attributes.class "battle-skirmish-text" ] [ Html.text ("Skirmish-Round: " ++ String.fromInt bS.round) ]
 
 
+{-| Displays the possible actions for the player (buttons)
+
+    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
+-}
 generateActionButtonsByState : BattleStats -> List (Html Msg)
 generateActionButtonsByState bS =
     if bS.finished then
@@ -124,19 +178,3 @@ generateActionButtonsByState bS =
         , button [ onClick (Types.BattleAction (Types.FleeBattle bS))] 
                  [ span [] [ Html.text "Flee battle" ] ]
         ]
-
-
-roundPercentage : String -> String
-roundPercentage v =
-    let 
-        parts = String.split "." v
-    in
-        case parts of 
-            [] -> 
-                "0.00"
-            
-            (x :: []) -> 
-                x ++ ".00"
-
-            (x :: (xs :: _)) -> 
-                x ++ "." ++ String.left 2 xs

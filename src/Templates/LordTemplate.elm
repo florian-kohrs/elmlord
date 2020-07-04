@@ -2,13 +2,18 @@ module Templates.LordTemplate exposing (..)
 
 import Entities exposing (..)
 import Faction exposing (..)
-import Html exposing (Html, button, div, img, span, text)
+import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import MapDrawer
 import OperatorExt exposing (..)
 import Troops exposing (..)
 import Types exposing (Msg(..), UiSettlementState(..))
+import Templates.HelperTemplate as Helper
+
+{-| Returns the layout for the lord modal (View [Lord-Name])
+
+    @param {Lord}: Takes the chosen Lord 
+-}
 
 generateLordTemplate : Lord -> Html Msg
 generateLordTemplate l = 
@@ -35,16 +40,9 @@ generateLordTemplate l =
                             , span [] [Html.text ("Settlements: " ++ String.fromInt (List.length l.land))]
                         ]
                         , div [Html.Attributes.class "lord-troops"] 
-                        (div [Html.Attributes.class "lord-troop-header"] [span [] [Html.text "Current-Army"]] :: List.map troopToHtml l.entity.army)
+                        (div [Html.Attributes.class "lord-troop-header"] [span [] [Html.text "Current-Army"]] :: List.map Helper.troopToHtml l.entity.army)
                     ]
                     
             ]
         ]
 
-
-troopToHtml : Troop -> Html Msg
-troopToHtml troop =
-        div [Html.Attributes.class "lord-troop-container"] [
-            img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] [],
-            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
-        ]

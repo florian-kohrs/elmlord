@@ -7,8 +7,17 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Types exposing ( Msg(..), UiSettlementState(..))
 import Troops exposing (..)
+import Templates.HelperTemplate exposing (..)
 import OperatorExt exposing (..)
+import Templates.HelperTemplate as Helper
 
+
+{-| Returns the layout for the settlement modal (Enter/View [Settlement-Name])
+
+    @param {Lord}: Takes the lord of the settlement 
+    @param {Settlement}: Takes the chosen settlement 
+    @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
+-}
 
 generateSettlementModalTemplate : Lord -> Settlement -> UiSettlementState -> Html Msg
 generateSettlementModalTemplate lord settlement uistate =
@@ -38,7 +47,12 @@ generateSettlementModalTemplate lord settlement uistate =
         ]
     ]
 
+{-| Returns the specific layout in dependence to the state
 
+    @param {Lord}: Takes the lord of the settlement 
+    @param {Settlement}: Takes the chosen settlement 
+    @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
+-}
 settlementStateToAction : Lord -> Settlement -> UiSettlementState -> List (Html Msg)
 settlementStateToAction lord settlement uistate = 
     case uistate of 
@@ -50,7 +64,7 @@ settlementStateToAction lord settlement uistate =
                         , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
                         , div [Html.Attributes.class "stationed-troops-overview"] [
                             span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
-                            , div [] (List.map troopToHtml settlement.entity.army)   
+                            , div [] (List.map Helper.troopToHtml settlement.entity.army)   
                         ]
                     ]
                 ]
@@ -90,7 +104,7 @@ settlementStateToAction lord settlement uistate =
                     , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
                     , div [Html.Attributes.class "stationed-troops-overview"] [
                         span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
-                        , div [] (List.map troopToHtml settlement.entity.army)
+                        , div [] (List.map Helper.troopToHtml settlement.entity.army)
                     ]
                 ]
             ])
@@ -99,6 +113,12 @@ settlementStateToAction lord settlement uistate =
             []
  
 
+{-| Returns the listview with the stationed troops, the player can take units out or station new troops to the settlement.
+    The function is used for the List.map2 function. 
+
+    @param {Troop}: Current troop/unit of the lord (specifically the amount!)
+    @param {(Troop, Settlement)}: Tuple with the current troop/unit and the settlement of this unit
+-}
 
 generateStationTroopContainer : Troop ->  (Troop, Settlement) -> Html Msg
 generateStationTroopContainer lT (sT, sE) = 
@@ -120,7 +140,12 @@ generateStationTroopContainer lT (sT, sE) =
             ]
     ]
 
+{-| Custom map function that displays the stationed troops listview of the settlement.
 
+    @param {List (Troop, Troop)}: Current troop/unit of the lord (specifically the amount!)
+    @param {Settlement}: Takes the chosen settlement 
+    @param {Lord}: Takes the current lord 
+-}
 mapSettlement : List (Troop, Troop) -> Settlement -> Lord -> List (Html Msg)
 mapSettlement li s l =
         case li of 
@@ -131,6 +156,12 @@ mapSettlement li s l =
                  generateRecruitTroopContainer x s l :: mapSettlement xs s l
 
 
+{-| Displays the listcomponent of the stationed troops list
+
+    @param {(Troop, Troop)}: Current troop/unit of the lord (specifically the amount!)
+    @param {Settlement}: Takes the chosen settlement 
+    @param {Lord}: Takes the current lord 
+-}
 generateRecruitTroopContainer : (Troop, Troop) -> Settlement -> Lord -> Html Msg
 generateRecruitTroopContainer (aT,sT) s l = 
     div [Html.Attributes.class "troop-recruiting-container"] [
@@ -152,21 +183,34 @@ generateRecruitTroopContainer (aT,sT) s l =
                 ]
     ]
 
+
+{-| Validates whether the player can buy new troops or not (if the player has the gold for the troops and the settlement has enough recruits)
+
+    @param {TroopType}: Takes the troopType that the player wants to buy
+    @param {Settlement}: Takes the chosen settlement 
+    @param {Lord}: Takes the current lord (to determine if the player has the gold)
+-}
 validateBuyTroops : TroopType -> Settlement -> Lord -> Bool 
 validateBuyTroops t s l = 
-        not ((l.gold - Troops.troopCost t > 0) && (Maybe.withDefault {amount = 0, troopType = t} (List.head (List.filter (\x -> x.troopType == t) s.recruitLimits))).amount > 0)
+        not ((l.gold - Troops.troopCost t > 0) 
+            && (Maybe.withDefault {amount = 0, troopType = t} (List.head (List.filter (\x -> x.troopType == t) s.recruitLimits))
+        ).amount > 0)
+
+{-| Validates whether the player can station or take troops out of the settlement
+
+    @param {Int}: Takes the current number of troops that are stationed or in the army
+-}
 
 validateStationTroops : Int -> Bool 
 validateStationTroops amount = 
         not (amount > 0)
 
-troopToHtml : Troop -> Html Msg
-troopToHtml troop =
-        div [Html.Attributes.class "stationed-troop-container troop-container"] [
-            img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] [],
-            span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
-        ]
 
+{-| Validates whether the settlement belongs to the player or to another lord, in dependence to this return a message
+
+    @param {Lord}: Takes the current lord
+    @param {Settlement}: Takes the current settlement
+-}
 validateSettlement : Lord -> Settlement -> List (Html Msg)
 validateSettlement l s =
         [div [Html.Attributes.class "settlement-enemy-overview"] [
