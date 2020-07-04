@@ -5,42 +5,49 @@ import Battle
 import Browser
 import DateExt
 import Dict
-import Entities exposing (..)
+import Entities
 import EntitiesDrawer
-import Faction exposing (..)
+import Faction
 import Html exposing (Html, div, span, text)
 import Html.Attributes exposing (..)
 import ListExt
-import Map exposing (Map, MapTile)
-import MapData exposing (..)
+import Map
+import MapData 
 import MapDrawer
-import MapGenerator exposing (createMap)
+import MapGenerator
 import OperatorExt
 import PathAgent
 import PathDrawer
 import Pathfinder
+import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Templates.BattleTemplate exposing (..)
-import Templates.EndTemplate exposing (..)
-import Templates.HeaderTemplate exposing (..)
-import Templates.LordTemplate exposing (..)
-import Templates.MapActionTemplate exposing (..)
-import Templates.SettlementTemplate exposing (..)
-import Troops exposing (Troop, TroopType)
-import Types exposing (BattleMsg(..), MapTileMsg(..), Msg(..), SettlementArmyMsg(..), SettlementMsg(..), SettlementUIMsg(..), UiSettlementState(..))
-import Vector exposing (..)
-import Random
-import OperatorExt exposing (ternary)
+import Templates.BattleTemplate as BattleTemplate
+import Templates.EndTemplate as EndTemplate
+import Templates.HeaderTemplate as HeaderTemplate
+import Templates.LordTemplate as LordTemplate
+import Templates.MapActionTemplate as MapActionTemplate
+import Templates.SettlementTemplate as SettlementTemplate
+import Templates.EventTemplate as EventTemplate
+import Troops
+import Types
+import Vector
+import Event
+
+
+
+-- Model and the states of the UI (show/hide specific layouts)
+----------------------------------------------------------
 
 
 type alias Model =
-    { lords : LordList
+    { lords : Entities.LordList
     , gameState : GameState
-    , selectedPoint : Maybe Point
+    , selectedPoint : Maybe Vector.Point
     , date : DateExt.Date
     , map : Map.Map
     , errorMsg : String
+    , events: List Event.Event
     }
 
 
@@ -56,18 +63,38 @@ type UiState
     | NewCampain
     | GameMenue
     | BattleView Entities.BattleStats
-    | SettlementView Lord Settlement UiSettlementState
-    | LordView Lord
+    | SettlementView Entities.Lord Entities.Settlement Types.UiSettlementState
+    | LordView Entities.Lord
 
 
-hasActionOnPoint : Vector.Point -> MapTileMsg -> MapDrawer.MapClickAction -> Bool
+villagesPerLord : Int
+villagesPerLord =
+    3
+
+
+villageCaptialDistance : Float
+villageCaptialDistance =
+    7
+
+
+getPlayer : Model -> Entities.Lord
+getPlayer model =
+    Entities.getPlayer model.lords
+
+
+
+-- items and path drawing on the game map
+----------------------------------------------------------
+
+
+hasActionOnPoint : Vector.Point -> Types.MapTileMsg -> MapDrawer.MapClickAction -> Bool
 hasActionOnPoint p msg dict =
     List.member msg (MapDrawer.actionsOnPoint p dict)
 
 
 canMoveToPoint : MapDrawer.MapClickAction -> Vector.Point -> Bool
 canMoveToPoint dict p =
-    hasActionOnPoint p (MoveTo p) dict
+    hasActionOnPoint p (Types.MoveTo p) dict
 
 
 buildAllMapSvgs : Model -> MapDrawer.MapClickAction
@@ -142,110 +169,112 @@ getPathTo from to map =
         Nothing
 
 
-allSettlements : Model -> List Settlement
+allSettlements : Model -> List Entities.Settlement
 allSettlements m =
     List.concat (List.map .land (Entities.flattenLordList m.lords))
 
 
-
--- begin STATIC TEST DATA
-
--- https://cp-algorithms.com/string/string-hashing.html
-hashMultiplicator : Int
-hashMultiplicator = 31
-
-hashModulo : Int 
-hashModulo = 79119
-
-createSimplePseudoSeed : List Char -> Int
-createSimplePseudoSeed l =
-        modBy (List.foldr (\x y -> (Char.toCode x * hashMultiplicator) + y) 0 l) hashModulo
-
-getPseudoRandomElement : Random.Seed -> List a -> Maybe a 
-getPseudoRandomElement s l = 
-    let
-        (x, _) = Random.step (Random.int 0 (List.length l - 1)) s
-    in
-        case l of
-            [] -> 
-                Nothing
-
-            v -> 
-                getIndexedElement v x
-
-getIndexedElement : List a -> Int -> Maybe a
-getIndexedElement l i =
-    case l of
-        [] -> 
-            Nothing
-
-        (x :: xs) ->          
-            if i > 0 then
-                getIndexedElement xs (i - 1)
-            else 
-                Just x
- 
-
-
-testTroopList : List Troop
-testTroopList =
-    [ { amount = 30, troopType = Troops.Sword }, { amount = 30, troopType = Troops.Spear }, { amount = 30, troopType = Troops.Archer }, { amount = 30, troopType = Troops.Knight } ]
+drawnMap : Map.Map -> MapDrawer.MapClickAction
+drawnMap map =
+    Map.drawMap map
 
 
 
+-- TODO: Not needed anymore?
+-- items and path drawing on the game map
+----------------------------------------------------------
+{- hashMultiplicator : Int
+   hashMultiplicator =
+       31
+
+
+   hashModulo : Int
+   hashModulo =
+       79119
+
+
+   createSimplePseudoSeed : List Char -> Int
+   createSimplePseudoSeed l =
+       modBy (List.foldr (\x y -> (Char.toCode x * hashMultiplicator) + y) 0 l) hashModulo
+
+
+   getPseudoRandomElement : Random.Seed -> List a -> Maybe a
+   getPseudoRandomElement s l =
+       let
+           ( x, _ ) =
+               Random.step (Random.int 0 (List.length l - 1)) s
+       in
+       case l of
+           [] ->
+               Nothing
+
+           v ->
+               getIndexedElement v x
+
+
+   getIndexedElement : List a -> Int -> Maybe a
+   getIndexedElement l i =
+       case l of
+           [] ->
+               Nothing
+
+           x :: xs ->
+               if i > 0 then
+                   getIndexedElement xs (i - 1)
+
+               else
+                   Just x
+-}
 -- testLordData For Battlesimulation
 
 
-secondLordTroops : List Troop
-secondLordTroops =
-    [ { amount = 20, troopType = Troops.Sword }, { amount = 185, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
-
-
-testWorldEntity : WorldEntity
+testWorldEntity : Entities.WorldEntity
 testWorldEntity =
-    { army = testTroopList
+    { army = Troops.startTroops
     , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
     , name = "Malaca"
     }
 
 
-testSetelement : Settlement
+testSetelement : Entities.Settlement
 testSetelement =
     { entity = testWorldEntity
     , settlementType = Entities.Castle
-    , recruitLimits = secondLordTroops
+    , recruitLimits = Troops.emptyTroops
     , income = 3.19
     , isSieged = False
     }
 
 
-testLordWorldEntity : WorldEntity
+testLordWorldEntity : Entities.WorldEntity
 testLordWorldEntity =
-    { army = testTroopList
+    { army = Troops.startTroops
     , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
     , name = "RÜDIGER"
     }
 
 
-testLordWorldEntity2 : WorldEntity
+testLordWorldEntity2 : Entities.WorldEntity
 testLordWorldEntity2 =
-    { army = secondLordTroops
+    { army = Troops.startTroops
     , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
     , name = "Peter von Haskell"
     }
 
-testLord2 : Lord
+
+testLord2 : Entities.Lord
 testLord2 =
     { entity = testLordWorldEntity2
     , gold = 450
     , land = [ testSetelement ]
     , agent = PathAgent.getAgent 6
-    } 
+    }
 
-testLord : Lord
+
+testLord : Entities.Lord
 testLord =
     { entity = testLordWorldEntity
     , gold = 450
@@ -255,8 +284,9 @@ testLord =
 
 
 
--- end STATIC TEST DATA
--- begin initialization
+-- init game data (set the model data)
+-- add the player, lords, settlements, etc.
+----------------------------------------------------------
 
 
 startGame : Int -> Model
@@ -270,7 +300,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model (Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map ""
+    Model (Entities.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" []
 
 
 initPlayers : Model -> Int -> Model
@@ -281,20 +311,20 @@ initPlayers m count =
                 (\i -> initPlayer m.map i (2 * (toFloat i / toFloat count + 0.125)))
                 (List.range 0 (count - 1))
     in
-    { m | lords = Cons testLord lords }
+    { m | lords = Entities.Cons testLord lords }
 
 
-initPlayer : Map.Map -> Int -> Float -> Lord
+initPlayer : Map.Map -> Int -> Float -> Entities.Lord
 initPlayer m i rad =
     let
         entity =
-            WorldEntity
-                secondLordTroops
+            Entities.WorldEntity
+                Troops.startTroops
                 (Faction.getFaction i)
                 (Pathfinder.getClosestFreeFieldAt (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad)) (MapGenerator.getNav m) Dict.empty)
                 ("Lord " ++ String.fromInt i)
     in
-    Lord
+    Entities.Lord
         entity
         250
         (initSettlementsFor m Dict.empty entity i)
@@ -318,7 +348,7 @@ getVillagesInQuadrant m e q i =
     List.map
         (\index ->
             Entities.SettlementInfo
-                Village
+                Entities.Village
                 (getVillagesPosition i q index e.position)
                 (Maybe.withDefault
                     (e.name ++ " " ++ String.fromInt i ++ "th Village`")
@@ -371,11 +401,11 @@ getSafeSettlementInfo i m dict =
 
 
 
--- end initialization
--- begin drawing
+-- init the view (build the base layout of the page)
+----------------------------------------------------------
 
 
-view : Model -> Html Msg
+view : Model -> Html Types.Msg
 view model =
     let
         allClickActions =
@@ -383,10 +413,10 @@ view model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , Templates.HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
+        , HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             [ addStylesheet "link" "./assets/styles/main_styles.css"
-            , generateMapActionTemplate model.selectedPoint allClickActions
+            , MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
             , div []
                 [ Svg.svg
                     [ Svg.Attributes.viewBox "0 0 850 1000"
@@ -394,83 +424,73 @@ view model =
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-            --, span [] [ Html.text (gameStateToText model) ]
-            --, span [] [ Html.text ( Debug.toString (getPseudoRandomElement (Random.initialSeed (createSimplePseudoSeed (String.toList "sadaasdas"))) Entities.villageNames)) ]
-            , span [] [Html.text (Debug.toString (List.length (tailLordList model.lords)))]
+            , EventTemplate.generateEventOverview model.events
+            --, span [] [ Html.text (Debug.toString (List.length (Entities.tailLordList model.lords))) ]
             ]
         ]
 
 
-drawnMap : Map.Map -> MapDrawer.MapClickAction
-drawnMap map =
-    Map.drawMap map
+
+-- load / show right modal-window by the current model menue state
+----------------------------------------------------------
 
 
-
--- Get the right modal-window by the current Model-Menue-State
-
-
-findModalWindow : Model -> Html Msg
+findModalWindow : Model -> Html Types.Msg
 findModalWindow model =
     case model.gameState of
         GameSetup uistate ->
             case uistate of
                 SettlementView l s u ->
-                    generateSettlementModalTemplate l s u
+                    SettlementTemplate.generateSettlementModalTemplate l s u
 
                 LordView l ->
-                    generateLordTemplate l
+                    LordTemplate.generateLordTemplate l
 
                 BattleView bS ->
-                    generateBattleTemplate bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+                    BattleTemplate.generateBattleTemplate bS (Map.getTerrainForPoint bS.player.entity.position model.map)
 
                 _ ->
                     div [] []
 
         GameOver bool ->
-            generateEndTemplate bool
+            EndTemplate.generateEndTemplate bool
 
         _ ->
             div [] []
 
 
-addStylesheet : String -> String -> Html Msg
+addStylesheet : String -> String -> Html Types.Msg
 addStylesheet tag href =
     Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
 
 
-gameStateToText : Model -> String
-gameStateToText m =
-    String.fromFloat (getPlayer m).gold
+
+-- update function
+----------------------------------------------------------
 
 
-
--- end drawing
---begin update
-
-
-update : Msg -> Model -> Model
+update : Types.Msg -> Model -> Model
 update msg model =
     case msg of
-        EndRound ->
-            { model | date = DateExt.addMonths 1 model.date, lords = Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (npcs model.lords)) }
+        Types.EndRound ->
+            { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.npcs model.lords)) }
 
-        EndGame bool ->
+        Types.EndGame bool ->
             { model | gameState = GameOver bool }
 
-        CloseModal ->
+        Types.CloseModal ->
             { model | gameState = GameSetup GameMenue }
 
-        BattleAction bmsg ->
+        Types.BattleAction bmsg ->
             updateBattle bmsg model
 
-        SettlementAction action ->
+        Types.SettlementAction action ->
             updateSettlement action model
 
-        MapTileAction action ->
+        Types.MapTileAction action ->
             updateMaptileAction model action
 
-        Click p ->
+        Types.Click p ->
             { model | selectedPoint = Just p }
 
 
@@ -479,49 +499,61 @@ updateAIsAfterPlayerRound lords =
     List.map (\l -> updateAI l |> endRoundForLord) lords
 
 
-updateAI : Lord -> Lord
+updateAI : Entities.Lord -> Entities.Lord
 updateAI lord =
     { lord | entity = Entities.setPosition lord.entity (Vector.addPoints (Vector.Point 1 1) lord.entity.position) }
 
 
-endRoundForLord : Lord -> Lord
+endRoundForLord : Entities.Lord -> Entities.Lord
 endRoundForLord l =
     Entities.applyLordGoldIncome l |> Entities.resetUsedMovement |> Entities.applyLordNewRecruits
 
 
-updateMaptileAction : Model -> MapTileMsg -> Model
+
+-- update function for the map action messages
+-- like move to a point or engage a battle
+----------------------------------------------------------
+
+
+updateMaptileAction : Model -> Types.MapTileMsg -> Model
 updateMaptileAction model ma =
     case ma of
         Types.LordMsg msg lord ->
             updateLordAction msg lord model
 
-        SettlementMsg msg settlement ->
-            case msg of 
-                Types.ViewSettlement -> 
+        Types.SettlementMsg msg settlement ->
+            case msg of
+                Types.ViewSettlement ->
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.RestrictedView) }
 
-                Types.EnterSettlement -> 
+                Types.EnterSettlement ->
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Types.StandardView) }
 
-                Types.SiegeSettlement -> 
+                Types.SiegeSettlement ->
                     let
-                        enemy = findLordWithSettlement settlement (Entities.flattenLordList model.lords)
+                        enemy =
+                            Entities.findLordWithSettlement settlement (Entities.flattenLordList model.lords)
                     in
-                        case enemy of
-                            Nothing -> 
-                                model
+                    case enemy of
+                        Nothing ->
+                            model
 
-                            Just l -> 
-                                { model | gameState = GameSetup 
-                                            (BattleView 
-                                                { player = getPlayer model
-                                                , enemy = l
-                                                , round = 1
-                                                , playerCasualties = Troops.emptyTroops
-                                                , enemyCasualties = Troops.emptyTroops
-                                                , settlement = Just settlement
-                                                , siege = True
-                                                , finished = False }) }
+                        Just l ->
+                            { model
+                                | gameState =
+                                    GameSetup
+                                        (BattleView
+                                            { player = getPlayer model
+                                            , enemy = l
+                                            , round = 1
+                                            , playerCasualties = Troops.emptyTroops
+                                            , enemyCasualties = Troops.emptyTroops
+                                            , settlement = Just settlement
+                                            , siege = True
+                                            , finished = False
+                                            }
+                                        )
+                            }
 
         Types.MoveTo p ->
             let
@@ -543,7 +575,7 @@ updateMaptileAction model ma =
                                 , entity = Entities.setPosition player.entity point
                             }
                     in
-                    { model | lords = Cons newPlayer (npcs model.lords) }
+                    { model | lords = Entities.Cons newPlayer (Entities.npcs model.lords) }
 
 
 updateLordAction : Types.LordTileMsg -> Entities.Lord -> Model -> Model
@@ -553,59 +585,70 @@ updateLordAction msg lord m =
             { m | gameState = GameSetup (LordView lord) }
 
         Types.EngageLord ->
-            { m | gameState = GameSetup 
-                                (BattleView 
-                                    { player = getPlayer m
-                                    , enemy = lord
-                                    , round = 1
-                                    , playerCasualties = Troops.emptyTroops
-                                    , enemyCasualties = Troops.emptyTroops
-                                    , settlement = Nothing
-                                    , siege = False
-                                    , finished = False }) }
+            { m
+                | gameState =
+                    GameSetup
+                        (BattleView
+                            { player = getPlayer m
+                            , enemy = lord
+                            , round = 1
+                            , playerCasualties = Troops.emptyTroops
+                            , enemyCasualties = Troops.emptyTroops
+                            , settlement = Nothing
+                            , siege = False
+                            , finished = False
+                            }
+                        )
+            }
 
 
-updateSettlement : SettlementMsg -> Model -> Model
+
+-- update function for the settlement messages
+-- like view a settlement, recruit or station troops, etc.
+----------------------------------------------------------
+
+
+updateSettlement : Types.SettlementMsg -> Model -> Model
 updateSettlement msg model =
     case msg of
-        UIMsg umsg ->
+        Types.UIMsg umsg ->
             updateSettlementUI umsg model
 
-        TroopMsg tmsg ->
+        Types.TroopMsg tmsg ->
             updateSettlementStats tmsg model
 
 
-updateSettlementUI : SettlementUIMsg -> Model -> Model
+updateSettlementUI : Types.SettlementUIMsg -> Model -> Model
 updateSettlementUI msg model =
     case msg of
-        ShowBuyTroops s ->
+        Types.ShowBuyTroops s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.RecruitView) }
 
-        ShowStationTroops s ->
+        Types.ShowStationTroops s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StationView) }
 
-        ShowSettlement s ->
+        Types.ShowSettlement s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
 
 
-updateSettlementStats : SettlementArmyMsg -> Model -> Model
+updateSettlementStats : Types.SettlementArmyMsg -> Model -> Model
 updateSettlementStats msg model =
     case msg of
-        BuyTroops t s ->
+        Types.BuyTroops t s ->
             updateMultipleTroopStats
                 (Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t s))
                 s
                 Types.RecruitView
                 model
 
-        StationTroops t s ->
+        Types.StationTroops t s ->
             updateMultipleTroopStats
                 (Entities.updatePlayer model.lords (Entities.stationTroops (Entities.getPlayer model.lords) t s))
                 s
                 Types.StationView
                 model
 
-        TakeTroops t s ->
+        Types.TakeTroops t s ->
             updateMultipleTroopStats
                 (Entities.updatePlayer model.lords (Entities.takeTroops (Entities.getPlayer model.lords) t s))
                 s
@@ -613,11 +656,11 @@ updateSettlementStats msg model =
                 model
 
 
-updateMultipleTroopStats : LordList -> Settlement -> UiSettlementState -> Model -> Model
+updateMultipleTroopStats : Entities.LordList -> Entities.Settlement -> Types.UiSettlementState -> Model -> Model
 updateMultipleTroopStats l s u m =
     let
         newSettle =
-            getSettlementByName (Entities.getPlayer l).land s.entity.name
+            Entities.getSettlementByName (Entities.getPlayer l).land s.entity.name
     in
     case newSettle of
         Nothing ->
@@ -630,13 +673,19 @@ updateMultipleTroopStats l s u m =
             }
 
 
-updateBattle : BattleMsg -> Model -> Model
+
+-- update function for the battle messages
+-- like start a skirmish, flee a battle, etc.
+----------------------------------------------------------
+
+
+updateBattle : Types.BattleMsg -> Model -> Model
 updateBattle msg model =
     case msg of
-
-        StartSkirmish bS ->
+        Types.StartSkirmish bS ->
             let
-                newBattleStats = Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+                newBattleStats =
+                    Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
             in
             { model
                 | gameState =
@@ -646,66 +695,69 @@ updateBattle msg model =
                         )
             }
 
-        SkipSkirmishes bS ->
+        Types.SkipSkirmishes bS ->
             { model | gameState = GameSetup (BattleView (skipBattle bS model)) }
 
-        FleeBattle bS ->
+        Types.FleeBattle bS ->
             let
                 newEnemyLords =
-                    OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+                    OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (Entities.tailLordList model.lords)
 
                 newPlayer =
                     Entities.updatePlayerArmy bS.player (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.player.entity.army)
 
                 lords =
-                    Cons newPlayer newEnemyLords
+                    Entities.Cons newPlayer newEnemyLords
             in
             { model | lords = lords, gameState = GameSetup GameMenue }
 
-        EndBattle bS ->
-            case bS.settlement of 
-                Nothing -> 
+        Types.EndBattle bS ->
+            case bS.settlement of
+                Nothing ->
                     let
                         newEnemyLords =
-                            OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (tailLordList model.lords)
+                            OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (Entities.tailLordList model.lords)
 
                         lords =
-                            Cons bS.player newEnemyLords
+                            Entities.Cons bS.player newEnemyLords
                     in
-                        { model | lords = lords, gameState = GameSetup GameMenue }
+                    { model | lords = lords, gameState = GameSetup GameMenue }
 
-                Just settle -> 
+                Just settle ->
                     let
-                        (tempPlayer, tempEnemyLord, lordKilled) = Battle.siegeBattleAftermath bS settle
-
+                        ( tempPlayer, tempEnemyLord, lordKilled ) =
+                            Battle.siegeBattleAftermath bS settle
 
                         newEnemyLords =
                             checkLordLost
-                            lordKilled
-                            tempEnemyLord.entity.name
-                            (OperatorExt.mapFilter (\_ -> tempEnemyLord) identity (\x -> x.entity.name == tempEnemyLord.entity.name) (tailLordList model.lords))
+                                lordKilled
+                                tempEnemyLord.entity.name
+                                (OperatorExt.mapFilter (\_ -> tempEnemyLord) identity (\x -> x.entity.name == tempEnemyLord.entity.name) (Entities.tailLordList model.lords))
 
                         lords =
-                            Cons tempPlayer newEnemyLords
+                            Entities.Cons tempPlayer newEnemyLords
                     in
-                        if List.length (tailLordList model.lords) > 0 then
-                            { model | lords = lords, gameState = GameSetup GameMenue }
-                        else 
-                            { model | lords = lords, gameState = GameOver True }
+                    if List.length (Entities.tailLordList model.lords) > 0 then
+                        { model | lords = lords, gameState = GameSetup GameMenue }
+
+                    else
+                        { model | lords = lords, gameState = GameOver True }
 
 
-
-checkLordLost : Bool -> String -> List Lord -> List Lord
-checkLordLost k n l = 
+checkLordLost : Bool -> String -> List Entities.Lord -> List Entities.Lord
+checkLordLost k n l =
     if k then
         List.filter (\x -> x.entity.name /= n) l
-    else 
+
+    else
         l
 
-skipBattle : BattleStats -> Model -> BattleStats
+
+skipBattle : Entities.BattleStats -> Model -> Entities.BattleStats
 skipBattle bS model =
     let
-        newBattleStats = Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+        newBattleStats =
+            Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
     in
     if newBattleStats.finished then
         newBattleStats
@@ -714,30 +766,6 @@ skipBattle bS model =
         skipBattle newBattleStats model
 
 
-
--- end update
--- begin config
-
-
-villagesPerLord : Int
-villagesPerLord =
-    3
-
-
-villageCaptialDistance : Float
-villageCaptialDistance =
-    7
-
-
-
--- end config
-
-
-getPlayer : Model -> Entities.Lord
-getPlayer model =
-    Entities.getPlayer model.lords
-
-
-main : Program () Model Msg
+main : Program () Model Types.Msg
 main =
     Browser.sandbox { init = startGame 4, view = view, update = update }

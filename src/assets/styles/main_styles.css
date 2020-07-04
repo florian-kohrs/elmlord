@@ -1042,43 +1042,71 @@ span {
 
 .page-map {
     margin: 0 10%;
-    width: 60%;
+    width: 75%;
     display: grid;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 22.5% 1fr 22.5%;
+}
+
+.event-logs {
+    background: black;
+    border-radius: 20px;
+    height: 90%;
+    margin: 10px 0;
+    opacity: 0.6;
+
+    display: grid;
+    grid-template-rows: 50px 1fr;
+}
+
+.event-logs-header {
+    color: white;
+    font-size: 25px;
+    text-align: center;
+}
+
+.event-logs-component {
+    color: white;
+    font-size: 25px;
+    text-align: center;
+}
+
+.event-logs-header > span {
+    padding-top: 20px;
+    display: block;
 }
 
 @media only screen and (min-width: 1250px) and (max-height: 800px){
-    .page-map {
-        width: 67.5%;
-    }
-}
-
-@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 900px) {
-    .page-map {
-        width: 67.5%;
-    }
-}
-
-@media only screen and (min-height: 950px) and (max-width: 1300px) and (min-width: 1201px) {
-    .page-map {
-        width: 80%;
-    }
-}
-
-@media only screen and (min-height: 950px) and (max-width: 1400px) and (min-width: 1301px) {
     .page-map {
         width: 75%;
     }
 }
 
+@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 900px) {
+    .page-map {
+        width: 75%;
+    }
+}
+
+@media only screen and (min-height: 950px) and (max-width: 1300px) and (min-width: 1201px) {
+    .page-map {
+        width: 85%;
+    }
+}
+
+@media only screen and (min-height: 950px) and (max-width: 1400px) and (min-width: 1301px) {
+    .page-map {
+        width: 70%;
+    }
+}
+
 @media only screen and (min-height: 950px) and (max-width: 1450px) and (min-width: 1401px) {
     .page-map {
-        width: 72.5%;
+        width: 77.5%;
     }
 }
 
 @media only screen and (min-height: 950px) and (max-width: 1650px) and (min-width: 1451px) {
     .page-map {
-        width: 67.5%;
+        width: 72.5%;
     }
 }
