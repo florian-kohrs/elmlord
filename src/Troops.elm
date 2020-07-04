@@ -31,7 +31,6 @@ updateTroops tr ty v =
             OperatorExt.ternary (x.troopType == ty) { x | amount = x.amount + v } x :: updateTroops xs ty v
 
 
-
 troopDifferences : Troop -> Troop -> Troop
 troopDifferences t1 t2 =
     { amount = t2.amount - t1.amount
@@ -45,6 +44,15 @@ emptyTroops =
     , { amount = 0, troopType = Spear }
     , { amount = 0, troopType = Archer }
     , { amount = 0, troopType = Knight }
+    ]
+
+
+startTroops : List Troop
+startTroops =
+    [ { amount = 20, troopType = Sword }
+    , { amount = 45, troopType = Spear }
+    , { amount = 10, troopType = Archer }
+    , { amount = 5, troopType = Knight }
     ]
 
 
