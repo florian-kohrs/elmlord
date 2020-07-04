@@ -1,9 +1,12 @@
 module Types exposing (..)
 
-import Entities exposing (BattleStats)
-import Troops exposing (..)
+import Entities
+import Troops
 import Vector
 
+
+-- all msg types that are used for the different states
+----------------------------------------------------------
 
 type Msg
     = EndRound
@@ -21,51 +24,15 @@ type MapTileMsg
     | MoveTo Vector.Point
 
 
-mapTileMsgToToolTip : MapTileMsg -> String
-mapTileMsgToToolTip m =
-    case m of
-        LordMsg msg l ->
-            showLordTileMsg msg ++ " " ++ l.entity.name
-
-        SettlementMsg msg s ->
-            showSettlementTileMsg msg ++ " " ++ s.entity.name
-
-        MoveTo _ ->
-            "Move here"
-
-
 type LordTileMsg
     = ViewLord
     | EngageLord
-
-
-showLordTileMsg : LordTileMsg -> String
-showLordTileMsg lordTileMsg =
-    case lordTileMsg of
-        ViewLord ->
-            "View"
-
-        EngageLord ->
-            "Engage"
 
 
 type SettlementTileMsg
     = ViewSettlement
     | EnterSettlement
     | SiegeSettlement
-
-
-showSettlementTileMsg : SettlementTileMsg -> String
-showSettlementTileMsg msg =
-    case msg of
-        ViewSettlement ->
-            "View"
-
-        EnterSettlement ->
-            "Enter"
-
-        SiegeSettlement ->
-            "Siege"
 
 
 type SettlementMsg
@@ -99,3 +66,44 @@ type BattleMsg
     | SkipSkirmishes Entities.BattleStats
     | FleeBattle Entities.BattleStats
     | EndBattle Entities.BattleStats
+
+
+
+-- Resolve map actions types that are displayed on the left
+-- to the map
+----------------------------------------------------------
+
+showLordTileMsg : LordTileMsg -> String
+showLordTileMsg lordTileMsg =
+    case lordTileMsg of
+        ViewLord ->
+            "View"
+
+        EngageLord ->
+            "Engage"
+
+
+mapTileMsgToToolTip : MapTileMsg -> String
+mapTileMsgToToolTip m =
+    case m of
+        LordMsg msg l ->
+            showLordTileMsg msg ++ " " ++ l.entity.name
+
+        SettlementMsg msg s ->
+            showSettlementTileMsg msg ++ " " ++ s.entity.name
+
+        MoveTo _ ->
+            "Move here"
+
+
+showSettlementTileMsg : SettlementTileMsg -> String
+showSettlementTileMsg msg =
+    case msg of
+        ViewSettlement ->
+            "View"
+
+        EnterSettlement ->
+            "Enter"
+
+        SiegeSettlement ->
+            "Siege"
