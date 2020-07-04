@@ -17,7 +17,7 @@ span {
     background: #deb887;
     display: grid;
     grid-template-rows: 1fr;
-    grid-template-columns: 325px 85px 210px 195px 1fr 150px 15%;
+    grid-template-columns: 325px 85px 235px 195px 1fr 150px 15%;
     grid-column-gap: 50px;
 
     border-bottom-right-radius: 35px;
@@ -327,6 +327,12 @@ span {
     width: 100%;
 }
 
+.troop-station-icon {
+    height: 30px;
+    width: 30px;
+    margin-left: -5px;
+}
+
 .stationed-troop-container {
     width: 80%;
     height: 30px !important;
@@ -356,7 +362,7 @@ span {
 .settlement-troop-recruiting {
     grid-area: 1 / 1 / 5 / 2;
     display: grid;
-    grid-template-rows: 65px 50px 50px 50px 50px 1fr;
+    grid-template-rows: 65px 50px 50px 50px 50px 50px 1fr;
     grid-row-gap: 10px;
     text-align: center;
 }
@@ -374,6 +380,26 @@ span {
     border: 1px solid #49505c;
     text-align: center;
     border-radius: 10px;
+}
+
+.troop-recruiting-header {
+    display: grid;
+    grid-template-columns: 60px 50px 50px 1fr;
+}
+
+.troop-recruiting-header > div > img {
+    width: 70%;
+    height: 70%;
+    display: block;
+    margin: 5px auto;
+}
+
+.troop-recruiting-header > .troop-settlement-header {
+    grid-area: 1 / 2 / 4 / 3;
+}
+
+.troop-recruiting-header > .troop-army-header {
+    grid-area: 1 / 3 / 4 / 3;
 }
 
 .troop-disabled-button {
@@ -465,7 +491,7 @@ span {
 .settlement-troop-stationing {
     grid-area: 1 / 1 / 5 / 2;
     display: grid;
-    grid-template-rows: 65px 50px 50px 50px 50px 1fr;
+    grid-template-rows: 65px 50px 50px 50px 50px 50px 1fr;
     grid-row-gap: 10px;
     text-align: center;
 }
@@ -706,7 +732,7 @@ span {
 
 .battle-action-container {
     display: grid;
-    grid-template-rows: 200px 80px 80px 1fr;
+    grid-template-rows: 250px 80px 80px 1fr;
     text-align: center;
     color: #49505c;
 }

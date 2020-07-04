@@ -43,28 +43,43 @@ settlementStateToAction : Lord -> Settlement -> UiSettlementState -> List (Html 
 settlementStateToAction lord settlement uistate = 
     case uistate of 
         StandardView -> 
-                [ button [onClick (SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement)))] 
-                [ span [] [Html.text "Recruit troops"]], button [onClick (SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement)))] [ span [] [Html.text "Station troops"]]
+                [   button [onClick (SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement)))] [ span [] [Html.text "Recruit troops"]]
+                    , button [onClick (SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement)))] [ span [] [Html.text "Station troops"]]
                     ,div [Html.Attributes.class "settlement-info"] [
                         span [Html.Attributes.class "header-span"] [Html.text "Settlement Info"]
-                    , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
-                    , div [Html.Attributes.class "stationed-troops-overview"] [
-                        span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
-                        , div [] (List.map troopToHtml settlement.entity.army)
-                        
+                        , span [Html.Attributes.class "income-span"] [Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats")]
+                        , div [Html.Attributes.class "stationed-troops-overview"] [
+                            span [Html.Attributes.class "troop-span"] [Html.text "Stationed Troops: "]
+                            , div [] (List.map troopToHtml settlement.entity.army)   
+                        ]
                     ]
                 ]
-            ]
         
         RecruitView -> 
             [div [Html.Attributes.class "settlement-troop-recruiting"] 
                     (span [] [Html.text "Recruit troops"] ::
+                    div [Html.Attributes.class "troop-recruiting-header"] [
+                        div [Html.Attributes.class "troop-settlement-header"] [
+                            img [src "./assets/images/troop_icon.png"][]
+                        ]
+                        , div [Html.Attributes.class "troop-army-header"] [
+                            img [src (getSettlementImage settlement)][]
+                        ]
+                    ] ::
                     mapSettlement (List.map2 Tuple.pair lord.entity.army settlement.recruitLimits) settlement lord ++
                     [button [onClick (SettlementAction (Types.UIMsg (Types.ShowSettlement settlement)))] [ span [] [Html.text "Back"]]])]
 
         StationView -> 
             [div [Html.Attributes.class "settlement-troop-stationing"] 
                     (span [] [Html.text "Station troops"] ::
+                    div [Html.Attributes.class "troop-recruiting-header"] [
+                        div [Html.Attributes.class "troop-settlement-header"] [
+                            img [src "./assets/images/troop_icon.png"][]
+                        ]
+                        , div [Html.Attributes.class "troop-army-header"] [
+                            img [src (getSettlementImage settlement)][]
+                        ]
+                    ] ::
                     List.map2 generateStationTroopContainer lord.entity.army (List.map (\x -> (x, settlement)) settlement.entity.army) ++
                     [button [onClick (SettlementAction (Types.UIMsg (Types.ShowSettlement settlement)))] [ span [] [Html.text "Back"]]])]
                     
@@ -93,8 +108,16 @@ generateStationTroopContainer lT (sT, sE) =
             , div [] [
                 span [] [Html.text ("[" ++ String.fromInt sT.amount ++ "]")]
             ]
-            , button [onClick (SettlementAction (Types.TroopMsg (Types.TakeTroops lT.troopType sE)))] [ Html.text "O" ]
-            , button [onClick (SettlementAction (Types.TroopMsg (Types.StationTroops lT.troopType sE)))] [ Html.text "I" ]
+            , button [onClick (SettlementAction (Types.TroopMsg (Types.TakeTroops lT.troopType sE)))
+                     , Html.Attributes.class (OperatorExt.ternary (validateStationTroops sT.amount) "troop-disabled-button" "")
+                     , disabled (validateStationTroops sT.amount)] [ 
+                img [Html.Attributes.class "troop-station-icon", src "./assets/images/arrow_up.png"] []
+            ]
+            , button [onClick (SettlementAction (Types.TroopMsg (Types.StationTroops lT.troopType sE))),
+                     Html.Attributes.class (OperatorExt.ternary (validateStationTroops lT.amount) "troop-disabled-button" "tooltip")
+                     , disabled (validateStationTroops lT.amount)] [ 
+                img [Html.Attributes.class "troop-station-icon", src "./assets/images/arrow_down.png"] []
+            ]
     ]
 
 
@@ -132,6 +155,10 @@ generateRecruitTroopContainer (aT,sT) s l =
 validateBuyTroops : TroopType -> Settlement -> Lord -> Bool 
 validateBuyTroops t s l = 
         not ((l.gold - Troops.troopCost t > 0) && (Maybe.withDefault {amount = 0, troopType = t} (List.head (List.filter (\x -> x.troopType == t) s.recruitLimits))).amount > 0)
+
+validateStationTroops : Int -> Bool 
+validateStationTroops amount = 
+        not (amount > 0)
 
 troopToHtml : Troop -> Html Msg
 troopToHtml troop =

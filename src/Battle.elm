@@ -4,28 +4,29 @@ import Entities exposing (..)
 import Faction exposing (..)
 import OperatorExt exposing (..)
 import Troops exposing (..)
+import Map exposing (Terrain)
 
-evaluateBattleResult : BattleStats -> BattleStats
-evaluateBattleResult bS =
+evaluateBattleResult : BattleStats -> Terrain -> BattleStats
+evaluateBattleResult bS t =
     if bS.siege then
         case bS.settlement of
             Nothing -> 
                 bS
             
             Just settle -> 
-                evaluateSiegeBattle bS settle
+                evaluateSiegeBattle bS settle t
     else 
-        evaluateLordBattle bS
+        evaluateLordBattle bS t
 
 
-evaluateSiegeBattle : BattleStats -> Settlement -> BattleStats 
-evaluateSiegeBattle bS settle =
+evaluateSiegeBattle : BattleStats -> Settlement -> Terrain -> BattleStats 
+evaluateSiegeBattle bS settle ter =
         if Entities.isLordOnSettlement bS.enemy settle then
             let
                 (tEnemy, tSettle) = transferTroops bS.enemy settle
                 tempPlayer = bS.player
-                newPlayer = { tempPlayer | entity = evaluateBattle tempPlayer.entity tSettle.entity.army}
-                newSettle = { tSettle | entity = evaluateBattle tSettle.entity bS.player.entity.army}
+                newPlayer = { tempPlayer | entity = evaluateBattle tempPlayer.entity tSettle.entity.army ter (getSettlementBonus settle bS.enemy.land)}
+                newSettle = { tSettle | entity = evaluateBattle tSettle.entity bS.player.entity.army ter 1}
             in
                     { bS
                         | round = bS.round + 1
@@ -39,8 +40,8 @@ evaluateSiegeBattle bS settle =
         else   
             let
                 tempPlayer = bS.player
-                newPlayer = {tempPlayer | entity = evaluateBattle tempPlayer.entity settle.entity.army}
-                newSettle = {settle | entity = evaluateBattle settle.entity bS.player.entity.army}
+                newPlayer = {tempPlayer | entity = evaluateBattle tempPlayer.entity settle.entity.army ter (getSettlementBonus settle bS.enemy.land)}
+                newSettle = {settle | entity = evaluateBattle settle.entity bS.player.entity.army ter 1}
             in
                 { bS
                         | round = bS.round + 1
@@ -52,27 +53,14 @@ evaluateSiegeBattle bS settle =
                         , finished = sumTroops newPlayer.entity.army == 0 || sumTroops newSettle.entity.army == 0
                 }
 
-
-
-calcSiegeBattle : Lord -> Lord -> Settlement -> (Lord, Lord, Settlement)
-calcSiegeBattle attacker defender settle = 
-    let
-        (dLord, dSettle) = transferTroops defender settle
-        newAttacker = { attacker | entity = evaluateBattle attacker.entity settle.entity.army}
-        newSettle = { dSettle | entity = evaluateBattle dSettle.entity attacker.entity.army}
-    in
-        (newAttacker, dLord, newSettle)
     
-
-
-
-evaluateLordBattle : BattleStats -> BattleStats
-evaluateLordBattle bS =
+evaluateLordBattle : BattleStats -> Terrain -> BattleStats
+evaluateLordBattle bS ter =
     let
         tempPlayer = bS.player
         tempEnemy = bS.enemy
-        newPlayer = {tempPlayer | entity = evaluateBattle tempPlayer.entity bS.enemy.entity.army}
-        newEnemy = {tempEnemy | entity = evaluateBattle tempEnemy.entity bS.player.entity.army}
+        newPlayer = {tempPlayer | entity = evaluateBattle tempPlayer.entity bS.enemy.entity.army ter 1}
+        newEnemy = {tempEnemy | entity = evaluateBattle tempEnemy.entity bS.player.entity.army ter 1}
     in
         { bS
             | round = bS.round + 1
@@ -143,9 +131,9 @@ handleSettlementTransfer player enemy =
 
 -- TODO: Combine the aftermath parts of normal and sieged battles
 
-evaluateBattle : WorldEntity -> List Troop -> WorldEntity
-evaluateBattle w t =
-    evaluateLordCasualities w (sumTroopsDamage t)
+evaluateBattle : WorldEntity -> List Troop -> Terrain -> Float -> WorldEntity
+evaluateBattle w t ter siegeBonus=
+    evaluateLordCasualities w (sumTroopsDamage t ter siegeBonus)
 
 evaluateLordCasualities : WorldEntity -> Float -> WorldEntity
 evaluateLordCasualities w d =
@@ -180,9 +168,12 @@ sumTroops l =
 -- checksumTroopsDamage
 
 
-sumTroopsDamage : List Troop -> Float
-sumTroopsDamage t =
-    List.foldr (\x y -> Troops.troopDamage x.troopType * toFloat x.amount + y) 0 t
+sumTroopsDamage : List Troop -> Terrain -> Float -> Float
+sumTroopsDamage t ter siegeBonus=
+    let
+        bonusTroopTypes = Map.terrainToBonus ter
+    in
+    List.foldr (\x y -> siegeBonus * ternary (List.member x.troopType bonusTroopTypes) (Troops.battlefieldBonus x.troopType) 1 * Troops.troopDamage x.troopType * toFloat x.amount + y) 0 t
 
 
 transferTroops : Lord -> Settlement -> (Lord, Settlement)
@@ -193,3 +184,12 @@ transferTroops l s =
         newSettlement = { s | entity = Entities.updateEntitiesArmy newArmy s.entity}
     in
         (newLord, newSettlement)
+
+
+getSettlementBonus : Settlement -> List Settlement -> Float
+getSettlementBonus s l = 
+    if s.settlementType == Entities.Village then
+        1.1
+    else 
+        List.foldr (\_ y -> 0.1 + y) 1 l
+

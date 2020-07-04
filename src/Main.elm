@@ -199,7 +199,7 @@ testTroopList =
 
 secondLordTroops : List Troop
 secondLordTroops =
-    [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
+    [ { amount = 20, troopType = Troops.Sword }, { amount = 185, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
 
 
 testWorldEntity : WorldEntity
@@ -226,7 +226,7 @@ testLordWorldEntity =
     { army = testTroopList
     , faction = Faction.Faction1
     , position = { x = 0, y = 0 }
-    , name = "Jan von Haskell"
+    , name = "RÜDIGER"
     }
 
 
@@ -396,7 +396,8 @@ view model =
                     (MapDrawer.allSvgs allClickActions)
                 ]
             --, span [] [ Html.text (gameStateToText model) ]
-            , span [] [ Html.text ( Debug.toString (getPseudoRandomElement (Random.initialSeed (createSimplePseudoSeed (String.toList "sadaasdas"))) Entities.villageNames)) ]
+            --, span [] [ Html.text ( Debug.toString (getPseudoRandomElement (Random.initialSeed (createSimplePseudoSeed (String.toList "sadaasdas"))) Entities.villageNames)) ]
+            , span [] [Html.text (Debug.toString (List.length (tailLordList model.lords)))]
             ]
         ]
 
@@ -636,7 +637,7 @@ updateBattle msg model =
 
         StartSkirmish bS ->
             let
-                newBattleStats = Battle.evaluateBattleResult bS
+                newBattleStats = Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
             in
             { model
                 | gameState =
@@ -647,7 +648,7 @@ updateBattle msg model =
             }
 
         SkipSkirmishes bS ->
-            { model | gameState = GameSetup (BattleView (skipBattle bS)) }
+            { model | gameState = GameSetup (BattleView (skipBattle bS model)) }
 
         FleeBattle bS ->
             let
@@ -688,7 +689,11 @@ updateBattle msg model =
                         lords =
                             Cons tempPlayer newEnemyLords
                     in
-                        { model | lords = lords, gameState = GameSetup GameMenue }
+                        if List.length (tailLordList model.lords) > 0 then
+                            { model | lords = lords, gameState = GameSetup GameMenue }
+                        else 
+                            { model | lords = lords, gameState = GameOver True }
+
 
 
 checkLordLost : Bool -> String -> List Lord -> List Lord
@@ -698,16 +703,16 @@ checkLordLost k n l =
     else 
         l
 
-skipBattle : BattleStats -> BattleStats
-skipBattle bS =
+skipBattle : BattleStats -> Model -> BattleStats
+skipBattle bS model =
     let
-        newBattleStats = Battle.evaluateBattleResult bS
+        newBattleStats = Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
     in
     if newBattleStats.finished then
         newBattleStats
 
     else
-        skipBattle newBattleStats
+        skipBattle newBattleStats model
 
 
 

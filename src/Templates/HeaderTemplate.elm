@@ -109,7 +109,7 @@ headerSettingsTemplate =
 -- Logic
 ---------------------------------------------------------------------------------------------------------------------------------------------------
 
-
+-- TODO: combine this in here and BattleTemplate
 roundGold : Float -> String
 roundGold v =
     let 

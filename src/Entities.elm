@@ -76,23 +76,13 @@ buyTroops l t s =
 
 stationTroops : Lord -> TroopType -> Settlement -> Lord
 stationTroops l t s =
-    handleTroopInteraction
-        (checkTroopTreshhold (Troops.filterTroopList l.entity.army t) t 5)
-        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5 }
-        l
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5 }
+
 
 
 takeTroops : Lord -> TroopType -> Settlement -> Lord
 takeTroops l t s =
-    handleTroopInteraction
-        (checkTroopTreshhold (Troops.filterTroopList s.entity.army t) t 5)
-        { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5 }
-        l
-
-
-handleTroopInteraction : Bool -> Lord -> Lord -> Lord
-handleTroopInteraction bool l1 l2 =
-    ternary bool l1 l2
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5 }
 
 
 updateEntitiesArmy : List Troop -> WorldEntity -> WorldEntity
@@ -302,7 +292,7 @@ applySettlementNewRecruits ls =
 
 createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
-    { entity = { army = [], faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = [], income = 5.0, isSieged = False }
+    { entity = { army = [], faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = secondLordTroops, income = 5.0, isSieged = False }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
@@ -312,9 +302,10 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = secondLordTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = [], income = 1.5, isSieged = False }
+    { entity = { army = secondLordTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = secondLordTroops, income = 1.5, isSieged = False }
 
 
+-- TODO: Ersetze das mit einer Liste mit Null Truppen
 secondLordTroops : List Troop
 secondLordTroops =
     [ { amount = 20, troopType = Troops.Sword }, { amount = 45, troopType = Troops.Spear }, { amount = 10, troopType = Troops.Archer }, { amount = 5, troopType = Troops.Knight } ]
@@ -333,6 +324,15 @@ getSettlementNameByType s =
         Castle ->
             "Castle"
 
+getSettlementImage : Settlement -> String 
+getSettlementImage s = 
+    "./assets/images/settlements/" ++ getSettlementNameByType s.settlementType ++ ".png"
+
+
+getPlayerImage : Lord -> String
+getPlayerImage l = 
+    "./assets/images/profiles/" ++ factionToImage l.entity.faction
+    
 
 getLordCapital : List Settlement -> Maybe Settlement
 getLordCapital l =
