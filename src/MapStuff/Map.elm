@@ -141,10 +141,10 @@ terrainToImageName t =
             Nothing
 
         Forest ->
-            Just "map/tree.png"
+            Just "./assets/images/map/tree.png"
 
         Mountain ->
-            Just "map/mountain_icon.png"
+            Just "./assets/images/map/mountain_icon.png"
 
 
 terrainToName : Terrain -> String

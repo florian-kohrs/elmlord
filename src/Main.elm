@@ -35,12 +35,13 @@ import Vector exposing (..)
 import Random
 import OperatorExt exposing (ternary)
 
+
 type alias Model =
     { lords : LordList
     , gameState : GameState
     , selectedPoint : Maybe Point
     , date : DateExt.Date
-    , map : Map.Map --used for pathfinding
+    , map : Map.Map
     , errorMsg : String
     }
 

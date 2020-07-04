@@ -1,19 +1,16 @@
 module Templates.HelperTemplate exposing (troopToHtml, roundDigits)
 
-import Entities exposing (..)
-import Faction exposing (..)
-import Html exposing (Html, button, div, img, span, text)
+import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
-import Types exposing ( Msg(..), UiSettlementState(..))
-import Troops exposing (..)
+import Types
+import Troops
 
 {-| Returns a container for a troop overview (image, name and amount)
 
     @param {Troop}: Takes the troop that needs to be displayed
 -}
 
-troopToHtml : Troop -> Html Msg
+troopToHtml : Troops.Troop -> Html Types.Msg
 troopToHtml troop =
         div [Html.Attributes.class "stationed-troop-container troop-container"] [
             img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] [],

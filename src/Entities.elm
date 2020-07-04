@@ -346,12 +346,6 @@ getLordCapital l =
             else 
                 getLordCapital xs
 
-settlementImageName : SettlementType -> String
-settlementImageName s =
-    getSettlementNameByType s ++ ".png"
-
-
-
 -- calc income
 
 
@@ -419,7 +413,7 @@ lordToMapIcon l =
                 Faction.Faction4 ->
                     "mini4.png"
     in
-    "profiles/" ++ fileName
+    "./assets/images/profiles/" ++ fileName
 
 
 factionToImage : Faction -> String

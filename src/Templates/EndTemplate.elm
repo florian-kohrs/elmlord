@@ -1,13 +1,10 @@
-module Templates.EndTemplate exposing (..)
+module Templates.EndTemplate exposing (generateEndTemplate)
 
-import Entities exposing (..)
-import Faction exposing (..)
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Types exposing (Msg(..))
-import Troops exposing (..)
-import OperatorExt exposing (..)
+import Types
+import OperatorExt
 
 winningTitle : String
 winningTitle = "We have won!"
@@ -27,7 +24,7 @@ losingDesc = "My lord our castle was taken, the campaign is a lost cause."
     @param {Bool}: Takes a bool, which says if the player won (True) or lost (False) the game
 -}
 
-generateEndTemplate : Bool -> Html Msg
+generateEndTemplate : Bool -> Html Types.Msg
 generateEndTemplate bool =
     div [Html.Attributes.class "modal-background"] [
         div [Html.Attributes.class "end-modal"] (generateEndData bool)
@@ -39,13 +36,13 @@ generateEndTemplate bool =
     @param {Bool}: Takes a bool, which says if the player won (True) or lost (False) the game
 -}
 
-generateEndData : Bool -> List (Html Msg)
+generateEndData : Bool -> List (Html Types.Msg)
 generateEndData res =
         [div [Html.Attributes.class "end-modal-title"] [
-            span [Html.Attributes.class (ternary res "winning-color" "losing-color")] [Html.text (ternary res winningTitle losingTitle)]
+            span [Html.Attributes.class (OperatorExt.ternary res "winning-color" "losing-color")] [Html.text (OperatorExt.ternary res winningTitle losingTitle)]
         ]
         , div [Html.Attributes.class "end-modal-desc"] [
-            span [] [Html.text (ternary res winningDesc losingDesc)]
+            span [] [Html.text (OperatorExt.ternary res winningDesc losingDesc)]
         ]
         , div [] [
             button [] [

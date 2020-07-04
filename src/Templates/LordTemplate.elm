@@ -1,13 +1,10 @@
 module Templates.LordTemplate exposing (..)
 
-import Entities exposing (..)
-import Faction exposing (..)
+import Entities
 import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import OperatorExt exposing (..)
-import Troops exposing (..)
-import Types exposing (Msg(..), UiSettlementState(..))
+import Types
 import Templates.HelperTemplate as Helper
 
 {-| Returns the layout for the lord modal (View [Lord-Name])
@@ -15,7 +12,7 @@ import Templates.HelperTemplate as Helper
     @param {Lord}: Takes the chosen Lord 
 -}
 
-generateLordTemplate : Lord -> Html Msg
+generateLordTemplate : Entities.Lord -> Html Types.Msg
 generateLordTemplate l = 
         div [Html.Attributes.class "modal-background"] [
             div [Html.Attributes.class "lord-modal"] [
@@ -28,11 +25,11 @@ generateLordTemplate l =
                         span [] [Html.text l.entity.name]
                     ]
                     , div [Html.Attributes.class "lord-image"] [
-                        img [src  ("./assets/images/profiles/" ++ factionToImage l.entity.faction)] []
+                        img [src  ("./assets/images/profiles/" ++ Entities.factionToImage l.entity.faction)] []
                     ]
                     , div [Html.Attributes.class "lord-stats"] [
                         div [Html.Attributes.class "lord-data"] [
-                            img [src  "./assets/images/ducats_icon.png"] []
+                            img [src  "./assets/images/general/ducats_icon.png"] []
                             , span [] [Html.text ("Gold: " ++ String.fromFloat l.gold)]
                         ]
                         , div [Html.Attributes.class "lord-data"] [

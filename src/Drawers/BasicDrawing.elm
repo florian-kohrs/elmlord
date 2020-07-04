@@ -23,7 +23,7 @@ getImage imgName indices scale =
         , Svg.Attributes.y (String.fromFloat (pos.y - size.y / 2))
         , Svg.Attributes.width (String.fromFloat size.x)
         , Svg.Attributes.height (String.fromFloat size.y)
-        , Svg.Attributes.xlinkHref ("assets/images/" ++ imgName)
+        , Svg.Attributes.xlinkHref (imgName)
 
         --, Svg.Attributes.src "../Images/Background.png"
         --, Svg.Attributes.overflow "visible"

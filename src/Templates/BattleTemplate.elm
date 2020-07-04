@@ -1,15 +1,14 @@
-module Templates.BattleTemplate exposing (..)
+module Templates.BattleTemplate exposing (generateBattleTemplate)
 
 import Battle
-import Entities exposing (..)
-import Faction exposing (..)
+import Entities
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Map exposing (Map, Terrain)
+import Map
 import OperatorExt
-import Troops exposing (..)
-import Types exposing (Msg(..))
+import Troops
+import Types
 import Templates.HelperTemplate as Helper
 
 
@@ -19,7 +18,7 @@ import Templates.HelperTemplate as Helper
     @param {Terrain}: Takes terrain on which the battle takes place on
 -}
 
-generateBattleTemplate : BattleStats -> Terrain -> Html Msg
+generateBattleTemplate : Entities.BattleStats -> Map.Terrain -> Html Types.Msg
 generateBattleTemplate bS t =
     div [ Html.Attributes.class "modal-background" ]
         [ div [ Html.Attributes.class "battle-modal" ]
@@ -34,7 +33,7 @@ generateBattleTemplate bS t =
     @param {Terrain}: Takes terrain on which the battle takes place on
 -}
 
-determineBattleMap : BattleStats -> Terrain -> List (Html Msg)
+determineBattleMap : Entities.BattleStats -> Map.Terrain -> List (Html Types.Msg)
 determineBattleMap bS t =
         if bS.siege then
             case bS.settlement of
@@ -61,7 +60,7 @@ determineBattleMap bS t =
     @param {List Troop}: Takes the current casualities of this entity
 -}
 
-generateArmyOverview : WorldEntity -> String -> List Troop -> Html Msg
+generateArmyOverview : Entities.WorldEntity -> String -> List Troops.Troop -> Html Types.Msg
 generateArmyOverview we image troops =
     div [ Html.Attributes.class "battle-army-overview" ]
         [ img [ src image ] []
@@ -76,7 +75,7 @@ generateArmyOverview we image troops =
     @param {Troop}: Takes the current army troop casualties of the entity
 -}
 
-generateTroopOverview : Troop -> Troop -> Html Msg
+generateTroopOverview : Troops.Troop -> Troops.Troop -> Html Types.Msg
 generateTroopOverview troop casu =
     div [ Html.Attributes.class "battle-troop-container" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png") ] []
@@ -96,7 +95,7 @@ generateTroopOverview troop casu =
     @param {Terrain}: Takes terrain on which the battle takes place on
 -}
 
-generateActionOverview : BattleStats -> Terrain -> Html Msg
+generateActionOverview : Entities.BattleStats -> Map.Terrain -> Html Types.Msg
 generateActionOverview bS ter =
     div [ Html.Attributes.class "battle-action-container" ]
         [ div [ Html.Attributes.class "battle-terrain-info" ]
@@ -121,11 +120,11 @@ generateActionOverview bS ter =
     @param {TroopType}: Takes the troop type for which the bonus has to be determined
 -}
 
-generateTerrainBonuses : TroopType -> Html Msg
+generateTerrainBonuses : Troops.TroopType -> Html Types.Msg
 generateTerrainBonuses t =
     div [ Html.Attributes.class "battle-terrain-bonus" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
-        , span [] [ Html.text ("+" ++ String.fromFloat (Troops.battlefieldBonus t * 100 - 100) ++ "%") ]
+        , span [] [ Html.text ("+" ++ Helper.roundDigits (Troops.battlefieldBonus t * 100 - 100) ++ "%") ]
         ]
 
 {-| Displays the terrain bonus for the settlement
@@ -133,7 +132,7 @@ generateTerrainBonuses t =
     @param {BattleStats}: Takes information about the battle to get the settlement
 -}
 
-generateSettlementBonus : BattleStats -> Html Msg
+generateSettlementBonus : Entities.BattleStats -> Html Types.Msg
 generateSettlementBonus bS =
     case bS.settlement of 
         Nothing -> 
@@ -151,7 +150,7 @@ generateSettlementBonus bS =
     @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
 -}
 
-generateStatusText : BattleStats -> Html Msg
+generateStatusText : Entities.BattleStats -> Html Types.Msg
 generateStatusText bS =
     if bS.finished then
         span [ Html.Attributes.class (OperatorExt.ternary (Battle.sumTroops bS.player.entity.army == 0) "negative-income battle-skirmish-text" "positive-income battle-skirmish-text") ]
@@ -166,7 +165,7 @@ generateStatusText bS =
 
     @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
 -}
-generateActionButtonsByState : BattleStats -> List (Html Msg)
+generateActionButtonsByState : Entities.BattleStats -> List (Html Types.Msg)
 generateActionButtonsByState bS =
     if bS.finished then
         [ button [ onClick (Types.BattleAction (Types.EndBattle bS)) ] [ span [] [ Html.text "Leave battlefield" ] ]

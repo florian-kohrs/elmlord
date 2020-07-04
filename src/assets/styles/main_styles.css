@@ -8,7 +8,8 @@ span {
     height: 100vh;
     width: 100vw;
     overflow-x: hidden;
-    background-image: url("../images/background_image.png");
+    background-image: url("../images/general/background_image.png");
+    background-repeat: no-repeat;
 }
 
 .page-header {

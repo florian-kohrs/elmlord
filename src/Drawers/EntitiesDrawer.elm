@@ -117,6 +117,6 @@ getSvgBorderForSettlement s =
 getSvgForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
 getSvgForSettlement s =
     BasicDrawing.getImage
-        (Entities.settlementImageName s.settlementType)
+        (Entities.getSettlementImage s)
         s.entity.position
         1
