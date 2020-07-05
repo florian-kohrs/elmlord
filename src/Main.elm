@@ -513,7 +513,7 @@ updateMaptileAction model ma =
 
                 Types.SiegeSettlement ->
                     let
-                        defender=
+                        defender =
                             Entities.findLordWithSettlement settlement (Entities.flattenLordList model.lords)
                     in
                     case defender of
@@ -678,52 +678,46 @@ updateBattle msg model =
             }
 
         Types.SkipSkirmishes bS ->
-            { model | gameState = GameSetup (BattleView (skipBattle bS model)) }
+            { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
 
         Types.FleeBattle bS ->
-            let
-                newEnemyLords =
-                    OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords)
-
-                newPlayer =
-                    Entities.updatePlayerArmy bS.attacker (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.attacker.entity.army)
-
-                lords =
-                    Entities.Cons newPlayer newEnemyLords
-            in
-            { model | lords = lords, gameState = GameSetup GameMenue }
+            updateLordsAfterBattle
+                (Battle.fleeBattle bS)
+                (OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords))
+                model
+                (GameSetup GameMenue)
 
         Types.EndBattle bS ->
             case bS.settlement of
                 Nothing ->
-                    let
-                        newEnemyLords =
-                            OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords)
-
-                        lords =
-                            Entities.Cons bS.attacker newEnemyLords
-                    in
-                    { model | lords = lords, gameState = GameSetup GameMenue }
+                    updateLordsAfterBattle
+                        bS.attacker
+                        (OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords))
+                        model
+                        (GameSetup GameMenue)
 
                 Just settle ->
                     let
-                        ( tempPlayer, tempEnemyLord, lordKilled ) =
+                        ( newAttacker, newDefender, lordKilled ) =
                             Battle.siegeBattleAftermath bS settle
 
                         newEnemyLords =
                             checkLordLost
                                 lordKilled
-                                tempEnemyLord.entity.name
-                                (OperatorExt.mapFilter (\_ -> tempEnemyLord) identity (\x -> x.entity.name == tempEnemyLord.entity.name) (Entities.tailLordList model.lords))
+                                newDefender.entity.name
+                                (OperatorExt.mapFilter (\_ -> newDefender) identity (\x -> x.entity.name == newDefender.entity.name) (Entities.tailLordList model.lords))
 
-                        lords =
-                            Entities.Cons tempPlayer newEnemyLords
                     in
-                    if List.length (Entities.tailLordList model.lords) > 0 then
-                        { model | lords = lords, gameState = GameSetup GameMenue }
+                    updateLordsAfterBattle
+                        newAttacker
+                        newEnemyLords
+                        model
+                        (OperatorExt.ternary (List.length (Entities.tailLordList model.lords) > 0) (GameSetup GameMenue) (GameOver True))
 
-                    else
-                        { model | lords = lords, gameState = GameOver True }
+
+updateLordsAfterBattle : Entities.Lord -> List Entities.Lord -> Model -> GameState -> Model
+updateLordsAfterBattle player enemyLords model state = 
+            { model | lords = Entities.Cons player enemyLords, gameState = state }
 
 
 checkLordLost : Bool -> String -> List Entities.Lord -> List Entities.Lord
@@ -733,19 +727,6 @@ checkLordLost k n l =
 
     else
         l
-
-
-skipBattle : Entities.BattleStats -> Model -> Entities.BattleStats
-skipBattle bS model =
-    let
-        newBattleStats =
-            Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
-    in
-    if newBattleStats.finished then
-        newBattleStats
-
-    else
-        skipBattle newBattleStats model
 
 
 
@@ -762,8 +743,8 @@ updateEvent msg model =
         Types.SwitchEventView ->
             { model | event = Event.updateEventState model.event }
 
-        Types.ClearEvents -> 
-            { model | event = Event.clearEvents model.event}
+        Types.ClearEvents ->
+            { model | event = Event.clearEvents model.event }
 
 
 main : Program () Model Types.Msg
