@@ -47,7 +47,7 @@ type alias Model =
     , date : DateExt.Date
     , map : Map.Map
     , errorMsg : String
-    , events : List Event.Event
+    , event : Event.EventState
     }
 
 
@@ -255,11 +255,16 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model (Entities.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEvents
+    Model (Entities.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState
 
 
 
 --TODO: delete it after you ve added events
+
+
+testEventState : Event.EventState
+testEventState =
+    { state = True, events = testEvents }
 
 
 testEvents : List Event.Event
@@ -267,6 +272,12 @@ testEvents =
     [ { index = 0, header = "Hallo leude", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Important }
     , { index = 1, header = "Ich der zweite", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
     , { index = 2, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
+    , { index = 3, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
+    , { index = 4, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
+    , { index = 5, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
+    , { index = 6, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
+    , { index = 7, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
+    , { index = 8, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
     ]
 
 
@@ -391,7 +402,7 @@ view model =
                     ]
                     (MapDrawer.allSvgs allClickActions)
                 ]
-            , EventTemplate.generateEventOverview model.events
+            , EventTemplate.generateEventOverview model.event
 
             --, span [] [ Html.text (Debug.toString (List.length (Entities.tailLordList model.lords))) ]
             ]
@@ -455,7 +466,7 @@ update msg model =
         Types.SettlementAction action ->
             updateSettlement action model
 
-        Types.EventAction emsg -> 
+        Types.EventAction emsg ->
             updateEvent emsg model
 
         Types.MapTileAction action ->
@@ -737,14 +748,23 @@ skipBattle bS model =
         skipBattle newBattleStats model
 
 
+
 -- update function for the event log system
 ----------------------------------------------------------
 
+
 updateEvent : Types.EventMsg -> Model -> Model
-updateEvent msg model = 
+updateEvent msg model =
     case msg of
-       Types.DeleteEvent index -> 
-            { model | events = Event.removeEvent model.events index}
+        Types.DeleteEvent index ->
+            { model | event = Event.removeEvent model.event index }
+
+        Types.SwitchEventView ->
+            { model | event = Event.updateEventState model.event }
+
+        Types.ClearEvents -> 
+            { model | event = Event.clearEvents model.event}
+
 
 main : Program () Model Types.Msg
 main =

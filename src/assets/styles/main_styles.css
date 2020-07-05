@@ -1055,7 +1055,20 @@ span {
     opacity: 0.9;
 
     display: grid;
-    grid-template-rows: 50px 1fr;
+    grid-template-rows: 50px 70px 1fr;
+}
+
+.event-logs > div > button {
+    margin: 15px auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 90%;
+    height: 40px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
 }
 
 .event-logs-header {
@@ -1088,21 +1101,28 @@ span {
 }
 
 .important-log {
-    background: #a44a4a !important;
+
+    background: #7b3737 !important;
 }
 
 .minor-log {
-    background: #bebebe;
+    background: #858585;
+}
+
+.event-logs-component:hover {
+    border: 3px solid #187bcd;
 }
 
 .event-logs-component > div > span {
     display: block;
     padding-top: 9px;
     font-size: 15px;
+    color: white;
 }
 
 .event-logs-close {
     font-size: 20px;
+    color: white;
 }
 
 

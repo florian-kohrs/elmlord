@@ -14,14 +14,21 @@ import Types
     @param {MapDrawer.MapClickAction}: Takes a dict with all possible actions
 
 -}
-generateEventOverview : List Event.Event -> Html Types.Msg
-generateEventOverview l =
-    div [ Html.Attributes.class "event-logs" ]
-        [ div [ Html.Attributes.class "event-logs-header" ]
-            [ span [] [ Html.text "Events" ]
+generateEventOverview : Event.EventState -> Html Types.Msg
+generateEventOverview event =
+    if event.state then
+        div [ Html.Attributes.class "event-logs" ]
+            [ div [ Html.Attributes.class "event-logs-header" ]
+                [ span [] [ Html.text "Events" ]
+                ]
+            , div [ ] [ 
+                button [onClick (Types.EventAction Types.ClearEvents)] [Html.text "Clear events"]
             ]
-        , div [ Html.Attributes.class "event-logs-body" ] (List.map generateEventComponent l)
-        ]
+            , div [ Html.Attributes.class "event-logs-body" ] (List.map generateEventComponent event.events)
+            ]
+
+    else
+        div [] []
 
 
 {-| Function for map, that displays a button for each possible action
@@ -31,8 +38,8 @@ generateEventOverview l =
 -}
 generateEventComponent : Event.Event -> Html Types.Msg
 generateEventComponent e =
-    div [Html.Attributes.class ("event-logs-component " ++ OperatorExt.ternary (e.eventType == Event.Important) "important-log" "minor-log")]
+    div [ Html.Attributes.class ("event-logs-component " ++ OperatorExt.ternary (e.eventType == Event.Important) "important-log" "minor-log") ]
         [ div [] [ span [] [ Html.text e.header ] ]
-        , div [ onClick (Types.EventAction (Types.DeleteEvent e.index)) ,Html.Attributes.class "event-logs-close"] [ Html.text "x" ]
+        , div [ onClick (Types.EventAction (Types.DeleteEvent e.index)), Html.Attributes.class "event-logs-close" ] [ Html.text "x" ]
         , div [] [ span [] [ Html.text e.text ] ]
         ]

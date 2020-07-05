@@ -5,8 +5,10 @@ import Troops
 import Vector
 
 
+
 -- all msg types that are used for the different states
 ----------------------------------------------------------
+
 
 type Msg
     = EndRound
@@ -60,12 +62,15 @@ type UiSettlementState
     | StationView
     | BuildingView
 
-type EventMsg = 
-    DeleteEvent Int
+
+type EventMsg
+    = DeleteEvent Int
+    | SwitchEventView
+    | ClearEvents
+
 
 type BattleMsg
-    = 
-    StartSkirmish Entities.BattleStats
+    = StartSkirmish Entities.BattleStats
     | SkipSkirmishes Entities.BattleStats
     | FleeBattle Entities.BattleStats
     | EndBattle Entities.BattleStats
@@ -75,6 +80,7 @@ type BattleMsg
 -- Resolve map actions types that are displayed on the left
 -- to the map
 ----------------------------------------------------------
+
 
 showLordTileMsg : LordTileMsg -> String
 showLordTileMsg lordTileMsg =
