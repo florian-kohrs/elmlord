@@ -64,7 +64,7 @@ settlementStateToAction lord settlement uistate =
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                    , div [] (List.map Helper.troopToHtml settlement.entity.army)
+                    , div [] (List.map Helper.troopToHtml (List.map (\x -> (x, "stationed-troop-container troop-container")) settlement.entity.army))
                     ]
                 ]
             ]
@@ -108,7 +108,7 @@ settlementStateToAction lord settlement uistate =
                         , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                         , div [ Html.Attributes.class "stationed-troops-overview" ]
                             [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                            , div [] (List.map Helper.troopToHtml settlement.entity.army)
+                            , div [] (List.map Helper.troopToHtml (List.map (\x -> (x, "stationed-troop-container troop-container")) settlement.entity.army))
                             ]
                         ]
                    ]

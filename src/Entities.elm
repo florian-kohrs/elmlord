@@ -93,22 +93,43 @@ setPosition entity pos =
 
 buyTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 buyTroops l t s =
-    { l | gold = l.gold - Troops.troopCost t, entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementRecruits l.land s.entity.name t 5 }
+    let
+        amount =
+            getPossibleTroopAmount s.recruitLimits t
+    in
+    { l | gold = l.gold - (Troops.troopCost t * (toFloat amount / 5.0)) , entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity, land = updateSettlementRecruits l.land s.entity.name t amount }
 
 
 stationTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 stationTroops l t s =
-    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t -5) l.entity, land = updateSettlementTroops l.land s.entity.name t 5 }
+    let
+        amount =
+            getPossibleTroopAmount l.entity.army t
+    in
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity, land = updateSettlementTroops l.land s.entity.name t amount }
 
 
 takeTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 takeTroops l t s =
-    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t 5) l.entity, land = updateSettlementTroops l.land s.entity.name t -5 }
+    let
+        amount =
+            getPossibleTroopAmount s.entity.army t
+    in
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity, land = updateSettlementTroops l.land s.entity.name t (-1 * amount) }
 
 
 updateEntitiesArmy : List Troops.Troop -> WorldEntity -> WorldEntity
 updateEntitiesArmy l e =
     { e | army = l }
+
+
+getPossibleTroopAmount : List Troops.Troop -> Troops.TroopType -> Int
+getPossibleTroopAmount l t =
+    let
+        currentAmount =
+            (Maybe.withDefault { amount = 2, troopType = t } (List.head (List.filter (\x -> x.troopType == t) l))).amount
+    in
+    OperatorExt.ternary (currentAmount >= 5) 5 currentAmount
 
 
 
@@ -118,7 +139,6 @@ updateEntitiesArmy l e =
 updatePlayerArmy : Lord -> List Troops.Troop -> Lord
 updatePlayerArmy l t =
     { l | entity = updateEntitiesArmy t l.entity }
-
 
 
 flattenTroops : List Troops.Troop -> List Troops.TroopType -> List Troops.Troop
@@ -134,6 +154,8 @@ flattenTroops troops types =
 sumLordTroops : Lord -> List Troops.Troop
 sumLordTroops lord =
     lord.entity.army ++ List.foldr (\x y -> x.entity.army ++ y) [] lord.land
+
+
 
 -- functions for the handling of settlements
 ----------------------------------------------------------
@@ -179,6 +201,7 @@ combineSettlementName : Settlement -> String
 combineSettlementName settlement =
     getSettlementNameByType settlement.settlementType ++ " - " ++ settlement.entity.name
 
+
 getLordCapital : List Settlement -> Maybe Settlement
 getLordCapital l =
     case l of
@@ -191,6 +214,7 @@ getLordCapital l =
 
             else
                 getLordCapital xs
+
 
 createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
@@ -205,6 +229,7 @@ editSettlmentInfoPosition p i =
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
     { entity = { army = Troops.startTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = Troops.emptyTroops, income = 1.5, isSieged = False }
+
 
 
 -- functions for the handling of lords and their data
@@ -269,6 +294,7 @@ applyLordNewRecruits lord =
     { lord | land = applySettlementNewRecruits lord.land }
 
 
+
 -- functions for income calculation of the lord
 ----------------------------------------------------------
 
@@ -276,6 +302,7 @@ applyLordNewRecruits lord =
 applyLordGoldIncome : Lord -> Lord
 applyLordGoldIncome lord =
     { lord | gold = lord.gold + calculateRoundIncome lord }
+
 
 calculateRoundIncome : Lord -> Float
 calculateRoundIncome lord =
@@ -292,8 +319,10 @@ sumTroopWages t =
     List.foldr (\x v -> toFloat x.amount * Troops.troopWage x.troopType + v) 0 t
 
 
+
 -- Resolve image paths, names, types, etc. of the entities
 ----------------------------------------------------------
+
 
 getSettlementNameByType : SettlementType -> String
 getSettlementNameByType s =

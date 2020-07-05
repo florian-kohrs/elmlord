@@ -10,9 +10,9 @@ import Troops
     @param {Troop}: Takes the troop that needs to be displayed
 -}
 
-troopToHtml : Troops.Troop -> Html Types.Msg
-troopToHtml troop =
-        div [Html.Attributes.class "stationed-troop-container troop-container"] [
+troopToHtml : (Troops.Troop, String) -> Html Types.Msg
+troopToHtml (troop, cls) =
+        div [Html.Attributes.class cls] [
             img [src  ("./assets/images/troops/" ++ String.toLower (Troops.troopName troop.troopType) ++ ".png")] [],
             span [] [Html.text (String.fromInt troop.amount ++ "  " ++ Troops.troopName troop.troopType) ]
         ]

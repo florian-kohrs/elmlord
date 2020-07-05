@@ -37,7 +37,8 @@ generateLordTemplate l =
                             , span [] [Html.text ("Settlements: " ++ String.fromInt (List.length l.land))]
                         ]
                         , div [Html.Attributes.class "lord-troops"] 
-                        (div [Html.Attributes.class "lord-troop-header"] [span [] [Html.text "Current-Army"]] :: List.map Helper.troopToHtml l.entity.army)
+                        (div [Html.Attributes.class "lord-troop-header"] 
+                        [span [] [Html.text "Current-Army"]] :: List.map Helper.troopToHtml (List.map (\x -> (x, "lord-troop-container")) l.entity.army))
                     ]
                     
             ]

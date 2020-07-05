@@ -141,7 +141,7 @@ generateSettlementBonus bS =
         Just settle -> 
             div [ Html.Attributes.class "battle-terrain-bonus" ]
                 [ img [ src (Entities.getSettlementImage settle) ] []
-                    , span [] [ Html.text (Helper.roundDigits (Entities.getSettlementBonus settle bS.enemy.land * 100 - 100) ++ "%") ]
+                    , span [] [ Html.text ("+" ++ Helper.roundDigits (Entities.getSettlementBonus settle bS.enemy.land * 100 - 100) ++ "%") ]
                 ]
 
 
