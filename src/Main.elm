@@ -683,7 +683,7 @@ updateBattle msg model =
         Types.FleeBattle bS ->
             updateLordsAfterBattle
                 (Battle.fleeBattle bS)
-                (OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords))
+                (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
                 model
                 (GameSetup GameMenue)
 
@@ -692,7 +692,7 @@ updateBattle msg model =
                 Nothing ->
                     updateLordsAfterBattle
                         bS.attacker
-                        (OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords))
+                        (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
                         model
                         (GameSetup GameMenue)
 
@@ -705,8 +705,7 @@ updateBattle msg model =
                             checkLordLost
                                 lordKilled
                                 newDefender.entity.name
-                                (OperatorExt.mapFilter (\_ -> newDefender) identity (\x -> x.entity.name == newDefender.entity.name) (Entities.tailLordList model.lords))
-
+                                (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
                     in
                     updateLordsAfterBattle
                         newAttacker

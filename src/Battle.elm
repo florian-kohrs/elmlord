@@ -1,10 +1,9 @@
-module Battle exposing (evaluateBattleResult, siegeBattleAftermath, fleeBattle, skipBattle)
+module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, skipBattle)
 
 import Entities
 import Map
 import OperatorExt
 import Troops
-
 
 
 {-| Resolves / Calculate a battle skirmish outcome between (lord vs lord or lord vs siege).
@@ -94,17 +93,13 @@ evaluateLordBattle bS ter =
 -}
 constructBattleResult : Entities.BattleStats -> Entities.Lord -> Entities.Lord -> Maybe Entities.Settlement -> ( List Troops.Troop, List Troops.Troop ) -> Entities.BattleStats
 constructBattleResult bS attacker defender settle ( aCasu, dCasu ) =
-    let
-        ( aAttacker, aDefender, aSettle ) =
-            resolveBattleAftermaths bS.siege attacker defender settle
-    in
     { bS
         | round = bS.round + 1
         , attackerCasualties = aCasu
         , defenderCasualties = dCasu
-        , attacker = aAttacker
-        , defender = aDefender
-        , settlement = aSettle
+        , attacker = lordBattleAftermath attacker
+        , defender = lordBattleAftermath defender
+        , settlement = settle
         , finished = Troops.sumTroops attacker.entity.army == 0 || checkDefenderArmy defender settle
     }
 
@@ -113,15 +108,6 @@ constructBattleResult bS attacker defender settle ( aCasu, dCasu ) =
 -- battle aftermath functions
 -- like position resets, settlement transfers, etc.
 -------------------------------------------------------------------------------------
-
-
-resolveBattleAftermaths : Bool -> Entities.Lord -> Entities.Lord -> Maybe Entities.Settlement -> ( Entities.Lord, Entities.Lord, Maybe Entities.Settlement )
-resolveBattleAftermaths siege attacker defender settlement =
-    if siege then
-        ( attacker, defender, settlement )
-
-    else
-        ( lordBattleAftermath attacker, lordBattleAftermath defender, settlement )
 
 
 {-| Check if the player lost the normal battle, if thats the case his position gets a reset to his
@@ -180,6 +166,7 @@ skipBattle bS ter =
 
     else
         skipBattle newBattleStats ter
+
 
 
 -- helper functions for the construction of the battle result

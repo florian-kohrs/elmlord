@@ -666,7 +666,7 @@ span {
     border-radius: 20px;
     position: absolute;
     margin-top: 100px;
-    margin-left: calc(50% - 500px);
+    margin-left: calc(50% - 450px);
     display: grid;
     grid-template-rows: 20px 1fr;
     grid-row-gap: 7.5px;
@@ -1151,6 +1151,10 @@ span {
         margin-top: 12.5px;
     }
 
+    .battle-modal {
+        margin-top: 50px;
+    }
+
 
 }
 
@@ -1170,6 +1174,10 @@ span {
     .settlement-modal, .lord-modal {
         height: 800px;
         margin-top: 50px;
+    }
+
+    .battle-modal {
+        margin-top: 100px;
     }
 }
 

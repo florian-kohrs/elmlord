@@ -293,8 +293,6 @@ applyLordNewRecruits : Lord -> Lord
 applyLordNewRecruits lord =
     { lord | land = applySettlementNewRecruits lord.land }
 
-
-
 -- functions for income calculation of the lord
 ----------------------------------------------------------
 

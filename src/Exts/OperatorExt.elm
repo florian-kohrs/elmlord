@@ -10,19 +10,7 @@ ternary bool op1 op2 =
         op2
 
 
-mapFilter : (a -> b) -> (a -> b) -> (a -> Bool) -> List a -> List b
-mapFilter func esc fil l =
-    case l of
-        [] ->
-            []
-
-        x :: xs ->
-            if fil x then
-                func x :: mapFilter func esc fil xs
-            else 
-                esc x :: mapFilter func esc fil xs
-
-
+-- TODO: check if this is needed
 {- hashMultiplicator : Int
    hashMultiplicator =
        31
