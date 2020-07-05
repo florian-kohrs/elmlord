@@ -47,6 +47,7 @@ type SettlementUIMsg
     = ShowSettlement Entities.Settlement
     | ShowBuyTroops Entities.Settlement
     | ShowStationTroops Entities.Settlement
+    | ShowBuildings Entities.Settlement
 
 
 type SettlementArmyMsg

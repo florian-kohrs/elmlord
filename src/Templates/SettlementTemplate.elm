@@ -59,12 +59,13 @@ settlementStateToAction lord settlement uistate =
         Types.StandardView ->
             [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement))) ] [ span [] [ Html.text "Recruit troops" ] ]
             , button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement))) ] [ span [] [ Html.text "Station troops" ] ]
+            , button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowBuildings settlement))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                    , div [] (List.map Helper.troopToHtml (List.map (\x -> (x, "stationed-troop-container troop-container")) settlement.entity.army))
+                    , div [] (List.map Helper.troopToHtml (List.map (\x -> ( x, "stationed-troop-container troop-container" )) settlement.entity.army))
                     ]
                 ]
             ]
@@ -108,12 +109,12 @@ settlementStateToAction lord settlement uistate =
                         , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                         , div [ Html.Attributes.class "stationed-troops-overview" ]
                             [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                            , div [] (List.map Helper.troopToHtml (List.map (\x -> (x, "stationed-troop-container troop-container")) settlement.entity.army))
+                            , div [] (List.map Helper.troopToHtml (List.map (\x -> ( x, "stationed-troop-container troop-container" )) settlement.entity.army))
                             ]
                         ]
                    ]
 
-        _ ->
+        Types.BuildingView ->
             []
 
 
@@ -173,7 +174,6 @@ mapSettlement li s l =
     @param {Lord}: Takes the current lord
 
 -}
-
 generateRecruitTroopContainer : ( Troops.Troop, Troops.Troop ) -> Entities.Settlement -> Entities.Lord -> Html Types.Msg
 generateRecruitTroopContainer ( aT, sT ) s l =
     div [ Html.Attributes.class "troop-recruiting-container" ]

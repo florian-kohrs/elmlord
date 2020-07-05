@@ -609,6 +609,9 @@ updateSettlementUI msg model =
         Types.ShowSettlement s ->
             { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.StandardView) }
 
+        Types.ShowBuildings s ->
+            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Types.BuildingView) }
+
 
 updateSettlementStats : Types.SettlementArmyMsg -> Model -> Model
 updateSettlementStats msg model =
