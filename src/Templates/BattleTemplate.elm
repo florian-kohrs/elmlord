@@ -41,15 +41,15 @@ determineBattleMap bS t =
                         []
                 
                 Just settle -> 
-                    [ generateArmyOverview bS.player.entity (Entities.getPlayerImage bS.player) bS.playerCasualties
+                    [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
                     , generateActionOverview bS t
-                    , generateArmyOverview settle.entity (Entities.getSettlementImage settle) bS.enemyCasualties
+                    , generateArmyOverview settle.entity (Entities.getSettlementImage settle) bS.defenderCasualties
                     ]
 
         else 
-                [ generateArmyOverview bS.player.entity (Entities.getPlayerImage bS.player) bS.playerCasualties
+                [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
                 , generateActionOverview bS t
-                , generateArmyOverview bS.enemy.entity (Entities.getPlayerImage bS.enemy) bS.enemyCasualties
+                , generateArmyOverview bS.defender.entity (Entities.getPlayerImage bS.defender) bS.defenderCasualties
                 ]
 
 
@@ -141,7 +141,7 @@ generateSettlementBonus bS =
         Just settle -> 
             div [ Html.Attributes.class "battle-terrain-bonus" ]
                 [ img [ src (Entities.getSettlementImage settle) ] []
-                    , span [] [ Html.text ("+" ++ Helper.roundDigits (Entities.getSettlementBonus settle bS.enemy.land * 100 - 100) ++ "%") ]
+                    , span [] [ Html.text ("+" ++ Helper.roundDigits (Entities.getSettlementBonus settle bS.defender.land * 100 - 100) ++ "%") ]
                 ]
 
 
@@ -153,8 +153,8 @@ generateSettlementBonus bS =
 generateStatusText : Entities.BattleStats -> Html Types.Msg
 generateStatusText bS =
     if bS.finished then
-        span [ Html.Attributes.class (OperatorExt.ternary (Troops.sumTroops bS.player.entity.army == 0) "negative-income battle-skirmish-text" "positive-income battle-skirmish-text") ]
-            [ Html.text (OperatorExt.ternary (Troops.sumTroops bS.player.entity.army == 0) "My lord, we have lost, we will return to our castle!" "My lord, we were victorious, we repeled them!")
+        span [ Html.Attributes.class (OperatorExt.ternary (Troops.sumTroops bS.attacker.entity.army == 0) "negative-income battle-skirmish-text" "positive-income battle-skirmish-text") ]
+            [ Html.text (OperatorExt.ternary (Troops.sumTroops bS.attacker.entity.army == 0) "My lord, we have lost, we will return to our castle!" "My lord, we were victorious, we repeled them!")
             ]
 
     else

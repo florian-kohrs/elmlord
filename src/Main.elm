@@ -426,7 +426,7 @@ findModalWindow model =
                     LordTemplate.generateLordTemplate l
 
                 BattleView bS ->
-                    BattleTemplate.generateBattleTemplate bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+                    BattleTemplate.generateBattleTemplate bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
 
                 _ ->
                     div [] []
@@ -513,10 +513,10 @@ updateMaptileAction model ma =
 
                 Types.SiegeSettlement ->
                     let
-                        enemy =
+                        defender=
                             Entities.findLordWithSettlement settlement (Entities.flattenLordList model.lords)
                     in
-                    case enemy of
+                    case defender of
                         Nothing ->
                             model
 
@@ -525,11 +525,11 @@ updateMaptileAction model ma =
                                 | gameState =
                                     GameSetup
                                         (BattleView
-                                            { player = getPlayer model
-                                            , enemy = l
+                                            { attacker = getPlayer model
+                                            , defender = l
                                             , round = 1
-                                            , playerCasualties = Troops.emptyTroops
-                                            , enemyCasualties = Troops.emptyTroops
+                                            , attackerCasualties = Troops.emptyTroops
+                                            , defenderCasualties = Troops.emptyTroops
                                             , settlement = Just settlement
                                             , siege = True
                                             , finished = False
@@ -571,11 +571,11 @@ updateLordAction msg lord m =
                 | gameState =
                     GameSetup
                         (BattleView
-                            { player = getPlayer m
-                            , enemy = lord
+                            { attacker = getPlayer m
+                            , defender = lord
                             , round = 1
-                            , playerCasualties = Troops.emptyTroops
-                            , enemyCasualties = Troops.emptyTroops
+                            , attackerCasualties = Troops.emptyTroops
+                            , defenderCasualties = Troops.emptyTroops
                             , settlement = Nothing
                             , siege = False
                             , finished = False
@@ -667,7 +667,7 @@ updateBattle msg model =
         Types.StartSkirmish bS ->
             let
                 newBattleStats =
-                    Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+                    Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
             in
             { model
                 | gameState =
@@ -683,10 +683,10 @@ updateBattle msg model =
         Types.FleeBattle bS ->
             let
                 newEnemyLords =
-                    OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (Entities.tailLordList model.lords)
+                    OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords)
 
                 newPlayer =
-                    Entities.updatePlayerArmy bS.player (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.player.entity.army)
+                    Entities.updatePlayerArmy bS.attacker (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.attacker.entity.army)
 
                 lords =
                     Entities.Cons newPlayer newEnemyLords
@@ -698,10 +698,10 @@ updateBattle msg model =
                 Nothing ->
                     let
                         newEnemyLords =
-                            OperatorExt.mapFilter (\_ -> bS.enemy) identity (\x -> x.entity.name == bS.enemy.entity.name) (Entities.tailLordList model.lords)
+                            OperatorExt.mapFilter (\_ -> bS.defender) identity (\x -> x.entity.name == bS.defender.entity.name) (Entities.tailLordList model.lords)
 
                         lords =
-                            Entities.Cons bS.player newEnemyLords
+                            Entities.Cons bS.attacker newEnemyLords
                     in
                     { model | lords = lords, gameState = GameSetup GameMenue }
 
@@ -739,7 +739,7 @@ skipBattle : Entities.BattleStats -> Model -> Entities.BattleStats
 skipBattle bS model =
     let
         newBattleStats =
-            Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.player.entity.position model.map)
+            Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
     in
     if newBattleStats.finished then
         newBattleStats

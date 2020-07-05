@@ -1048,14 +1048,17 @@ span {
 }
 
 .event-logs {
-    background: black;
+    background: #deb887;
     border-radius: 20px;
     height: 90%;
     margin: 10px 0;
-    opacity: 0.9;
 
     display: grid;
     grid-template-rows: 50px 70px 1fr;
+
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
 }
 
 .event-logs > div > button {
@@ -1072,7 +1075,7 @@ span {
 }
 
 .event-logs-header {
-    color: white;
+    color: #49505c;
     font-size: 25px;
     text-align: center;
 }

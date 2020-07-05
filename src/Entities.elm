@@ -26,11 +26,11 @@ type alias Lord =
 
 
 type alias BattleStats =
-    { player : Lord
-    , enemy : Lord
+    { attacker : Lord
+    , defender : Lord
     , round : Int
-    , playerCasualties : List Troops.Troop
-    , enemyCasualties : List Troops.Troop
+    , attackerCasualties : List Troops.Troop
+    , defenderCasualties : List Troops.Troop
     , settlement : Maybe Settlement
     , siege : Bool
     , finished : Bool
