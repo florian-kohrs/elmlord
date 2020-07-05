@@ -7,7 +7,7 @@ span {
 .page-container {
     height: 100vh;
     width: 100vw;
-    overflow-x: hidden;
+    overflow-y: hidden;
     background-image: url("../images/general/background_image.png");
     background-repeat: no-repeat;
 }
@@ -915,7 +915,7 @@ span {
 
 .lord-modal {
     width: 550px;
-    height: 800px;
+    height: 750px;
     background: #b8bbc0;
     border-radius: 20px;
     position: absolute;
@@ -923,7 +923,7 @@ span {
     margin-left: calc(50% - 300px);
     display: grid;
     grid-template-columns: 15px 1fr 1fr 15px;
-    grid-template-rows: 20px 50px 250px 1fr;
+    grid-template-rows: 20px 50px 225px 1fr;
     grid-row-gap: 10px;
     grid-column-gap: 10px;
     border: 1px solid #49505c;
@@ -1008,7 +1008,7 @@ span {
 }
 
 .lord-stats > div > .lord-troop-container {
-    height: 40px;
+    height: 30px;
     display: grid;
     margin: 20px auto;
     grid-template-columns: 25% 1fr;
@@ -1051,7 +1051,7 @@ span {
     background: #deb887;
     border-radius: 20px;
     height: 90%;
-    margin: 10px 0;
+    margin: 5px 0;
 
     display: grid;
     grid-template-rows: 50px 70px 1fr;
@@ -1129,38 +1129,52 @@ span {
 }
 
 
-@media only screen and (min-width: 1250px) and (max-height: 800px){
+@media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
     .page-map {
-        width: 75%;
+        width: 80%;
     }
+
+    .event-logs {
+        height: 70%;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 13px !important;
+    }
+
+    .settlement-modal, .lord-modal {
+        height: 750px;
+        margin-top: 25px;
+    }
+
+    .lord-modal {
+        margin-top: 12.5px;
+    }
+
+
 }
 
-@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 900px) {
-    .page-map {
-        width: 75%;
-    }
-}
-
-@media only screen and (min-height: 950px) and (max-width: 1300px) and (min-width: 1201px) {
+@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 800px) {
     .page-map {
         width: 85%;
     }
+
+    .event-logs {
+        height: 75%;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 14px !important;
+    }
+
+    .settlement-modal, .lord-modal {
+        height: 800px;
+        margin-top: 50px;
+    }
 }
 
-@media only screen and (min-height: 950px) and (max-width: 1400px) and (min-width: 1301px) {
+@media only screen and (min-height: 950px) and (min-width: 1551px) {
     .page-map {
         width: 70%;
-    }
-}
-
-@media only screen and (min-height: 950px) and (max-width: 1450px) and (min-width: 1401px) {
-    .page-map {
-        width: 77.5%;
-    }
-}
-
-@media only screen and (min-height: 950px) and (max-width: 1650px) and (min-width: 1451px) {
-    .page-map {
-        width: 72.5%;
     }
 }

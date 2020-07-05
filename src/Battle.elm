@@ -7,9 +7,6 @@ import Troops
 
 
 
---TODO: Maybe implement autoresolve instead the way in the main.elm
-
-
 {-| Resolves / Calculate a battle skirmish outcome between (lord vs lord or lord vs siege).
 Notice that only one round will be calculated!
 
@@ -270,7 +267,7 @@ calcTroopCasualties t d a =
             []
 
         x :: xs ->
-            calcCasualties x (d * (toFloat x.amount / a)) :: calcTroopCasualties xs d a
+            calcCasualties x ((d + 100.0) * (toFloat x.amount / a)) :: calcTroopCasualties xs d a
 
 
 calcCasualties : Troops.Troop -> Float -> Troops.Troop
