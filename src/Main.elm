@@ -180,51 +180,6 @@ drawnMap map =
 
 
 
--- TODO: Not needed anymore?
--- items and path drawing on the game map
-----------------------------------------------------------
-{- hashMultiplicator : Int
-   hashMultiplicator =
-       31
-
-
-   hashModulo : Int
-   hashModulo =
-       79119
-
-
-   createSimplePseudoSeed : List Char -> Int
-   createSimplePseudoSeed l =
-       modBy (List.foldr (\x y -> (Char.toCode x * hashMultiplicator) + y) 0 l) hashModulo
-
-
-   getPseudoRandomElement : Random.Seed -> List a -> Maybe a
-   getPseudoRandomElement s l =
-       let
-           ( x, _ ) =
-               Random.step (Random.int 0 (List.length l - 1)) s
-       in
-       case l of
-           [] ->
-               Nothing
-
-           v ->
-               getIndexedElement v x
-
-
-   getIndexedElement : List a -> Int -> Maybe a
-   getIndexedElement l i =
-       case l of
-           [] ->
-               Nothing
-
-           x :: xs ->
-               if i > 0 then
-                   getIndexedElement xs (i - 1)
-
-               else
-                   Just x
--}
 -- testLordData For Battlesimulation
 
 
