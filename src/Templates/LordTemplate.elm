@@ -25,18 +25,18 @@ generateLordTemplate l =
                         span [] [Html.text l.entity.name]
                     ]
                     , div [Html.Attributes.class "lord-image"] [
-                        img [src  ("./assets/images/profiles/" ++ Entities.factionToImage l.entity.faction)] []
+                        img [src  ("./assets/images/profiles/" ++ Entities.factionToImage l.entity.faction), Html.Attributes.class "box-shadow"] []
                     ]
                     , div [Html.Attributes.class "lord-stats"] [
-                        div [Html.Attributes.class "lord-data"] [
+                        div [Html.Attributes.class "lord-data box-shadow"] [
                             img [src  "./assets/images/general/ducats_icon.png"] []
                             , span [] [Html.text ("Gold: " ++ String.fromFloat l.gold)]
                         ]
-                        , div [Html.Attributes.class "lord-data"] [
+                        , div [Html.Attributes.class "lord-data box-shadow"] [
                             img [src  "./assets/images/map/Castle.png"] []
                             , span [] [Html.text ("Settlements: " ++ String.fromInt (List.length l.land))]
                         ]
-                        , div [Html.Attributes.class "lord-troops"] 
+                        , div [Html.Attributes.class "lord-troops box-shadow"] 
                         (div [Html.Attributes.class "lord-troop-header"] 
                         [span [] [Html.text "Current-Army"]] :: List.map Helper.troopToHtml (List.map (\x -> (x, "lord-troop-container")) l.entity.army))
                     ]

@@ -29,7 +29,7 @@ generateSettlementModalTemplate lord settlement uistate =
             , div [ Html.Attributes.class "settlement-modal-name" ]
                 [ span [] [ Html.text (Entities.combineSettlementName settlement) ]
                 ]
-            , div [ Html.Attributes.class "settlement-lordship" ]
+            , div [ Html.Attributes.class "settlement-lordship box-shadow" ]
                 [ div []
                     [ img [ src ("./assets/images/profiles/" ++ Entities.factionToImage lord.entity.faction), Html.Attributes.class "settlement-lord-icon" ] []
                     ]
@@ -39,7 +39,7 @@ generateSettlementModalTemplate lord settlement uistate =
                 ]
             , div [ Html.Attributes.class "settlement-action-container" ]
                 (settlementStateToAction lord settlement uistate)
-            , div [ Html.Attributes.class "settlement-illustration-container" ]
+            , div [ Html.Attributes.class "settlement-illustration-container box-shadow" ]
                 [ img [ src "./assets/images/illustrations/example_ilustration.png" ] []
                 ]
             ]
@@ -59,7 +59,7 @@ settlementStateToAction lord settlement uistate =
         Types.StandardView ->
             [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement))) ] [ span [] [ Html.text "Recruit troops" ] ]
             , button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement))) ] [ span [] [ Html.text "Station troops" ] ]
-            , div [ Html.Attributes.class "settlement-info" ]
+            , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
@@ -103,7 +103,7 @@ settlementStateToAction lord settlement uistate =
 
         Types.RestrictedView ->
             validateSettlement lord settlement
-                ++ [ div [ Html.Attributes.class "settlement-info" ]
+                ++ [ div [ Html.Attributes.class "settlement-info box-shadow" ]
                         [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
                         , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                         , div [ Html.Attributes.class "stationed-troops-overview" ]

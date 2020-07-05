@@ -17,7 +17,7 @@ import Types
 generateEventOverview : Event.EventState -> Html Types.Msg
 generateEventOverview event =
     if event.state then
-        div [ Html.Attributes.class "event-logs" ]
+        div [ Html.Attributes.class "event-logs box-shadow" ]
             [ div [ Html.Attributes.class "event-logs-header" ]
                 [ span [] [ Html.text "Events" ]
                 ]

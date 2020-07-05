@@ -53,7 +53,6 @@ type alias Model =
 
 type GameState
     = GameSetup UiState
-    | InGame Int Int -- playerCount, playersTurn
     | GameOver Bool -- true = gewonnen, false = verloren
 
 
@@ -393,8 +392,8 @@ view model =
         [ findModalWindow model
         , HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
-            [ addStylesheet "link" "./assets/styles/main_styles.css"
-            , MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
+            (List.map addStylesheet stylessheets ++
+            [ MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
             , div []
                 [ Svg.svg
                     [ Svg.Attributes.viewBox "0 0 850 1000"
@@ -405,7 +404,7 @@ view model =
             , EventTemplate.generateEventOverview model.event
 
             --, span [] [ Html.text (Debug.toString (List.length (Entities.tailLordList model.lords))) ]
-            ]
+            ])
         ]
 
 
@@ -434,15 +433,13 @@ findModalWindow model =
         GameOver bool ->
             EndTemplate.generateEndTemplate bool
 
-        _ ->
-            div [] []
 
+addStylesheet : String -> Html Types.Msg
+addStylesheet href =
+    Html.node "link" [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" ("./assets/styles/" ++ href ++ ".css") ] []
 
-addStylesheet : String -> String -> Html Types.Msg
-addStylesheet tag href =
-    Html.node tag [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" href ] []
-
-
+stylessheets : List String
+stylessheets = ["main_styles", "battle_styles", "end_styles", "event_styles", "header_styles", "lord_styles", "mapaction_styles", "settlement_styles", "start_styles", "tooltip_styles"]
 
 -- update function
 ----------------------------------------------------------
