@@ -33,6 +33,7 @@ import Templates.SettlementTemplate as SettlementTemplate
 import Troops
 import Types
 import Vector
+import Building
 
 
 
@@ -198,6 +199,7 @@ testSetelement =
     , recruitLimits = Troops.emptyTroops
     , income = 3.19
     , isSieged = False
+    , buildings = Building.startBuildings
     }
 
 
@@ -231,7 +233,7 @@ testLord2 =
 testLord : Entities.Lord
 testLord =
     { entity = testLordWorldEntity
-    , gold = 450
+    , gold = 10050
     , land = [ testSetelement ]
     , agent = PathAgent.getAgent 6
     }
@@ -403,7 +405,7 @@ view model =
                 ]
             , EventTemplate.generateEventOverview model.event
 
-            --, span [] [ Html.text (Debug.toString (List.length (Entities.tailLordList model.lords))) ]
+            , span [] [ Html.text (Debug.toString (Entities.getPlayer model.lords).land) ]
             ])
         ]
 
@@ -636,6 +638,13 @@ updateSettlementStats msg model =
                 s
                 Types.StationView
                 model
+
+        Types.UpgradeBuilding b s ->
+            updateMultipleTroopStats
+                (Entities.updatePlayer model.lords (Entities.upgradeBuilding (Entities.getPlayer model.lords) b s))
+                s
+                Types.BuildingView
+                model 
 
 
 updateMultipleTroopStats : Entities.LordList -> Entities.Settlement -> Types.UiSettlementState -> Model -> Model

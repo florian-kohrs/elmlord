@@ -1,5 +1,6 @@
 module Templates.SettlementTemplate exposing (..)
 
+import Building
 import Entities
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
@@ -62,7 +63,7 @@ settlementStateToAction lord settlement uistate =
             , button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowBuildings settlement))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
+                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (settlement.income + Building.resolveBonusFromBuildings settlement.buildings Building.Marketplace) ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
                     , div [] (List.map Helper.troopToHtml (List.map (\x -> ( x, "stationed-troop-container troop-container" )) settlement.entity.army))
@@ -115,7 +116,12 @@ settlementStateToAction lord settlement uistate =
                    ]
 
         Types.BuildingView ->
-            []
+            [ div [ Html.Attributes.class "settlement-building-upgrading" ]
+                [ span [] [ Html.text "Upgrade buildings" ]
+                , div [] (List.map displayBuildingComponents (List.map (\x -> ( x, lord, settlement )) settlement.buildings))
+                , div [] [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
+                ]
+            ]
 
 
 {-| Returns the listview with the stationed troops, the player can take units out or station new troops to the settlement.
@@ -181,7 +187,7 @@ generateRecruitTroopContainer ( aT, sT ) s l =
         , span [] [ Html.text ("[" ++ String.fromInt aT.amount ++ "]") ]
         , span [] [ Html.text ("[" ++ String.fromInt sT.amount ++ "]") ]
         , div []
-            [ span [] [ Html.text (String.fromFloat (Troops.troopCost aT.troopType)) ]
+            [ span [] [ Html.text (String.fromFloat (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost aT.troopType)) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button
@@ -194,6 +200,51 @@ generateRecruitTroopContainer ( aT, sT ) s l =
                 [ span [] [ Html.text "Monthly wage" ]
                 , span [ Html.Attributes.class "negative-income" ] [ Html.text ("- " ++ String.fromFloat (Troops.troopWage aT.troopType) ++ " Ducats") ]
                 ]
+            ]
+        ]
+
+
+displayBuildingComponents : ( Building.Building, Entities.Lord, Entities.Settlement ) -> Html Types.Msg
+displayBuildingComponents ( b, l, s ) =
+    div [ Html.Attributes.class "settlement-building-component" ]
+        [ div [] []
+        , div [] [ span [] [ Html.text b.name ] ]
+        , div [ Html.Attributes.class "tooltip" ]
+            [ img [ Html.Attributes.class "info-icon", src "./assets/images/general/info.png" ] []
+            , div [ Html.Attributes.class "tooltiptext building-level-tooltip" ]
+                (span [] [ Html.text "Upgrade infos" ]
+                    :: List.map displayBuildingBonus [ ( b, 0 ), ( b, 1 ), ( b, 2 ), ( b, 3 ) ]
+                )
+            ]
+        , div []
+            [ button [ onClick (Types.SettlementAction (Types.TroopMsg (Types.UpgradeBuilding b s)))
+                ,Html.Attributes.class (OperatorExt.ternary (validateBuildingUpgrade b l) "troop-disabled-button" "tooltip")
+                , disabled (validateBuildingUpgrade b l) ]
+                [ img [ Html.Attributes.class "troop-station-icon", src "./assets/images/general/arrow_up.png" ] []
+                , div [ Html.Attributes.class "tooltiptext building-upgrade-tooltip" ]
+                    [ span [] [ Html.text "Upgrade building" ]
+                    , span [ Html.Attributes.class "positive-income" ] [ Html.text ("Upgrade " ++ b.name ++ " to level " ++ String.fromInt (b.level + 1)) ]
+                    ]
+                ]
+            ]
+        ]
+
+
+displayBuildingBonus : ( Building.Building, Int ) -> Html Types.Msg
+displayBuildingBonus ( b, i ) =
+    div [ Html.Attributes.class "buildings-info-container" ]
+        [ span [ Html.Attributes.class (OperatorExt.ternary (b.level >= i) "positive-income" "negative-income") ]
+            [ Html.text ("Level " ++ String.fromInt i ++ ":")
+            ]
+        , span [ Html.Attributes.class (OperatorExt.ternary (b.level >= i) "positive-income" "negative-income") ]
+            [ Html.text (Building.buildingToBonusInfo b.buildingType i)
+            ]
+        , span [ Html.Attributes.class (OperatorExt.ternary (b.level >= i) "positive-income" "negative-income") ]
+            [ Html.text
+                (OperatorExt.ternary (i >= 1)
+                    ("Cost: " ++ String.fromFloat (Building.upgradeCostBase b.buildingType * Basics.toFloat i))
+                    ""
+                )
             ]
         ]
 
@@ -236,3 +287,13 @@ validateSettlement l s =
         [ span [] [ Html.text (OperatorExt.ternary (l.entity.faction == s.entity.faction) "This is our settlement!" "This is an enemy settlement!") ]
         ]
     ]
+
+
+
+--TODO: combine it with the other validate functions (troopcost)
+
+
+validateBuildingUpgrade : Building.Building -> Entities.Lord -> Bool
+validateBuildingUpgrade b l =
+    not
+        ((l.gold - (Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)) > 0) && b.level <= 2)

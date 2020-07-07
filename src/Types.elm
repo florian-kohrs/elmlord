@@ -3,7 +3,7 @@ module Types exposing (..)
 import Entities
 import Troops
 import Vector
-
+import Building
 
 
 -- all msg types that are used for the different states
@@ -54,6 +54,7 @@ type SettlementArmyMsg
     = BuyTroops Troops.TroopType Entities.Settlement
     | StationTroops Troops.TroopType Entities.Settlement
     | TakeTroops Troops.TroopType Entities.Settlement
+    | UpgradeBuilding Building.Building Entities.Settlement
 
 
 type UiSettlementState

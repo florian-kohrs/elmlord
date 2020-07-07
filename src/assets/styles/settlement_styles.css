@@ -396,6 +396,111 @@
     font-size: 18px;
 }
 
+/* Styling for building upgrading */
+/* ---------------------------------------------------------------------------- */
+
+.settlement-building-upgrading {
+    grid-area: 1 / 1 / 5 / 2;
+    display: grid;
+    grid-template-rows: 65px 250px 1fr;
+    grid-row-gap: 10px;
+    text-align: center;
+}
+
+
+.settlement-building-upgrading > span {
+    color: #49505c;
+    font-size: 22px;
+    display: block;
+    padding-top: 25px;
+}
+
+.settlement-building-component {
+    display: grid;
+    grid-template-columns: 60px 1fr 30px 50px;
+    grid-column-gap: 10px;
+    border: 1px solid #49505c;
+    text-align: center;
+    border-radius: 10px;
+    height: 70px;
+    width: 95%;
+    margin: 10px auto;
+}
+
+.settlement-building-component > div > span {
+    color: #49505c;
+    font-size: 18px;
+    display: block;
+    padding-top: 25px;
+}
+
+.settlement-building-component > div > button {
+    margin: 15px auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 25px;
+}
+
+.info-icon {
+    margin: 20px auto;
+    width: 30px;
+    height: 30px;
+    display: block;
+    cursor: pointer;
+}
+
+.settlement-building-upgrading > div > button {
+    margin: 0 auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 80%;
+    height: 60px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+
+.building-level-tooltip {
+    width: 400px;
+    height: 170px;
+    background: #191919;
+    color: #fff;
+    margin-top: -20px;
+    margin-left: -130px;
+    opacity: 0.925;
+    display: grid;
+    grid-template-rows: 30px 1fr 1fr 1fr 1fr;
+    text-align: center;
+}
+
+.building-upgrade-tooltip {
+    width: 180px;
+    height: 80px;
+    font-size: 16px !important;
+    background: #191919;
+    color: #fff;
+    margin-top: 0px;
+    margin-left: -75px;
+    opacity: 0.925;
+    display: grid;
+    grid-template-rows: 30px 1fr 1fr 1fr 1fr;
+    text-align: center;
+}
+
+.buildings-info-container {
+    display: grid;
+    grid-template-columns: 25% 1fr 30%;
+    text-align: center;
+}
 
 @media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
     .settlement-modal {
