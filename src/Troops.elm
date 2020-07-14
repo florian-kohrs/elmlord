@@ -1,12 +1,11 @@
 module Troops exposing (..)
 
+import Dict
 import OperatorExt
 
 
-type alias Troop =
-    { amount : Int
-    , troopType : TroopType
-    }
+type alias Army =
+    Dict.Dict Int Int
 
 
 type TroopType
@@ -16,49 +15,71 @@ type TroopType
     | Knight
 
 
+mergeTroops : Army -> Army -> Army
+mergeTroops a1 a2 =
+    Dict.merge Dict.insert (\k v1 v2 r -> Dict.insert k (v1 + v2) r) Dict.insert a1 a2 Dict.empty
+
+
+troopTypeToInt : TroopType -> Int
+troopTypeToInt t =
+    case t of
+        Archer ->
+            0
+
+        Spear ->
+            1
+
+        Sword ->
+            2
+
+        Knight ->
+            3
+
+
+intToTroopType : Int -> TroopType
+intToTroopType i =
+    case i of
+        0 ->
+            Archer
+
+        1 ->
+            Spear
+
+        2 ->
+            Sword
+
+        3 ->
+            Knight
+
+        _ ->
+            Spear
+
+
 troopTypeList : List TroopType
 troopTypeList =
     [ Sword, Spear, Archer, Knight ]
 
 
-updateTroops : List Troop -> TroopType -> Int -> List Troop
-updateTroops tr ty v =
-    case tr of
-        [] ->
-            []
-
-        x :: xs ->
-            OperatorExt.ternary (x.troopType == ty) { x | amount = x.amount + v } x :: updateTroops xs ty v
+updateTroops : Army -> TroopType -> Int -> Army
+updateTroops army t i =
+    Dict.update (troopTypeToInt t) (\v -> Just (Maybe.withDefault 0 v + i)) army
 
 
-troopDifferences : Troop -> Troop -> Troop
-troopDifferences t1 t2 =
-    { amount = t2.amount - t1.amount
-    , troopType = t1.troopType
-    }
-
-
-emptyTroops : List Troop
+emptyTroops : Army
 emptyTroops =
-    [ { amount = 0, troopType = Sword }
-    , { amount = 0, troopType = Spear }
-    , { amount = 0, troopType = Archer }
-    , { amount = 0, troopType = Knight }
-    ]
+    List.foldl (\t dict -> Dict.insert (troopTypeToInt t) 0 dict) Dict.empty troopTypeList
 
 
-startTroops : List Troop
+startTroops : Army
 startTroops =
-    [ { amount = 20, troopType = Sword }
-    , { amount = 45, troopType = Spear }
-    , { amount = 10, troopType = Archer }
-    , { amount = 5, troopType = Knight }
-    ]
+    List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
+        Dict.empty
+        [ ( Archer, 10 ), ( Spear, 45 ), ( Sword, 20 ), ( Knight, 5 ) ]
 
 
-sumTroops : List Troop -> Float
-sumTroops l =
-    List.foldr (+) 0.0 (List.map (\x -> toFloat x.amount) l)
+sumTroops : Army -> Int
+sumTroops a =
+    List.foldl (+) 0 (Dict.values a)
 
 
 

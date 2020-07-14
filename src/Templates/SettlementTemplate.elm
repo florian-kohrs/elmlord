@@ -1,10 +1,12 @@
 module Templates.SettlementTemplate exposing (..)
 
 import Building
+import Dict
 import Entities
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import MaybeExt
 import OperatorExt
 import Templates.HelperTemplate as Helper
 import Troops
@@ -66,7 +68,7 @@ settlementStateToAction lord settlement uistate =
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (settlement.income + Building.resolveBonusFromBuildings settlement.buildings Building.Marketplace) ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                    , div [] (List.map Helper.troopToHtml (List.map (\x -> ( x, "stationed-troop-container troop-container" )) settlement.entity.army))
+                    , div [] (Dict.foldr (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "stationed-troop-container troop-container" :: r) [] settlement.entity.army)
                     ]
                 ]
             ]
@@ -82,7 +84,7 @@ settlementStateToAction lord settlement uistate =
                             [ img [ src (Entities.getSettlementImage settlement) ] []
                             ]
                         ]
-                    :: mapSettlement (List.map2 Tuple.pair lord.entity.army settlement.recruitLimits) settlement lord
+                    :: Dict.merge (\k v1 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 0 settlement lord :: r) (\k v1 v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 v2 settlement lord :: r) (\k v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 v2 settlement lord :: r) lord.entity.army settlement.recruitLimits []
                     ++ [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
@@ -98,7 +100,7 @@ settlementStateToAction lord settlement uistate =
                             [ img [ src (Entities.getSettlementImage settlement) ] []
                             ]
                         ]
-                    :: List.map2 generateStationTroopContainer lord.entity.army (List.map (\x -> ( x, settlement )) settlement.entity.army)
+                    :: Dict.merge (\k v1 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 0 settlement :: r) (\k v1 v2 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 v2 settlement :: r) (\k v2 r -> generateStationTroopContainer (Troops.intToTroopType k) 0 v2 settlement :: r) lord.entity.army settlement.entity.army []
                     ++ [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
@@ -110,7 +112,7 @@ settlementStateToAction lord settlement uistate =
                         , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                         , div [ Html.Attributes.class "stationed-troops-overview" ]
                             [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                            , div [] (List.map Helper.troopToHtml (List.map (\x -> ( x, "stationed-troop-container troop-container" )) settlement.entity.army))
+                            , div [] (Dict.foldr (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "stationed-troop-container troop-container" :: r) [] settlement.entity.army)
                             ]
                         ]
                    ]
@@ -131,46 +133,29 @@ The function is used for the List.map2 function.
     @param {(Troop, Settlement)}: Tuple with the current troop/unit and the settlement of this unit
 
 -}
-generateStationTroopContainer : Troops.Troop -> ( Troops.Troop, Entities.Settlement ) -> Html Types.Msg
-generateStationTroopContainer lT ( sT, sE ) =
+generateStationTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Settlement -> Html Types.Msg
+generateStationTroopContainer lt ltAmount stAmount sE =
     div [ Html.Attributes.class "troop-stationing-container" ]
-        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName lT.troopType) ++ ".png") ] []
-        , span [] [ Html.text ("[" ++ String.fromInt lT.amount ++ "]") ]
+        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName lt) ++ ".png") ] []
+        , span [] [ Html.text ("[" ++ String.fromInt ltAmount ++ "]") ]
         , div []
-            [ span [] [ Html.text ("[" ++ String.fromInt sT.amount ++ "]") ]
+            [ span [] [ Html.text ("[" ++ String.fromInt stAmount ++ "]") ]
             ]
         , button
-            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.TakeTroops lT.troopType sE)))
-            , Html.Attributes.class (OperatorExt.ternary (validateStationTroops sT.amount) "troop-disabled-button" "")
-            , disabled (validateStationTroops sT.amount)
+            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.TakeTroops lt sE)))
+            , Html.Attributes.class (OperatorExt.ternary (validateStationTroops stAmount) "troop-disabled-button" "")
+            , disabled (validateStationTroops stAmount)
             ]
             [ img [ Html.Attributes.class "troop-station-icon", src "./assets/images/general/arrow_up.png" ] []
             ]
         , button
-            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.StationTroops lT.troopType sE)))
-            , Html.Attributes.class (OperatorExt.ternary (validateStationTroops lT.amount) "troop-disabled-button" "tooltip")
-            , disabled (validateStationTroops lT.amount)
+            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.StationTroops lt sE)))
+            , Html.Attributes.class (OperatorExt.ternary (validateStationTroops ltAmount) "troop-disabled-button" "tooltip")
+            , disabled (validateStationTroops ltAmount)
             ]
             [ img [ Html.Attributes.class "troop-station-icon", src "./assets/images/general/arrow_down.png" ] []
             ]
         ]
-
-
-{-| Custom map function that displays the stationed troops listview of the settlement.
-
-    @param {List (Troop, Troop)}: Current troop/unit of the lord (specifically the amount!)
-    @param {Settlement}: Takes the chosen settlement
-    @param {Lord}: Takes the current lord
-
--}
-mapSettlement : List ( Troops.Troop, Troops.Troop ) -> Entities.Settlement -> Entities.Lord -> List (Html Types.Msg)
-mapSettlement li s l =
-    case li of
-        [] ->
-            []
-
-        x :: xs ->
-            generateRecruitTroopContainer x s l :: mapSettlement xs s l
 
 
 {-| Displays the listcomponent of the stationed troops list
@@ -180,25 +165,25 @@ mapSettlement li s l =
     @param {Lord}: Takes the current lord
 
 -}
-generateRecruitTroopContainer : ( Troops.Troop, Troops.Troop ) -> Entities.Settlement -> Entities.Lord -> Html Types.Msg
-generateRecruitTroopContainer ( aT, sT ) s l =
+generateRecruitTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Settlement -> Entities.Lord -> Html Types.Msg
+generateRecruitTroopContainer t aAmount sAmount s l =
     div [ Html.Attributes.class "troop-recruiting-container" ]
-        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName aT.troopType) ++ ".png") ] []
-        , span [] [ Html.text ("[" ++ String.fromInt aT.amount ++ "]") ]
-        , span [] [ Html.text ("[" ++ String.fromInt sT.amount ++ "]") ]
+        [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
+        , span [] [ Html.text ("[" ++ String.fromInt aAmount ++ "]") ]
+        , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "]") ]
         , div []
-            [ span [] [ Html.text (String.fromFloat (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost aT.troopType)) ]
+            [ span [] [ Html.text (String.fromFloat (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost t)) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button
-            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.BuyTroops aT.troopType s)))
-            , Html.Attributes.class (OperatorExt.ternary (validateBuyTroops aT.troopType s l) "troop-disabled-button" "tooltip")
-            , disabled (validateBuyTroops aT.troopType s l)
+            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.BuyTroops t s)))
+            , Html.Attributes.class (OperatorExt.ternary (validateBuyTroops t s l) "troop-disabled-button" "tooltip")
+            , disabled (validateBuyTroops t s l)
             ]
             [ span [] [ Html.text "+" ]
             , div [ Html.Attributes.class "tooltiptext troop-recruiting-tooltip" ]
                 [ span [] [ Html.text "Monthly wage" ]
-                , span [ Html.Attributes.class "negative-income" ] [ Html.text ("- " ++ String.fromFloat (Troops.troopWage aT.troopType) ++ " Ducats") ]
+                , span [ Html.Attributes.class "negative-income" ] [ Html.text ("- " ++ String.fromFloat (Troops.troopWage t) ++ " Ducats") ]
                 ]
             ]
         ]
@@ -217,9 +202,11 @@ displayBuildingComponents ( b, l, s ) =
                 )
             ]
         , div []
-            [ button [ onClick (Types.SettlementAction (Types.TroopMsg (Types.UpgradeBuilding b s)))
-                ,Html.Attributes.class (OperatorExt.ternary (validateBuildingUpgrade b l) "troop-disabled-button" "tooltip")
-                , disabled (validateBuildingUpgrade b l) ]
+            [ button
+                [ onClick (Types.SettlementAction (Types.TroopMsg (Types.UpgradeBuilding b s)))
+                , Html.Attributes.class (OperatorExt.ternary (validateBuildingUpgrade b l) "troop-disabled-button" "tooltip")
+                , disabled (validateBuildingUpgrade b l)
+                ]
                 [ img [ Html.Attributes.class "troop-station-icon", src "./assets/images/general/arrow_up.png" ] []
                 , div [ Html.Attributes.class "tooltiptext building-upgrade-tooltip" ]
                     [ span [] [ Html.text "Upgrade building" ]
@@ -260,8 +247,7 @@ validateBuyTroops : Troops.TroopType -> Entities.Settlement -> Entities.Lord -> 
 validateBuyTroops t s l =
     not
         ((l.gold - Troops.troopCost t > 0)
-            && (Maybe.withDefault { amount = 0, troopType = t } (List.head (List.filter (\x -> x.troopType == t) s.recruitLimits))).amount
-            > 0
+            && MaybeExt.foldMaybe (\v -> v > 0) False (Dict.get (Troops.troopTypeToInt t) s.recruitLimits)
         )
 
 

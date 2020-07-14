@@ -1,9 +1,15 @@
 module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, skipBattle)
 
+import Dict
 import Entities
 import Map
 import OperatorExt
 import Troops
+
+
+battleFleeTroopLoss : Float
+battleFleeTroopLoss =
+    0.4
 
 
 {-| Resolves / Calculate a battle skirmish outcome between (lord vs lord or lord vs siege).
@@ -49,10 +55,13 @@ evaluateSiegeBattle bS settle ter =
         newSettle =
             { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army ter 1 }
 
-        casualties =
-            calculateEntityCasualties ( bS.attacker.entity.army, newAttacker.entity.army ) ( transferedSettle.entity.army, newSettle.entity.army )
+        attackerCasualties =
+            calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
+
+        defenderCasualties =
+            calculateEntityCasualties bS.defender.entity.army newSettle.entity.army
     in
-    constructBattleResult bS newAttacker transferedDefender (Just newSettle) casualties
+    constructBattleResult bS newAttacker transferedDefender (Just newSettle) attackerCasualties defenderCasualties
 
 
 {-| Resolves / Calculate a battle skirmish outcome for lord battles
@@ -76,10 +85,13 @@ evaluateLordBattle bS ter =
         newDefender =
             { tempDefender | entity = evaluateBattle tempDefender.entity bS.attacker.entity.army ter 1 }
 
-        casualties =
-            calculateEntityCasualties ( bS.attacker.entity.army, newAttacker.entity.army ) ( bS.defender.entity.army, newDefender.entity.army )
+        attackerCasualties =
+            calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
+
+        defenderCasualties =
+            calculateEntityCasualties bS.defender.entity.army newDefender.entity.army
     in
-    constructBattleResult bS newAttacker newDefender bS.settlement casualties
+    constructBattleResult bS newAttacker newDefender bS.settlement attackerCasualties defenderCasualties
 
 
 {-| Construct a generic battle result for both sieges and normal battles
@@ -91,8 +103,8 @@ evaluateLordBattle bS ter =
     @param {(List Troop, List Troop)}: Takes the calculated casualties for both sides
 
 -}
-constructBattleResult : Entities.BattleStats -> Entities.Lord -> Entities.Lord -> Maybe Entities.Settlement -> ( List Troops.Troop, List Troops.Troop ) -> Entities.BattleStats
-constructBattleResult bS attacker defender settle ( aCasu, dCasu ) =
+constructBattleResult : Entities.BattleStats -> Entities.Lord -> Entities.Lord -> Maybe Entities.Settlement -> Troops.Army -> Troops.Army -> Entities.BattleStats
+constructBattleResult bS attacker defender settle aCasu dCasu =
     { bS
         | round = bS.round + 1
         , attackerCasualties = aCasu
@@ -152,7 +164,7 @@ siegeBattleAftermath bS s =
 
 fleeBattle : Entities.BattleStats -> Entities.Lord
 fleeBattle bS =
-    Entities.updatePlayerArmy bS.attacker (List.map (\x -> { x | amount = round (toFloat x.amount * 0.6) }) bS.attacker.entity.army)
+    Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
 
 
 skipBattle : Entities.BattleStats -> Map.Terrain -> Entities.BattleStats
@@ -216,10 +228,10 @@ transferTroops : Entities.Lord -> Entities.Settlement -> ( Entities.Lord, Entiti
 transferTroops l s =
     let
         newArmy =
-            List.map2 (\x y -> { amount = x.amount + y.amount, troopType = y.troopType }) l.entity.army s.entity.army
+            Troops.mergeTroops l.entity.army s.entity.army
 
         newLord =
-            { l | entity = Entities.updateEntitiesArmy (List.map (\x -> { x | amount = 0, troopType = x.troopType }) l.entity.army) l.entity }
+            { l | entity = Entities.updateEntitiesArmy Dict.empty l.entity }
 
         newSettlement =
             { s | entity = Entities.updateEntitiesArmy newArmy s.entity }
@@ -232,14 +244,20 @@ transferTroops l s =
 -------------------------------------------------------------------------------------
 
 
-evaluateBattle : Entities.WorldEntity -> List Troops.Troop -> Map.Terrain -> Float -> Entities.WorldEntity
-evaluateBattle w t ter siegeBonus =
-    evaluateLordCasualities w (sumTroopsDamage t ter siegeBonus)
+evaluateBattle : Entities.WorldEntity -> Troops.Army -> Map.Terrain -> Float -> Entities.WorldEntity
+evaluateBattle w army ter siegeBonus =
+    evaluateLordCasualities w (sumTroopsDamage army ter siegeBonus)
 
 
-calculateEntityCasualties : ( List Troops.Troop, List Troops.Troop ) -> ( List Troops.Troop, List Troops.Troop ) -> ( List Troops.Troop, List Troops.Troop )
-calculateEntityCasualties ( ffWe, fsWe ) ( sfWe, ssWe ) =
-    ( List.map2 Troops.troopDifferences ffWe fsWe, List.map2 Troops.troopDifferences sfWe ssWe )
+calculateEntityCasualties : Troops.Army -> Troops.Army -> Troops.Army
+calculateEntityCasualties armyBefore armyAfter =
+    Dict.merge
+        (\k v r -> Dict.insert k 0 r)
+        (\k v1 v2 r -> Dict.insert k (v2 - v1) r)
+        (\k v2 r -> Dict.insert k 0 r)
+        armyBefore
+        armyAfter
+        Dict.empty
 
 
 evaluateLordCasualities : Entities.WorldEntity -> Float -> Entities.WorldEntity
@@ -247,30 +265,32 @@ evaluateLordCasualities w d =
     { w | army = calcTroopCasualties w.army d (Troops.sumTroops w.army) }
 
 
-calcTroopCasualties : List Troops.Troop -> Float -> Float -> List Troops.Troop
-calcTroopCasualties t d a =
-    case t of
-        [] ->
-            []
-
-        x :: xs ->
-            calcCasualties x ((d + 100.0) * (toFloat x.amount / a)) :: calcTroopCasualties xs d a
+calcTroopCasualties : Troops.Army -> Float -> Int -> Troops.Army
+calcTroopCasualties army d a =
+    Dict.map (\k v -> calcCasualties (Troops.intToTroopType k) v ((d + 100.0) * toFloat (v // a))) army
 
 
-calcCasualties : Troops.Troop -> Float -> Troops.Troop
-calcCasualties t d =
-    { t | amount = restrictNegativInt (t.amount - round (d / Troops.troopDefense t.troopType)) }
+calcCasualties : Troops.TroopType -> Int -> Float -> Int
+calcCasualties t amount d =
+    max 0 (amount - round (d / Troops.troopDefense t))
 
 
-restrictNegativInt : Int -> Int
-restrictNegativInt nmb =
-    OperatorExt.ternary (nmb > 0) nmb 0
-
-
-sumTroopsDamage : List Troops.Troop -> Map.Terrain -> Float -> Float
-sumTroopsDamage t ter siegeBonus =
+sumTroopsDamage : Troops.Army -> Map.Terrain -> Float -> Float
+sumTroopsDamage army ter siegeBonus =
     let
         bonusTroopTypes =
             Map.terrainToBonus ter
     in
-    List.foldr (\x y -> siegeBonus * OperatorExt.ternary (List.member x.troopType bonusTroopTypes) (Troops.battlefieldBonus x.troopType) 1 * Troops.troopDamage x.troopType * toFloat x.amount + y) 0 t
+    Dict.foldl
+        (\k v dmg ->
+            dmg
+                + siegeBonus
+                * OperatorExt.ternary
+                    (List.member (Troops.intToTroopType k) bonusTroopTypes)
+                    (Troops.battlefieldBonus (Troops.intToTroopType k))
+                    1
+                * Troops.troopDamage (Troops.intToTroopType k)
+                * toFloat v
+        )
+        0
+        army

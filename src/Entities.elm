@@ -1,6 +1,7 @@
 module Entities exposing (..)
 
 import Building
+import Dict
 import Faction
 import List
 import OperatorExt
@@ -30,8 +31,8 @@ type alias BattleStats =
     { attacker : Lord
     , defender : Lord
     , round : Int
-    , attackerCasualties : List Troops.Troop
-    , defenderCasualties : List Troops.Troop
+    , attackerCasualties : Troops.Army
+    , defenderCasualties : Troops.Army
     , settlement : Maybe Settlement
     , siege : Bool
     , finished : Bool
@@ -45,7 +46,7 @@ type LordList
 type alias Settlement =
     { entity : WorldEntity
     , settlementType : SettlementType
-    , recruitLimits : List Troops.Troop
+    , recruitLimits : Troops.Army
     , income : Float
     , isSieged : Bool
     , buildings : List Building.Building
@@ -53,7 +54,7 @@ type alias Settlement =
 
 
 type alias WorldEntity =
-    { army : List Troops.Troop
+    { army : Troops.Army
     , faction : Faction.Faction
     , position : Vector.Point
     , name : String
@@ -99,7 +100,16 @@ buyTroops l t s =
         amount =
             getPossibleTroopAmount s.recruitLimits t
     in
-    { l | gold = l.gold - (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost t * (toFloat amount / 5.0)), entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity, land = updateSettlementRecruits l.land s.entity.name t amount }
+    { l
+        | gold =
+            l.gold
+                - (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100)
+                    * Troops.troopCost t
+                    * (toFloat amount / 5.0)
+                  )
+        , entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity
+        , land = updateSettlementRecruits s t -amount l.land
+    }
 
 
 stationTroops : Lord -> Troops.TroopType -> Settlement -> Lord
@@ -121,47 +131,44 @@ takeTroops l t s =
 
 
 upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
-upgradeBuilding l b s = 
+upgradeBuilding l b s =
     { l | gold = l.gold - (Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)), land = updateSettlementBuildings l.land s.entity.name b.buildingType }
 
 
+updateEntitiesArmy : Troops.Army -> WorldEntity -> WorldEntity
+updateEntitiesArmy army e =
+    { e | army = army }
 
-updateEntitiesArmy : List Troops.Troop -> WorldEntity -> WorldEntity
-updateEntitiesArmy l e =
-    { e | army = l }
 
+getPossibleTroopAmount : Troops.Army -> Troops.TroopType -> Int
+getPossibleTroopAmount army t =
+    case Dict.get (Troops.troopTypeToInt t) army of
+        Nothing ->
+            0
 
-getPossibleTroopAmount : List Troops.Troop -> Troops.TroopType -> Int
-getPossibleTroopAmount l t =
-    let
-        currentAmount =
-            (Maybe.withDefault { amount = 2, troopType = t } (List.head (List.filter (\x -> x.troopType == t) l))).amount
-    in
-    OperatorExt.ternary (currentAmount >= 5) 5 currentAmount
+        Just amount ->
+            min 5 amount
 
 
 
 -- is needed for the direct update of the lord troops inside the battle stats
 
 
-updatePlayerArmy : Lord -> List Troops.Troop -> Lord
+updatePlayerArmy : Lord -> Troops.Army -> Lord
 updatePlayerArmy l t =
     { l | entity = updateEntitiesArmy t l.entity }
 
 
-flattenTroops : List Troops.Troop -> List Troops.TroopType -> List Troops.Troop
-flattenTroops troops types =
-    case types of
-        [] ->
-            []
-
-        y :: ys ->
-            { amount = List.foldr (\t v -> t.amount + v) 0 (List.filter (\x -> x.troopType == y) troops), troopType = y } :: flattenTroops troops ys
-
-
-sumLordTroops : Lord -> List Troops.Troop
+sumLordTroops : Lord -> Troops.Army
 sumLordTroops lord =
-    lord.entity.army ++ List.foldr (\x y -> x.entity.army ++ y) [] lord.land
+    Troops.mergeTroops
+        lord.entity.army
+        (sumLordSettlementTroops lord)
+
+
+sumLordSettlementTroops : Lord -> Troops.Army
+sumLordSettlementTroops lord =
+    List.foldl (\s dict -> Troops.mergeTroops dict s.entity.army) Dict.empty lord.land
 
 
 
@@ -183,23 +190,32 @@ updateSettlementTroops l s t a =
         )
         l
 
-updateSettlementRecruits : List Settlement -> String -> Troops.TroopType -> Int -> List Settlement
-updateSettlementRecruits l s t v =
+
+updateSettlementRecruits : Settlement -> Troops.TroopType -> Int -> List Settlement -> List Settlement
+updateSettlementRecruits s t add =
     List.map
         (\x ->
             { x
                 | recruitLimits =
-                    OperatorExt.ternary
-                        (x.entity.name == s)
-                        (List.map (\z -> { amount = OperatorExt.ternary (z.troopType == t) (z.amount - v) z.amount, troopType = z.troopType }) x.recruitLimits)
+                    if x.entity.name == s.entity.name then
+                        Dict.map
+                            (\k v ->
+                                if k == Troops.troopTypeToInt t then
+                                    v + add
+
+                                else
+                                    v
+                            )
+                            x.recruitLimits
+
+                    else
                         x.recruitLimits
             }
         )
-        l
 
 
 updateSettlementBuildings : List Settlement -> String -> Building.BuildingType -> List Settlement
-updateSettlementBuildings l s b = 
+updateSettlementBuildings l s b =
     List.map
         (\x ->
             { x
@@ -212,6 +228,7 @@ updateSettlementBuildings l s b =
         )
         l
 
+
 getSettlementByName : List Settlement -> String -> Maybe Settlement
 getSettlementByName l s =
     case List.filter (\x -> x.entity.name == s) l of
@@ -223,8 +240,8 @@ getSettlementByName l s =
 
 
 applySettlementNewRecruits : List Settlement -> List Settlement
-applySettlementNewRecruits ls =
-    List.map (\x -> { x | recruitLimits = List.map (\y -> { y | amount = y.amount + Basics.round (5.0 + Building.resolveBonusFromBuildings x.buildings Building.Barracks)}) x.recruitLimits }) ls
+applySettlementNewRecruits =
+    List.map (\s -> { s | recruitLimits = Dict.map (\t amount -> amount + Basics.round (5.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)) s.recruitLimits })
 
 
 getSettlementBonus : Settlement -> List Settlement -> Float
@@ -257,7 +274,7 @@ getLordCapital l =
 
 createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
-    { entity = { army = [], faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = Troops.emptyTroops, income = 5.0, isSieged = False, buildings = Building.startBuildings }
+    { entity = { army = Dict.empty, faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = Troops.emptyTroops, income = 5.0, isSieged = False, buildings = Building.startBuildings }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
@@ -345,7 +362,7 @@ applyLordGoldIncome lord =
 
 calculateRoundIncome : Lord -> Float
 calculateRoundIncome lord =
-    sumSettlementsIncome lord.land - sumTroopWages (flattenTroops (sumLordTroops lord) Troops.troopTypeList)
+    sumSettlementsIncome lord.land - sumTroopWages (sumLordTroops lord)
 
 
 sumSettlementsIncome : List Settlement -> Float
@@ -353,9 +370,9 @@ sumSettlementsIncome s =
     List.foldr (\x v -> x.income + Building.resolveBonusFromBuildings x.buildings Building.Marketplace + v) 0 s
 
 
-sumTroopWages : List Troops.Troop -> Float
-sumTroopWages t =
-    List.foldr (\x v -> toFloat x.amount * Troops.troopWage x.troopType + v) 0 t
+sumTroopWages : Troops.Army -> Float
+sumTroopWages =
+    Dict.foldl (\k v wages -> toFloat v * Troops.troopWage (Troops.intToTroopType k) + wages) 0
 
 
 
