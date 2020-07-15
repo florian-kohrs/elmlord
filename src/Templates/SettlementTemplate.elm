@@ -84,7 +84,13 @@ settlementStateToAction lord settlement uistate =
                             [ img [ src (Entities.getSettlementImage settlement) ] []
                             ]
                         ]
-                    :: Dict.merge (\k v1 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 0 settlement lord :: r) (\k v1 v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 v2 settlement lord :: r) (\k v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 v2 settlement lord :: r) lord.entity.army settlement.recruitLimits []
+                    :: Dict.merge
+                        (\k v1 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 0 settlement lord :: r)
+                        (\k v1 v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 v2 settlement lord :: r)
+                        (\k v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 v2 settlement lord :: r)
+                        lord.entity.army
+                        settlement.recruitLimits
+                        []
                     ++ [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
@@ -246,7 +252,7 @@ displayBuildingBonus ( b, i ) =
 validateBuyTroops : Troops.TroopType -> Entities.Settlement -> Entities.Lord -> Bool
 validateBuyTroops t s l =
     not
-        ((l.gold - Troops.troopCost t > 0)
+        ((l.gold - (Troops.troopCost t * (1 - Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100)) >= 0)
             && MaybeExt.foldMaybe (\v -> v > 0) False (Dict.get (Troops.troopTypeToInt t) s.recruitLimits)
         )
 

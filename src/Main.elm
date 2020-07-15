@@ -3,6 +3,7 @@ module Main exposing (..)
 import AI
 import Battle
 import Browser
+import Building
 import DateExt
 import Dict
 import Entities
@@ -33,7 +34,6 @@ import Templates.SettlementTemplate as SettlementTemplate
 import Troops
 import Types
 import Vector
-import Building
 
 
 
@@ -394,19 +394,19 @@ view model =
         [ findModalWindow model
         , HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
-            (List.map addStylesheet stylessheets ++
-            [ MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
-            , div []
-                [ Svg.svg
-                    [ Svg.Attributes.viewBox "0 0 850 1000"
-                    , Svg.Attributes.fill "none"
-                    ]
-                    (MapDrawer.allSvgs allClickActions)
-                ]
-            , EventTemplate.generateEventOverview model.event
-
-            , span [] [ Html.text (Debug.toString (Entities.getPlayer model.lords).land) ]
-            ])
+            (List.map addStylesheet stylessheets
+                ++ [ MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
+                   , div []
+                        [ Svg.svg
+                            [ Svg.Attributes.viewBox "0 0 850 1000"
+                            , Svg.Attributes.fill "none"
+                            ]
+                            (MapDrawer.allSvgs allClickActions)
+                        ]
+                   , EventTemplate.generateEventOverview model.event
+                   , span [] [ Html.text (Debug.toString (Entities.getPlayer model.lords).land) ]
+                   ]
+            )
         ]
 
 
@@ -440,8 +440,12 @@ addStylesheet : String -> Html Types.Msg
 addStylesheet href =
     Html.node "link" [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" ("./assets/styles/" ++ href ++ ".css") ] []
 
+
 stylessheets : List String
-stylessheets = ["main_styles", "battle_styles", "end_styles", "event_styles", "header_styles", "lord_styles", "mapaction_styles", "settlement_styles", "start_styles", "tooltip_styles"]
+stylessheets =
+    [ "main_styles", "battle_styles", "end_styles", "event_styles", "header_styles", "lord_styles", "mapaction_styles", "settlement_styles", "start_styles", "tooltip_styles" ]
+
+
 
 -- update function
 ----------------------------------------------------------
@@ -644,7 +648,7 @@ updateSettlementStats msg model =
                 (Entities.updatePlayer model.lords (Entities.upgradeBuilding (Entities.getPlayer model.lords) b s))
                 s
                 Types.BuildingView
-                model 
+                model
 
 
 updateMultipleTroopStats : Entities.LordList -> Entities.Settlement -> Types.UiSettlementState -> Model -> Model
@@ -724,8 +728,8 @@ updateBattle msg model =
 
 
 updateLordsAfterBattle : Entities.Lord -> List Entities.Lord -> Model -> GameState -> Model
-updateLordsAfterBattle player enemyLords model state = 
-            { model | lords = Entities.Cons player enemyLords, gameState = state }
+updateLordsAfterBattle player enemyLords model state =
+    { model | lords = Entities.Cons player enemyLords, gameState = state }
 
 
 checkLordLost : Bool -> String -> List Entities.Lord -> List Entities.Lord
