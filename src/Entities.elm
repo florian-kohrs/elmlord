@@ -74,6 +74,14 @@ type alias SettlementInfo =
     }
 
 
+lordSettlementCount : Lord -> Int
+lordSettlementCount l =
+    List.foldl
+        (always ((+) 1))
+        0
+        l.land
+
+
 
 -- functions for general handling or update of entities
 ----------------------------------------------------------

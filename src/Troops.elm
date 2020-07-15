@@ -82,6 +82,11 @@ sumTroops a =
     List.foldl (+) 0 (Dict.values a)
 
 
+sumTroopStats : Army -> Int
+sumTroopStats =
+    Dict.foldl (\k v r -> round (troopDamage (intToTroopType k) + troopDefense (intToTroopType k)) * v + r) 0
+
+
 
 -- Resolve a troop type to different, for values like
 -- wages, costs, fighting-stats, etc.

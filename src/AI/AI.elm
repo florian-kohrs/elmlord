@@ -61,6 +61,47 @@ type alias SettlementStatus =
 type alias EnemyStatus =
     { strengthDiff : Float, turnsTillReached : Float, settlement : Entities.Settlement }
 
+type alias EntityDefenseRating =
+  {entity : Entities.WorldEntity, armyStrength : Float}
+
+type EntityType =
+   LordType
+  | Settlement Entities.SettlementType
+
+estimatedNormalPlayerTroopStrength : Lord -> Int
+estimatedNormalPlayerTroopStrength =
+    let
+        x = Entities.lordSettlementCount l
+    in
+    300 + 50 * x
+
+estimatedNormalVillageTroopStrength : Lord -> Int
+estimatedNormalVillageTroopStrength l =
+    250
+
+estimatedNormalCastleTroopStrength : Lord -> Int
+estimatedNormalCastleTroopStrength l =
+  let
+      x = Entities.lordSettlementCount l
+  in
+    400 * ((1 / x) + ((1 - (1 / x)) / (x*x *0.01 + 1)))
+
+
+
+armyStrengthEvaluator : Lord -> Int -> EntityType -> Int
+armyStrengthEvaluator lord strength entityType =
+    case entityType of
+      LordType ->
+        strength / estimatedNormalPlayerTroopStrength lord
+      Settlement Entities.Village ->
+        strength / estimatedNormalVillageTroopStrength lord
+      Settlement Entities.Castle ->
+        strength / estimatedNormalCastleTroopStrength lord
+
+entityArmyStrength : Entities.Lord -> List EntityDefenseRating
+entityArmyStrength l =
+    list.foldl (\s -> EntityDefenseRating s.entity (Troops.sumTroopStats s.entity.army) (Settlement s.settlementType)) [] l.land :: EntityDefenseRating l.entity (Troops.sumTroopStats l.entity.army) LordType
+
 getAiAction : AI -> List Entities.Lord -> AiRoundActions
 getAiAction ai lordEntitiesList =
     let
@@ -69,7 +110,7 @@ getAiAction ai lordEntitiesList =
     if remainingMovement == 0 then
       EndRound
     else
-
+      --evaulate  weak enemy castles  and too weak enemy castles.  apply  distance  as penalty
 
 settlementStates : AI -> List Entities.Lord -> List SettlementStatus
 settlementStates ai others =
