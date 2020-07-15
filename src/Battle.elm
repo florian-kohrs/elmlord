@@ -267,7 +267,7 @@ evaluateLordCasualities w d =
 
 calcTroopCasualties : Troops.Army -> Float -> Int -> Troops.Army
 calcTroopCasualties army d a =
-    Dict.map (\k v -> calcCasualties (Troops.intToTroopType k) v ((d + 100.0) * toFloat (v // a))) army
+    Dict.map (\k v -> calcCasualties (Troops.intToTroopType k) v ((d + 100.0) * (toFloat v / toFloat a))) army
 
 
 calcCasualties : Troops.TroopType -> Int -> Float -> Int
