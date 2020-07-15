@@ -47,6 +47,7 @@ getLordAction player lord =
                     == lord.entity.position
                     && lord.entity.name
                     /= player.entity.name
+                    && not (Entities.isLordInOwnSettlement lord)
             then
                 Just Types.EngageLord
 
@@ -95,7 +96,7 @@ showSettlementBorder s =
 getSvgForLord : Entities.Lord -> Svg.Svg Types.Msg
 getSvgForLord l =
     BasicDrawing.getImage
-        "Lord1.png"
+        (Entities.lordToMapIcon l)
         l.entity.position
         1
 
@@ -116,6 +117,6 @@ getSvgBorderForSettlement s =
 getSvgForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
 getSvgForSettlement s =
     BasicDrawing.getImage
-        (Entities.settlementImageName s.settlementType)
+        (Entities.getSettlementImage s)
         s.entity.position
         1

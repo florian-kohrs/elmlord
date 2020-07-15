@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap");
 
+/* General styles */
+/* ---------------------------------------------------------------------------- */
+
 span {
     font-family: "MedievalSharp", cursive;
 }
@@ -7,990 +10,99 @@ span {
 .page-container {
     height: 100vh;
     width: 100vw;
-    overflow-x: hidden;
-    background-image: url("../images/background_image.png");
+    overflow-y: hidden;
+    background-image: url("../images/general/background_image.png");
+    background-repeat: no-repeat;
 }
-
-.page-header {
-    width: 100%;
-    height: 80px;
-    background: #deb887;
-    display: grid;
-    grid-template-rows: 1fr;
-    grid-template-columns: 300px 125px 175px 175px 1fr 150px 15%;
-    grid-column-gap: 50px;
-
-    border-bottom-right-radius: 35px;
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-}
-
-.page-turn-header {
-    grid-area: 1 / 1 / 2 / 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
-
-.page-turn-date-header {
-    grid-area: 1 / 2 / 2 / 3;
-    text-align: center;
-}
-
-.page-turn-handler-header {
-    grid-area: 1 / 1 / 2 / 2;
-}
-
-.page-turn-button {
-    width: 70%;
-    height: 85%;
-    margin: 2.5px auto;
-    display: block;
-    border-radius: 10px;
-    background: #a51c27;
-    cursor: pointer;
-    text-align: center;
-}
-
-.page-turn-button > span {
-    color: white;
-    font-size: 16px;
-    display: block;
-    padding-top: 25px;
-}
-
-.page-turn-button:hover {
-    background: #ed2939;
-}
-
-.page-gold-header {
-    grid-area: 1 / 3 / 2 / 4;
-    display: grid;
-    text-align: center;
-    grid-template-columns: 35% 1fr;
-    cursor: pointer;
-}
-
-.page-header-images {
-    width: 50px;
-    height: 50px;
-    margin: 10px auto;
-}
-
-.page-header-span {
-    padding-top: 25px;
-    font-size: 18px;
-    display: block;
-    color: #49505c;
-}
-
-.page-troop-header {
-    grid-area: 1 / 4 / 2 / 5;
-    display: grid;
-    text-align: center;
-    grid-template-columns: 35% 1fr;
-    cursor: pointer;
-}
-
-.page-settings-header {
-    grid-area: 1 / 6 / 2 / 7;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
-
-.page-setting-container:hover {
-    background: #8a8e96;
-}
-
-.page-setting-container {
-    display: block;
-    margin: 20px auto;
-    width: 40px;
-    height: 40px;
-    border-radius: 5px;
-    border: 1.5px solid #6d727c;
-    cursor: pointer;
-}
-
-.page-image-settings {
-    width: 35px;
-    height: 35px;
-    margin: 2.5px auto;
-    display: block;
-}
-
-/* Revenue */
-/* ---------------------------------------------------------------------------- */
-
-.revenue-container {
-    width: 100%;
-    height: 25px;
-}
-
-.revenue-result-container {
-    width: 85%;
-    margin: 0 auto;
-    border-top: 2px solid white;
-}
-
-.revenue-result-container > span {
-    display: block;
-    padding-top: 10px;
-}
-
-.negative-income {
-    color: #ed2939;
-    padding-top: 2px;
-}
-
-.positive-income {
-    color: #03c04a;
-    padding-top: 2px;
-    display: block;
-}
-
-
-/* MODAL */
-/* ---------------------------------------------------------------------------- */
 
 .modal-background {
-    position:fixed;
-    top:0;
-    left:0;
-    background:rgba(0,0,0,0.6);
-    z-index:5;
-    width:100%;
-    height:100%;
-}
-
-/* SETTLEMENTS */
-/* ---------------------------------------------------------------------------- */
-
-.settlement-modal {
-    width: 700px;
-    height: 800px;
-    background: #b8bbc0;
-    border-radius: 20px;
-    position: absolute;
-    margin-top: 100px;
-    margin-left: calc(50% - 350px);
-    display: grid;
-    grid-template-columns: 15px 1fr 1fr 15px;
-    grid-template-rows: 20px 50px 110px 1fr 50px;
-    grid-row-gap: 20px;
-    grid-column-gap: 10px;
-    border: 1px solid #49505c;
-}
-
-.settlement-modal-close-container {
-    grid-area: 1 / 2 / 2 / 4;
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-}
-
-.settlement-modal-close-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 30px;
-    margin-left: 93%;
-    margin-top: -2.5%;
-    position: absolute;
-    border: 2px solid #49505c;
-    background: white;
-    cursor: pointer;
-    text-align: center;
-}
-
-.settlement-modal-close-btn > span {
-    font-size: 25px;
-    display: block;
-    padding-top: 12px;
-    color: #49505c;
-}
-
-.settlement-modal-close-btn:hover {
-    background: #b8bbc0;
-}
-
-.settlement-modal-name {
-    grid-area: 2 / 2 / 3 / 4;
-    text-align: center;
-}
-
-.settlement-modal-name > span {
-    font-size: 35px;
-    color: #49505c;
-    display: block;
-    padding-top: 10px;
-}
-
-.settlement-lordship {
-    grid-area: 3 / 3 / 4 / 4;
-    display: grid;
-    grid-template-columns: 35% 1fr;
-    text-align: center;
-    background: #a1a4ab;
-    border-radius: 10px;
-
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-}
-
-.settlement-lord-text {
-    display: block;
-    padding-top: 40px;
-    font-size: 22px;
-    color: #49505c;
-}
-
-.settlement-lord-icon {
-    width: 100px;
-    height: 100px;
-    margin: 2.5px auto;
-    display: block;
-    border: 2px solid #49505c;
-    border-radius: 15px;
-}
-
-.settlement-action-container {
-    grid-area: 4 / 3 / 5 / 4;
-    display: grid;
-    grid-template-rows: 60px 60px 60px 1fr;
-    grid-row-gap: 10px;
-}
-
-.settlement-action-container > .settlement-enemy-overview {
-    grid-area: 1 / 1 / 4 / 2;
-    text-align: center;
-    color: #49505c;
-    font-size: 24px;
-    padding-top: 60px;
-}
-
-.settlement-action-container > button {
-    margin: 0 auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 80%;
-    height: 60px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.settlement-info {
-    border-radius: 20px;
-    border: 2px solid #49505c;
-    width: 80%;
-    display: grid;
-    margin: 0 auto;
-    grid-template-rows: 40px 50px 1fr;
-    grid-row-gap: 10px;
-    text-align: center;
-    color: #49505c;
-    grid-area: 4 / 1 / 5 / 2;
-}
-
-.settlement-info > .header-span {
-    padding: 10px;
-    display: block;
-    font-size: 20px;
-}
-
-.settlement-info > span {
-    padding: 10px;
-    display: block;
-    font-size: 17px;
-}
-
-.troop-span {
-    color: #7b0606
-}
-
-.settlement-info > .income-span {
-    color: #02993b;
-}
-
-.stationed-troops-overview {
-    display: grid;
-    grid-template-rows: 25px 1fr;
-    width: 100%;
-}
-
-.stationed-troop-container {
-    width: 80%;
-    height: 30px !important;
-    display: grid;
-    margin: 2.5px auto !important;
-    grid-template-columns: 25% 1fr 1fr;
-}
-
-.settlement-illustration-container {
-    grid-area: 3 / 2 / 5 / 3;
-    border-radius: 25px;
-    border: 1px solid #49505c;
-}
-
-.settlement-illustration-container > img {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 5;
     width: 100%;
     height: 100%;
 }
 
-/* Troop recruiting */
-/* ---------------------------------------------------------------------------- */
-
-.settlement-troop-recruiting {
-    grid-area: 1 / 1 / 5 / 2;
-    display: grid;
-    grid-template-rows: 65px 50px 50px 50px 50px 1fr;
-    grid-row-gap: 10px;
-    text-align: center;
-}
-
-.settlement-troop-recruiting > span {
-    color: #49505c;
-    font-size: 22px;
-    display: block;
-    padding-top: 25px;
-}
-
-.troop-recruiting-container {
-    display: grid;
-    grid-template-columns: 60px 40px 120px 1fr;
-    border: 1px solid #49505c;
-    text-align: center;
-    border-radius: 10px;
-}
-
-.troop-recruiting-tooltip {
-    width: 150px;
-    height: 60px;
-    background: #191919;
-    color: #fff;
-    margin-top: -60px;
-    margin-left: 50px;
-    opacity: 0.925;
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    text-align: center;
-}
-
-.troop-recruiting-tooltip > span {
-    font-size: 16px;
-    display: block;
-    padding-top: 10px;
-}
-
-.troop-recruiting-container > img {
-    width: 40px;
-    height: 40px;
-    margin: 2.5px auto;
-    display: block;
-}
-
-.troop-recruiting-container > span {
-    color: #49505c;
-    font-size: 18px;
-    display: block;
-    padding-top: 12.5px;
-}
-
-.troop-recruiting-container > div {
-    display: grid;
-    grid-template-columns: 50% 50%;
-    text-align: right;
-}
-
-.troop-recruiting-container > div > img {
-    height: 35px;
-    width: 35px;
-    margin: 5px auto;
-    display: block;
-}
-
-.troop-recruiting-container > div > span {
-    color: #49505c;
-    font-size: 18px;
-    display: block;
-    padding-top: 12.5px;
-}
-
-.troop-recruiting-container > button {
-    margin: 5px auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 25px;
-}
-
-
-.settlement-troop-recruiting > button {
-    margin: 0 auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 80%;
-    height: 60px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-/* Troop stationing */
-/* ---------------------------------------------------------------------------- */
-
-.settlement-troop-stationing {
-    grid-area: 1 / 1 / 5 / 2;
-    display: grid;
-    grid-template-rows: 65px 50px 50px 50px 50px 1fr;
-    grid-row-gap: 10px;
-    text-align: center;
-}
-
-.settlement-troop-stationing > span {
-    color: #49505c;
-    font-size: 22px;
-    display: block;
-    padding-top: 25px;
-}
-
-.troop-stationing-container {
-    display: grid;
-    grid-template-columns: 60px 40px 80px 50px 50px 1fr;
-    grid-column-gap: 10px;
-    border: 1px solid #49505c;
-    text-align: center;
-    border-radius: 10px;
-}
-
-.troop-stationing-container > img {
-    width: 40px;
-    height: 40px;
-    margin: 2.5px auto;
-    display: block;
-}
-
-.troop-stationing-container > span {
-    color: #49505c;
-    font-size: 18px;
-    display: block;
-    padding-top: 12.5px;
-}
-
-.troop-stationing-container > div {
-    display: grid;
-    grid-template-columns: 50% 50%;
-    text-align: right;
-}
-
-.troop-stationing-container > div > img {
-    height: 35px;
-    width: 35px;
-    margin: 5px auto;
-    display: block;
-}
-
-.troop-stationing-container > div > span {
-    color: #49505c;
-    font-size: 18px;
-    display: block;
-    padding-top: 12.5px;
-}
-
-.troop-stationing-container > button {
-    margin: 5px auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 25px;
-}
-
-.settlement-troop-stationing > button {
-    margin: 0 auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 80%;
-    height: 60px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-/* TOOLTIPS */
-/* ---------------------------------------------------------------------------- */
-
-.tooltip {
-    position: relative;
-    display: inline-block;
-}
-
-.tooltip .tooltiptext {
-    visibility: hidden;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-}
-
-.gold-tooltip {
-    width: 240px;
-    height: 200px;
-    background: #191919;
-    color: #fff;
-    margin-top: 20px;
-    margin-left: -100px;
-    opacity: 0.925;
-    display: grid;
-    grid-template-rows: 30px 1fr 40px;
-}
-
-.troop-tooltip {
-    width: 360px;
-    height: 270px;
-    background: #191919;
-    color: #fff;
-    margin-top: 20px;
-    margin-left: -160px;
-    opacity: 1;
-    display: grid;
-    grid-template-rows: 30px 30px 1fr;
-}
-
-.troop-container-header {
-    border-bottom: 1px solid white;
-    height: 30px !important;
-    margin-top: 0px !important;
-}
-
-.troop-container {
-    width: 80%;
-    height: 40px;
-    display: grid;
-    margin: 10px auto;
-    grid-template-columns: 25% 1fr 1fr;
-}
-
-.troop-container > img {
-    height: 30px;
-    width: 30px;
-    display: block;
-    margin: 0 auto;
-}
-
-.troop-container > span {
-    display: block;
-    padding-top: 5px;
-}
-
-.settings-tooltip {
-    width: 280px;
-    height: 30px;
-    background: #191919;
-    color: #fff;
-    margin-left: -120px;
-}
-
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-}
-
-
-/* Battle Modal */
-/* ---------------------------------------------------------------------------- */
-
-.battle-modal {
-    width: 900px;
-    height: 700px;
-    background: #b8bbc0;
-    border-radius: 20px;
-    position: absolute;
-    margin-top: 100px;
-    margin-left: calc(50% - 500px);
-    display: grid;
-    grid-template-rows: 20px 1fr;
-    grid-row-gap: 7.5px;
-    grid-column-gap: 10px;
-    border: 1px solid #49505c;
-}
-
-.battle-modal-main {
-    grid-area: 2 / 1 / 3 / 2;
-    display: grid;
-    grid-template-columns: 1fr 30% 1fr;
-}
-
-.battle-army-overview {
-    display: grid;
-    grid-template-rows: 30% 60px 1fr;
-    text-align: center;
-    color: #49505c;
-}
-
-.battle-army-overview > img {
-    display: block;
-    margin: 0 auto;
-    width: 150px;
-    height: 150px;
-    border: 2px solid #49505c;
-    border-radius: 15px;
-}
-
-.battle-army-overview > span {
-    font-size: 25px;
-    display: block;
-    padding-top: 10px
-}
-
-.battle-troop-container {
-    width: 60%;
-    height: 70px;
-    display: grid;
-    margin: 10px auto;
-    grid-template-columns: 25% 1fr;
-    grid-template-rows: 1fr 1fr;
-}
-
-.battle-troop-container > img {
-    height: 50px;
-    width: 50px;
-    display: block;
-    margin: 0 auto;
-    grid-area: 1 / 1 / 3 / 2;
-}
-
-.battle-troop-container > span {
-    display: block;
-    font-size: 20px;
-    padding-top: 15px;
-}
-
-.battle-troop-container > .battle-troop-casualties {
-    color: #7b0606;
-    font-size: 16px !important;
-    padding-top: 5px !important;
-}
-
-.battle-action-container {
-    display: grid;
-    grid-template-rows: 200px 80px 80px 1fr;
-    text-align: center;
-    color: #49505c;
-}
-
-.battle-action-container > .battle-versus-text {
-    color: #7b0606;
-    font-size: 45px;
-}
-
-.battle-action-container > .battle-skirmish-text {
-    font-size: 25px;
-}
-
-.battle-action-container > div > button {
-    margin: 20px auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 80%;
-    height: 60px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 18px;
-}
-
-.battle-terrain-info {
-    display: grid;
-    grid-template-rows: 25% 30% 1fr;
-    height: 70%;
-}
-
-.battle-terrain-info > span {
-    font-size: 25px;
-}
-
-.battle-terrain-info > div{
-    display: grid;
-    grid-template-columns: 30% 1fr;
-    width: 80%;
-    margin: 0 auto;
-}
-
-.battle-terrain-info > div > img{
-    width: 40px;
-    height: 40px;
-    display: block;
-    margin: 0 auto;
-}
-
-.battle-terrain-info > div > span {
-    font-size: 20px;
-    display: block;
-    padding-top: 10px;
-}
-
-.battle-terrain-bonus {
-    display: grid;
-    grid-template-columns: 1fr 1fr !important;
-    width: 50%;
-    margin: 5px auto !important;
-    text-align: left !important;
-}
-
-.battle-terrain-bonus > img{
-    float: right !important;
-    width: 35px !important;
-    height: 35px !important;
-}
-
-.battle-terrain-bonus > span{
-    font-size: 18px !important;
-    padding: 5px !important;
-}
-
-
-
-/* Losing Modal */
-/* ---------------------------------------------------------------------------- */
-
-.end-modal {
-    width: 600px;
-    height: 400px;
-    background: #b8bbc0;
-    border-radius: 20px;
-    position: absolute;
-    margin-top: 200px;
-    margin-left: calc(50% - 300px);
-    display: grid;
-    grid-template-rows: 100px 100px 1fr;
-    grid-row-gap: 7.5px;
-    grid-column-gap: 10px;
-    border: 1px solid #49505c;
-    text-align: center;
-}
-
-.end-modal > .end-modal-title > span {
-    font-size: 35px;
-    display: block;
-    padding-top: 35px;
-}
-
-.winning-color {
-    color: #03c04a;
-}
-
-.losing-color {
-    color: #ed2939;
-}
-
-.end-modal > .end-modal-desc{
-    width: 70%;
-    display: block;
-    margin: 0 auto;
-    display: block;
-    padding-top: 20px;
-}
-
-.end-modal > .end-modal-desc > span{
-    font-size: 18px;
-    color: #7f848c;
-}
-
-.end-modal > div > button {
-    margin: 40px auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 300px;
-    height: 60px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 18px;
-}
-
 /* Map Styling */
 /* ---------------------------------------------------------------------------- */
-
-.page-map {
-    margin: 0 10%;
-    width: 60%;
-    height: 800px;
-    display: grid;
-    grid-template-columns: 30% 1fr;
-}
-
-/* Map Action Styling */
-/* ---------------------------------------------------------------------------- */
-
-.map-action-menu {
-    width: 95%;
-    height: 300px;
-    border-radius: 10px;
-    background: #deb887;
-    margin-top: 5px;
-    text-align: center;
-    display: grid;
-    grid-template-rows: 50px 1fr 1fr 1fr;
-
-    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
-}
-
-.map-action-menu > span {
-    font-size: 22px;
-    color: #49505c;
-    padding-top: 10px;
-}
-
-.map-action-menu > button {
-    margin: 0 auto;
-    display: block;
-    background: #7b0606;
-    color: white;
-    width: 70%;
-    height: 60px;
-    border-radius: 5px;
-    border: 4px solid #c7994c;
-    cursor: pointer;
-    font-size: 16px;
-}
 
 .svg {
     width: 1000px;
     height: 600px;
 }
 
-/* Lord Overview Styling */
+.page-map {
+    margin: 0 10%;
+    width: 75%;
+    display: grid;
+    grid-template-columns: 22.5% 1fr 22.5%;
+}
+
+.box-shadow {
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
 /* ---------------------------------------------------------------------------- */
 
-.lord-modal {
-    width: 600px;
-    height: 800px;
-    background: #b8bbc0;
-    border-radius: 20px;
-    position: absolute;
-    margin-top: 100px;
-    margin-left: calc(50% - 300px);
-    display: grid;
-    grid-template-columns: 15px 1fr 1fr 15px;
-    grid-template-rows: 20px 50px 250px 1fr;
-    grid-row-gap: 10px;
-    grid-column-gap: 10px;
-    border: 1px solid #49505c;
+@media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
+    .page-map {
+        width: 80%;
+    }
+
+    .event-logs {
+        height: 70%;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 13px !important;
+    }
+
+    .settlement-modal,
+    .lord-modal {
+        height: 750px;
+        margin-top: 25px;
+    }
+
+    .lord-modal {
+        margin-top: 12.5px;
+    }
+
+    .battle-modal {
+        margin-top: 50px;
+    }
 }
 
-.lord-title {
-    grid-area: 2 / 2 / 3 / 4;
-    text-align: center;
-    color: #49505c;
+@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 800px) {
+    .page-map {
+        width: 85%;
+    }
+
+    .event-logs {
+        height: 75%;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 14px !important;
+    }
+
+    .settlement-modal,
+    .lord-modal {
+        height: 800px;
+        margin-top: 50px;
+    }
+
+    .battle-modal {
+        margin-top: 100px;
+    }
 }
 
-.lord-title > span {
-    display: block;
-    padding-top: 15px;
-    font-size: 25px;
-}
-
-.lord-image {
-    grid-area: 3 / 2 / 4 / 4;
-}
-
-.lord-image > img{
-    width: 200px;
-    height: 200px;
-    display: block;
-    margin: 0 auto;
-    border: 2px solid #49505c;
-    border-radius: 10px;
-}
-
-.lord-stats {
-    grid-area: 4 / 2 / 5 / 4;
-    display: grid;
-    grid-row-gap: 20px;
-    grid-template-rows: 50px 50px;
-    text-align: center;
-    color: #49505c;
-}
-
-.lord-stats > .lord-data {
-    display: grid;
-    grid-template-columns: 25% 1fr;
-    color: #49505c;
-    width: 250px;
-    margin: 0 auto;
-}
-
-.lord-stats > .lord-data > img {
-    width: 40px;
-    height: 40px;
-    display: block;
-    padding-top: 5px;
-    margin: 0 auto;
-}
-
-.lord-stats > .lord-data > span {
-    font-size: 20px;
-    display: block;
-    padding-top: 15px;
-}
-
-.lord-stats > div {
-    border: 1px solid #49505c;
-    border-radius: 5px;
-}
-
-.lord-troops {
-    width: 250px;
-    height: 90%;
-    margin: 0 auto;
-}
-
-.lord-stats > div > .lord-troop-container {
-    height: 40px;
-    display: grid;
-    margin: 20px auto;
-    grid-template-columns: 25% 1fr;
-}
-
-.lord-troop-container > img {
-    height: 40px;
-    width: 40px;
-    display: block;
-    margin: 0 auto;
-}
-
-.lord-troop-container > span {
-    font-size: 20px;
-    color: #49505c;
-    padding-top: 7.5px
-}
-
-.lord-troop-header {
-    height: 30px;
-}
-
-.lord-troop-header > span {
-    display: block;
-    padding-top: 7px;
-    font-size: 20px;
+@media only screen and (min-height: 950px) and (min-width: 1551px) {
+    .page-map {
+        width: 70%;
+    }
 }

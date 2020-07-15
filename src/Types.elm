@@ -1,8 +1,13 @@
 module Types exposing (..)
 
-import Entities exposing (BattleStats)
-import Troops exposing (..)
+import Entities
+import Troops
 import Vector
+import Building
+
+
+-- all msg types that are used for the different states
+----------------------------------------------------------
 
 
 type Msg
@@ -12,6 +17,7 @@ type Msg
     | BattleAction BattleMsg
     | SettlementAction SettlementMsg
     | MapTileAction MapTileMsg
+    | EventAction EventMsg
     | Click Vector.Point
 
 
@@ -19,6 +25,73 @@ type MapTileMsg
     = LordMsg LordTileMsg Entities.Lord
     | SettlementMsg SettlementTileMsg Entities.Settlement
     | MoveTo Vector.Point
+
+
+type LordTileMsg
+    = ViewLord
+    | EngageLord
+
+
+type SettlementTileMsg
+    = ViewSettlement
+    | EnterSettlement
+    | SiegeSettlement
+
+
+type SettlementMsg
+    = UIMsg SettlementUIMsg
+    | TroopMsg SettlementArmyMsg
+
+
+type SettlementUIMsg
+    = ShowSettlement Entities.Settlement
+    | ShowBuyTroops Entities.Settlement
+    | ShowStationTroops Entities.Settlement
+    | ShowBuildings Entities.Settlement
+
+
+type SettlementArmyMsg
+    = BuyTroops Troops.TroopType Entities.Settlement
+    | StationTroops Troops.TroopType Entities.Settlement
+    | TakeTroops Troops.TroopType Entities.Settlement
+    | UpgradeBuilding Building.Building Entities.Settlement
+
+
+type UiSettlementState
+    = StandardView
+    | RestrictedView
+    | RecruitView
+    | StationView
+    | BuildingView
+
+
+type EventMsg
+    = DeleteEvent Int
+    | SwitchEventView
+    | ClearEvents
+
+
+type BattleMsg
+    = StartSkirmish Entities.BattleStats
+    | SkipSkirmishes Entities.BattleStats
+    | FleeBattle Entities.BattleStats
+    | EndBattle Entities.BattleStats
+
+
+
+-- Resolve map actions types that are displayed on the left
+-- to the map
+----------------------------------------------------------
+
+
+showLordTileMsg : LordTileMsg -> String
+showLordTileMsg lordTileMsg =
+    case lordTileMsg of
+        ViewLord ->
+            "View"
+
+        EngageLord ->
+            "Engage"
 
 
 mapTileMsgToToolTip : MapTileMsg -> String
@@ -34,27 +107,6 @@ mapTileMsgToToolTip m =
             "Move here"
 
 
-type LordTileMsg
-    = ViewLord
-    | EngageLord
-
-
-showLordTileMsg : LordTileMsg -> String
-showLordTileMsg lordTileMsg =
-    case lordTileMsg of
-        ViewLord ->
-            "View"
-
-        EngageLord ->
-            "Engage"
-
-
-type SettlementTileMsg
-    = ViewSettlement
-    | EnterSettlement
-    | SiegeSettlement
-
-
 showSettlementTileMsg : SettlementTileMsg -> String
 showSettlementTileMsg msg =
     case msg of
@@ -66,35 +118,3 @@ showSettlementTileMsg msg =
 
         SiegeSettlement ->
             "Siege"
-
-
-type SettlementMsg
-    = UIMsg SettlementUIMsg
-    | TroopMsg SettlementArmyMsg
-
-
-type SettlementUIMsg
-    = ShowSettlement Entities.Settlement
-    | ShowBuyTroops Entities.Settlement
-    | ShowStationTroops Entities.Settlement
-
-
-type SettlementArmyMsg
-    = BuyTroops Troops.TroopType Entities.Settlement
-    | StationTroops Troops.TroopType Entities.Settlement
-    | TakeTroops Troops.TroopType Entities.Settlement
-
-
-type UiSettlementState
-    = StandardView
-    | RecruitView
-    | StationView
-    | BuildingView
-
-
-type BattleMsg
-    = StartBattle String
-    | StartSkirmish Entities.BattleStats
-    | SkipSkirmishes Entities.BattleStats
-    | FleeBattle Entities.BattleStats
-    | EndBattle Entities.BattleStats

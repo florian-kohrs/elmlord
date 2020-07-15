@@ -1,4 +1,4 @@
-module ListExt exposing (indexOf, insertToSortedList, justList)
+module ListExt exposing (getElementAt, indexOf, insertToSortedList, justList)
 
 import MaybeExt
 
@@ -11,6 +11,15 @@ indexOf p xs =
 justList : List (Maybe a) -> List a
 justList =
     List.foldr (\m r -> MaybeExt.foldMaybe (\a -> a :: r) r m) []
+
+
+getElementAt : Int -> List a -> Maybe a
+getElementAt i l =
+    if i <= 0 then
+        List.head l
+
+    else
+        Maybe.andThen (\tail -> getElementAt (i - 1) tail) (List.tail l)
 
 
 indexOf_ : Int -> (a -> Bool) -> List a -> Int

@@ -45,6 +45,6 @@ showPathPart i p =
 getSvgForPathPart : Int -> Vector.Point -> Svg.Svg Types.Msg
 getSvgForPathPart i p =
     BasicDrawing.getImage
-        ("letters/" ++ String.fromInt i ++ ".png")
+        ("./assets/images/letters/" ++ String.fromInt i ++ ".png")
         p
         1

@@ -1,6 +1,7 @@
 module Pathfinder exposing (..)
 
 import Dict exposing (Dict)
+import ListExt
 import MapData
 import MaybeExt
 import Vector
@@ -31,6 +32,64 @@ type alias PathTile =
     }
 
 
+type alias PathInfo =
+    { nav : NavigatableMap, target : Vector.Point }
+
+
+type alias NavigatableMap =
+    { timeToCrossField : Vector.Point -> Maybe Float
+    , getCircumjacentFields : Vector.Point -> Bool -> List Vector.Point
+    , getMinDistanceBetween : Vector.Point -> Vector.Point -> Float
+    }
+
+
+type alias PathTailLookup =
+    Dict Int ()
+
+
+type alias PathTails =
+    List PathPart
+
+
+getClosestFreeFieldAt : Vector.Point -> NavigatableMap -> Dict Int () -> Vector.Point
+getClosestFreeFieldAt p nav invalidDict =
+    Maybe.withDefault (Vector.Point 0 0) (getClosestFreeFieldAt_ p p [] nav invalidDict Dict.empty)
+
+
+getClosestFreeFieldAt_ :
+    Vector.Point
+    -> Vector.Point
+    -> List Vector.Point
+    -> NavigatableMap
+    -> Dict Int ()
+    -> Dict Int ()
+    -> Maybe Vector.Point
+getClosestFreeFieldAt_ start closest tails nav invalidFields usedFields =
+    if MaybeExt.hasValue (nav.timeToCrossField closest) && not (Dict.member (MapData.hashMapPoint closest) invalidFields) then
+        Just closest
+
+    else
+        let
+            circumjacent =
+                List.filter (\p -> not (Dict.member (MapData.hashMapPoint p) usedFields))
+                    (nav.getCircumjacentFields closest True)
+
+            tails2 =
+                List.foldl (\p ts2 -> ListExt.insertToSortedList p (nav.getMinDistanceBetween start) ts2) tails circumjacent
+        in
+        case tails2 of
+            [] ->
+                Nothing
+
+            x :: xs ->
+                getClosestFreeFieldAt_ start x xs nav invalidFields (addCircumjacentToDict usedFields circumjacent)
+
+
+addCircumjacentToDict : Dict Int () -> List Vector.Point -> Dict Int ()
+addCircumjacentToDict =
+    List.foldl (\p dict2 -> Dict.insert (MapData.hashMapPoint p) () dict2)
+
+
 pathToPoints : Path -> List Vector.Point
 pathToPoints path =
     List.map .indices path.path
@@ -46,14 +105,6 @@ pathTimeLoss (PathPart p) =
     MaybeExt.foldMaybe (\(PathPart parent) -> p.previousDistance - parent.previousDistance) 0 p.parent
 
 
-type alias PathInfo =
-    { nav : NavigatableMap, target : Vector.Point }
-
-
-type alias NavigatableMap =
-    { timeToCrossField : Vector.Point -> Float, getCircumjacentFields : Vector.Point -> List Vector.Point, getMinDistanceBetween : Vector.Point -> Vector.Point -> Float }
-
-
 createPathPart : Vector.Point -> Maybe PathPart -> PathInfo -> PathPart
 createPathPart p parent info =
     PathPart
@@ -61,7 +112,9 @@ createPathPart p parent info =
         , minDistanceToTarget = info.nav.getMinDistanceBetween p info.target
         , previousDistance =
             MaybeExt.foldMaybe
-                (\(PathPart part) -> part.previousDistance + info.nav.timeToCrossField p)
+                (\(PathPart part) ->
+                    Maybe.withDefault 9999 (info.nav.timeToCrossField p) + part.previousDistance
+                )
                 0
                 parent
         , position = p
@@ -88,7 +141,10 @@ totalDistance (PathPart p) =
 
 getPath : Vector.Point -> PathInfo -> Maybe Path
 getPath from info =
-    buildPath (createPathPart from Nothing info) [] (Dict.singleton (MapData.hashMapPoint from) ()) info
+    buildPath (createPathPart from Nothing info)
+        []
+        (Dict.singleton (MapData.hashMapPoint from) ())
+        info
 
 
 cutFirstStepFromPath : Path -> Path
@@ -109,10 +165,16 @@ buildPath (PathPart closest) tails dict info =
         let
             circumjacent =
                 List.filter (\p -> not (Dict.member (MapData.hashMapPoint p) dict))
-                    (info.nav.getCircumjacentFields closest.position)
+                    (info.nav.getCircumjacentFields closest.position False)
 
             tails2 =
-                List.foldl (\p ts2 -> addSortedPathTail ts2 (createPathPart p (Just (PathPart closest)) info)) tails circumjacent
+                List.foldl
+                    (\p ts2 ->
+                        addSortedPathTail ts2
+                            (createPathPart p (Just (PathPart closest)) info)
+                    )
+                    tails
+                    circumjacent
         in
         case closestPath tails2 dict of
             ( _, Nothing ) ->
@@ -124,10 +186,6 @@ buildPath (PathPart closest) tails dict info =
                     tails2
                     (Dict.insert (MapData.hashMapPoint newClosest.position) () dict)
                     info
-
-
-type alias PathTails =
-    List PathPart
 
 
 closestPath : PathTails -> PathTailLookup -> ( PathTails, Maybe PathPart )
@@ -142,10 +200,6 @@ closestPath tails dict =
 
             else
                 ( ps, Just (PathPart p) )
-
-
-type alias PathTailLookup =
-    Dict Int ()
 
 
 addSortedPathTail : PathTails -> PathPart -> PathTails
