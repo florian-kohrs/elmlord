@@ -11,7 +11,7 @@ import ListExt
 import MapData exposing (rad)
 import MapDrawer
 import MaybeExt
-import Pathfinder exposing (NavigatableMap)
+import Pathfinder
 import String exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)

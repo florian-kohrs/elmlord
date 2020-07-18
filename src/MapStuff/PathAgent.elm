@@ -56,6 +56,16 @@ pathPartsToTime a ts =
         )
 
 
+roundsToFinishPath : Agent -> List Pathfinder.PathTile -> Int
+roundsToFinishPath a ps =
+    case List.head (List.reverse (pathPartsToTime a ps)) of
+        Nothing ->
+            0
+
+        Just t ->
+            Tuple.second t
+
+
 getAgent : Float -> Agent
 getAgent speed =
     { target = Nothing, speed = speed, usedMovement = 0.0 }

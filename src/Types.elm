@@ -1,9 +1,10 @@
 module Types exposing (..)
 
+import Building
 import Entities
 import Troops
 import Vector
-import Building
+
 
 
 -- all msg types that are used for the different states

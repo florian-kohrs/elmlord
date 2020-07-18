@@ -22,6 +22,11 @@ type alias MapClickAction =
     Dict.Dict Int (List InteractableSvg)
 
 
+hasActionOnPoint : Vector.Point -> Types.MapTileMsg -> MapClickAction -> Bool
+hasActionOnPoint p msg dict =
+    List.member msg (actionsOnPoint p dict)
+
+
 isZAllowedOn : Int -> Int -> Bool
 isZAllowedOn z main =
     ((main /= MapData.lordZIndex && main /= MapData.settlementZIndex) || z /= MapData.imageTileZIndex)

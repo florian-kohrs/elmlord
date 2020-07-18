@@ -19,6 +19,7 @@ import MapDrawer
 import MapGenerator
 import OperatorExt
 import PathAgent
+import PathAgentExt
 import PathDrawer
 import Pathfinder
 import Random
@@ -87,16 +88,6 @@ getPlayer model =
 ----------------------------------------------------------
 
 
-hasActionOnPoint : Vector.Point -> Types.MapTileMsg -> MapDrawer.MapClickAction -> Bool
-hasActionOnPoint p msg dict =
-    List.member msg (MapDrawer.actionsOnPoint p dict)
-
-
-canMoveToPoint : MapDrawer.MapClickAction -> Vector.Point -> Bool
-canMoveToPoint dict p =
-    hasActionOnPoint p (Types.MoveTo p) dict
-
-
 buildAllMapSvgs : Model -> MapDrawer.MapClickAction
 buildAllMapSvgs m =
     filterMapSvgs
@@ -155,18 +146,7 @@ getSelectedPath m =
             Nothing
 
         Just point ->
-            getPathTo player.entity.position point m.map
-
-
-getPathTo : Vector.Point -> Vector.Point -> Map.Map -> Maybe Pathfinder.Path
-getPathTo from to map =
-    if canMoveToPoint (drawnMap map) to then
-        Pathfinder.getPath
-            from
-            (Pathfinder.PathInfo (MapGenerator.getNav map) to)
-
-    else
-        Nothing
+            PathAgentExt.getPathTo player.entity.position point m.map
 
 
 allSettlements : Model -> List Entities.Settlement
@@ -541,26 +521,7 @@ updateMaptileAction model ma =
                             }
 
         Types.MoveTo p ->
-            let
-                player =
-                    getPlayer model
-            in
-            case getPathTo player.entity.position p model.map of
-                Nothing ->
-                    model
-
-                Just path ->
-                    let
-                        ( usedMove, point ) =
-                            PathAgent.moveAlongPath path player.entity.position player.agent
-
-                        newPlayer =
-                            { player
-                                | agent = PathAgent.setUsedMovement usedMove player.agent
-                                , entity = Entities.setPosition player.entity point
-                            }
-                    in
-                    { model | lords = Entities.Cons newPlayer (Entities.npcs model.lords) }
+            { model | lords = Entities.Cons (PathAgent.moveLordOnPath model.map (getPlayer model) p) (Entities.npcs model.lords) }
 
 
 updateLordAction : Types.LordTileMsg -> Entities.Lord -> Model -> Model
