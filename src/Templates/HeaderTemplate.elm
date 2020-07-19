@@ -3,12 +3,13 @@ module Templates.HeaderTemplate exposing (..)
 import DateExt
 import Dict
 import Entities
+import Entities.Model
 import Html exposing (Html, audio, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Msg
 import Templates.HelperTemplate as Helper
 import Troops
-import Types
 
 
 {-| Returns the layout for the header
@@ -17,7 +18,7 @@ import Types
     @param {Date}: Takes the current (ingame)-date
 
 -}
-generateHeaderTemplate : Entities.Lord -> DateExt.Date -> Html Types.Msg
+generateHeaderTemplate : Entities.Model.Lord -> DateExt.Date -> Html Msg.Msg
 generateHeaderTemplate lord date =
     div [ Html.Attributes.class "page-header" ]
         [ div [ Html.Attributes.class "page-turn-header" ] (headerTurnTemplate date)
@@ -32,10 +33,10 @@ generateHeaderTemplate lord date =
     @param {Date}: Takes the current (ingame)-date
 
 -}
-headerTurnTemplate : DateExt.Date -> List (Html Types.Msg)
+headerTurnTemplate : DateExt.Date -> List (Html Msg.Msg)
 headerTurnTemplate date =
     [ div [ Html.Attributes.class "page-turn-handler-header" ]
-        [ div [ Html.Attributes.class "page-turn-button", onClick Types.EndRound ]
+        [ div [ Html.Attributes.class "page-turn-button", onClick Msg.EndRound ]
             [ span [] [ Html.text "End turn" ] ]
         ]
     , div [ Html.Attributes.class "page-turn-date-header" ]
@@ -49,9 +50,9 @@ headerTurnTemplate date =
     @param {Lord}: Takes the player lord
 
 -}
-headerGoldTemplate : Entities.Lord -> List (Html Types.Msg)
+headerGoldTemplate : Entities.Model.Lord -> List (Html Msg.Msg)
 headerGoldTemplate lord =
-    [ img [ onClick (Types.EndGame True), src "./assets/images/general/ducats_icon.png", Html.Attributes.class "page-header-images" ] []
+    [ img [ onClick (Msg.EndGame True), src "./assets/images/general/ducats_icon.png", Html.Attributes.class "page-header-images" ] []
     , div [ Html.Attributes.class "tooltip" ]
         [ span [ Html.Attributes.class "page-header-span" ]
             [ Html.text (Helper.roundDigits lord.gold ++ " Ducats")
@@ -73,7 +74,7 @@ headerGoldTemplate lord =
     @param {Lord}: Takes the player lord
 
 -}
-headerTroopTemplate : Entities.Lord -> List (Html Types.Msg)
+headerTroopTemplate : Entities.Model.Lord -> List (Html Msg.Msg)
 headerTroopTemplate lord =
     let
         lordSettlementTroops =
@@ -113,7 +114,7 @@ headerTroopTemplate lord =
     @param {Troop}: Takes the stationed player unit/troop
 
 -}
-generateTroopTooltip : Troops.TroopType -> Int -> Int -> Html Types.Msg
+generateTroopTooltip : Troops.TroopType -> Int -> Int -> Html Msg.Msg
 generateTroopTooltip aT aAmount sAmount =
     div [ Html.Attributes.class "troop-container" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName aT) ++ ".png") ] []
@@ -124,7 +125,7 @@ generateTroopTooltip aT aAmount sAmount =
 
 {-| Returns possible settings (save game and set audio) insided the header
 -}
-headerSettingsTemplate : List (Html Types.Msg)
+headerSettingsTemplate : List (Html Msg.Msg)
 headerSettingsTemplate =
     [ div [ Html.Attributes.class "page-setting-container tooltip" ]
         [ img [ src "./assets/images/general/audio_on_icon.png", Html.Attributes.class "page-image-settings" ] []
@@ -135,7 +136,7 @@ headerSettingsTemplate =
             ]
         ]
     , div [ Html.Attributes.class "page-settings-grid" ]
-        [ div [ onClick (Types.EventAction Types.SwitchEventView), Html.Attributes.class "page-setting-container tooltip" ]
+        [ div [ onClick (Msg.EventAction Msg.SwitchEventView), Html.Attributes.class "page-setting-container tooltip" ]
             [ img [ src "./assets/images/general/event.png", Html.Attributes.class "page-image-settings" ] []
             , div [ Html.Attributes.class "tooltip" ]
                 [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Hide / Show the event logs" ]
@@ -150,7 +151,7 @@ headerSettingsTemplate =
     @param {Lord}: Takes the lord, whose revenue should be calculated
 
 -}
-lordToRevenues : Entities.Lord -> List ( String, Float )
+lordToRevenues : Entities.Model.Lord -> List ( String, Float )
 lordToRevenues l =
     [ ( "Settlements:", Entities.sumSettlementsIncome l.land ), ( "Armies:", Entities.sumTroopWages (Entities.sumLordTroops l) * -1 ) ]
 
@@ -160,7 +161,7 @@ lordToRevenues l =
     @param {(String, Float)}: Revenue of a lord
 
 -}
-revenuesToTemplate : ( String, Float ) -> Html Types.Msg
+revenuesToTemplate : ( String, Float ) -> Html Msg.Msg
 revenuesToTemplate rev =
     div [ Html.Attributes.class "revenue-container" ] [ revenueToSpan rev ]
 
@@ -170,7 +171,7 @@ revenuesToTemplate rev =
     @param {(String, Float)}: Revenue of a lord
 
 -}
-revenueToSpan : ( String, Float ) -> Html Types.Msg
+revenueToSpan : ( String, Float ) -> Html Msg.Msg
 revenueToSpan ( name, value ) =
     if value > 0 then
         span [ Html.Attributes.class "positive-income" ] [ Html.text (name ++ "  +" ++ Helper.roundDigits value ++ " Ducats") ]

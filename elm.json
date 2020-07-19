@@ -2,10 +2,16 @@
     "type": "application",
     "source-directories": [
         "src",
-        "src/MapStuff",
-        "src/Drawers",
+        "src/Map",
+        "src/BasicDrawing",
 	      "src/AI",
-        "src/Exts"
+        "src/Exts",
+        "src/Entities",
+        "src/PathAgent",
+        "src/MapAction",
+        "src/Battle",
+        "src/Pathfinder"
+
     ],
     "elm-version": "0.19.1",
     "dependencies": {

@@ -9,8 +9,6 @@ import MaybeExt
 import PathAgent
 import PathAgentExt
 import Pathfinder
-import Troops
-import Types
 import Vector
 
 

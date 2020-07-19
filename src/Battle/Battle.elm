@@ -1,8 +1,11 @@
 module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, skipBattle)
 
+import Battle.Model exposing (..)
 import Dict
 import Entities
+import Entities.Model
 import Map
+import Map.Model
 import OperatorExt
 import Troops
 
@@ -19,7 +22,7 @@ Notice that only one round will be calculated!
     @param {Terrain}: Takes terrain on which the battle takes place on
 
 -}
-evaluateBattleResult : Entities.BattleStats -> Map.Terrain -> Entities.BattleStats
+evaluateBattleResult : BattleStats -> Map.Model.Terrain -> BattleStats
 evaluateBattleResult bS t =
     if bS.siege then
         case bS.settlement of
@@ -40,7 +43,7 @@ evaluateBattleResult bS t =
     @param {Terrain}: Takes terrain on which the battle takes place on
 
 -}
-evaluateSiegeBattle : Entities.BattleStats -> Entities.Settlement -> Map.Terrain -> Entities.BattleStats
+evaluateSiegeBattle : BattleStats -> Entities.Model.Settlement -> Map.Model.Terrain -> BattleStats
 evaluateSiegeBattle bS settle ter =
     let
         ( transferedDefender, transferedSettle ) =
@@ -70,7 +73,7 @@ evaluateSiegeBattle bS settle ter =
     @param {Terrain}: Takes terrain on which the battle takes place on
 
 -}
-evaluateLordBattle : Entities.BattleStats -> Map.Terrain -> Entities.BattleStats
+evaluateLordBattle : BattleStats -> Map.Model.Terrain -> BattleStats
 evaluateLordBattle bS ter =
     let
         tempAttacker =
@@ -103,7 +106,7 @@ evaluateLordBattle bS ter =
     @param {(List Troop, List Troop)}: Takes the calculated casualties for both sides
 
 -}
-constructBattleResult : Entities.BattleStats -> Entities.Lord -> Entities.Lord -> Maybe Entities.Settlement -> Troops.Army -> Troops.Army -> Entities.BattleStats
+constructBattleResult : BattleStats -> Entities.Model.Lord -> Entities.Model.Lord -> Maybe Entities.Model.Settlement -> Troops.Army -> Troops.Army -> BattleStats
 constructBattleResult bS attacker defender settle aCasu dCasu =
     { bS
         | round = bS.round + 1
@@ -128,7 +131,7 @@ capital position
     @param {Lord}: Takes the attacker-/defender lord
 
 -}
-lordBattleAftermath : Entities.Lord -> Entities.Lord
+lordBattleAftermath : Entities.Model.Lord -> Entities.Model.Lord
 lordBattleAftermath lord =
     if Troops.sumTroops lord.entity.army == 0 then
         case Entities.getLordCapital lord.land of
@@ -142,7 +145,7 @@ lordBattleAftermath lord =
         lord
 
 
-siegeBattleAftermath : Entities.BattleStats -> Entities.Settlement -> ( Entities.Lord, Entities.Lord, Bool )
+siegeBattleAftermath : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
 siegeBattleAftermath bS s =
     let
         attacker =
@@ -152,8 +155,8 @@ siegeBattleAftermath bS s =
             bS.defender
     in
     if Troops.sumTroops s.entity.army <= 0 then
-        if s.settlementType == Entities.Castle then
-            handleSettlementTransfer attacker defender (\y -> y.settlementType /= Entities.Castle) []
+        if s.settlementType == Entities.Model.Castle then
+            handleSettlementTransfer attacker defender (\y -> y.settlementType /= Entities.Model.Castle) []
 
         else
             handleSettlementTransfer attacker defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
@@ -162,12 +165,12 @@ siegeBattleAftermath bS s =
         ( attacker, defender, False )
 
 
-fleeBattle : Entities.BattleStats -> Entities.Lord
+fleeBattle : BattleStats -> Entities.Model.Lord
 fleeBattle bS =
     Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
 
 
-skipBattle : Entities.BattleStats -> Map.Terrain -> Entities.BattleStats
+skipBattle : BattleStats -> Map.Model.Terrain -> BattleStats
 skipBattle bS ter =
     let
         newBattleStats =
@@ -185,7 +188,7 @@ skipBattle bS ter =
 -------------------------------------------------------------------------------------
 
 
-siegeBattleSetDefender : Entities.BattleStats -> Entities.Settlement -> ( Entities.Lord, Entities.Settlement )
+siegeBattleSetDefender : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Settlement )
 siegeBattleSetDefender bS settle =
     if Entities.isLordOnSettlement bS.defender settle then
         transferTroops bS.defender settle
@@ -194,7 +197,7 @@ siegeBattleSetDefender bS settle =
         ( bS.defender, settle )
 
 
-checkDefenderArmy : Entities.Lord -> Maybe Entities.Settlement -> Bool
+checkDefenderArmy : Entities.Model.Lord -> Maybe Entities.Model.Settlement -> Bool
 checkDefenderArmy defender settle =
     case settle of
         Nothing ->
@@ -204,7 +207,12 @@ checkDefenderArmy defender settle =
             Troops.sumTroops s.entity.army == 0
 
 
-handleSettlementTransfer : Entities.Lord -> Entities.Lord -> (Entities.Settlement -> Bool) -> List Entities.Settlement -> ( Entities.Lord, Entities.Lord, Bool )
+handleSettlementTransfer :
+    Entities.Model.Lord
+    -> Entities.Model.Lord
+    -> (Entities.Model.Settlement -> Bool)
+    -> List Entities.Model.Settlement
+    -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
 handleSettlementTransfer attacker defender aFunc ndl =
     ( { attacker
         | land =
@@ -224,7 +232,7 @@ handleSettlementTransfer attacker defender aFunc ndl =
     @param {( Entities.Lord, Entities.Settlement )}: Returns the entities with the transfered armies
 
 -}
-transferTroops : Entities.Lord -> Entities.Settlement -> ( Entities.Lord, Entities.Settlement )
+transferTroops : Entities.Model.Lord -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Settlement )
 transferTroops l s =
     let
         newArmy =
@@ -244,7 +252,7 @@ transferTroops l s =
 -------------------------------------------------------------------------------------
 
 
-evaluateBattle : Entities.WorldEntity -> Troops.Army -> Map.Terrain -> Float -> Entities.WorldEntity
+evaluateBattle : Entities.Model.WorldEntity -> Troops.Army -> Map.Model.Terrain -> Float -> Entities.Model.WorldEntity
 evaluateBattle w army ter siegeBonus =
     evaluateLordCasualities w (sumTroopsDamage army ter siegeBonus)
 
@@ -260,7 +268,7 @@ calculateEntityCasualties armyBefore armyAfter =
         Dict.empty
 
 
-evaluateLordCasualities : Entities.WorldEntity -> Float -> Entities.WorldEntity
+evaluateLordCasualities : Entities.Model.WorldEntity -> Float -> Entities.Model.WorldEntity
 evaluateLordCasualities w d =
     { w | army = calcTroopCasualties w.army d (Troops.sumTroops w.army) }
 
@@ -275,7 +283,7 @@ calcCasualties t amount d =
     max 0 (amount - round (d / Troops.troopDefense t))
 
 
-sumTroopsDamage : Troops.Army -> Map.Terrain -> Float -> Float
+sumTroopsDamage : Troops.Army -> Map.Model.Terrain -> Float -> Float
 sumTroopsDamage army ter siegeBonus =
     let
         bonusTroopTypes =

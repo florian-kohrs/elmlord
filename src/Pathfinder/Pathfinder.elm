@@ -2,53 +2,83 @@ module Pathfinder exposing (..)
 
 import Dict exposing (Dict)
 import ListExt
+import Map
+import Map.Model
 import MapData
 import MaybeExt
+import Pathfinder.Model exposing (..)
 import Vector
+
+
+getNav : Map.Model.Map -> NavigatableMap
+getNav map =
+    { timeToCrossField =
+        \p ->
+            case Dict.get (MapData.hashMapPoint p) map of
+                Nothing ->
+                    Nothing
+
+                Just t ->
+                    case Map.terrainToMove t.terrain of
+                        Map.Model.CantWalkOn ->
+                            Nothing
+
+                        Map.Model.CanWalkOn speedFactor ->
+                            Just (1 / speedFactor)
+    , getCircumjacentFields =
+        \p useEveryTile ->
+            let
+                sign =
+                    if modBy 2 p.x == 0 then
+                        1
+
+                    else
+                        -1
+
+                canUseTile point =
+                    case Dict.get (MapData.hashMapPoint point) map of
+                        Nothing ->
+                            False
+
+                        Just t ->
+                            useEveryTile || Map.canMoveOnTile t
+            in
+            List.filter
+                (\point ->
+                    abs point.x
+                        <= MapData.mapSize
+                        && abs point.y
+                        <= MapData.mapSize
+                        && canUseTile point
+                )
+                [ Vector.Point p.x (p.y + 1)
+                , Vector.Point p.x (p.y - 1)
+                , Vector.Point (p.x + 1) (p.y + sign)
+                , Vector.Point (p.x - 1) (p.y + sign)
+
+                --, { p | x = p.x - 1, y = p.y + 1 }
+                --, { p | x = p.x - 1, y = p.y - 1 }
+                , Vector.Point (p.x + 1) p.y
+                , Vector.Point (p.x - 1) p.y
+                ]
+    , getMinDistanceBetween =
+        \p1 p2 ->
+            let
+                xDiff =
+                    toFloat (abs (p1.x - p2.x))
+
+                yDiff =
+                    Basics.max 0
+                        ((toFloat (abs (p1.y - p2.y)) - xDiff / 2)
+                            - toFloat (modBy 2 (round xDiff))
+                        )
+            in
+            xDiff + yDiff
+    }
 
 
 
 --negative x going up is bugged , psitive x giong down is bugged -> cant move on x axis
-
-
-type PathPart
-    = PathPart
-        { parent : Maybe PathPart
-        , minDistanceToTarget : Float
-        , previousDistance : Float
-        , position : Vector.Point
-        }
-
-
-type alias Path =
-    { target : Vector.Point
-    , path : List PathTile
-    }
-
-
-type alias PathTile =
-    { indices : Vector.Point
-    , timeLoss : Float
-    }
-
-
-type alias PathInfo =
-    { nav : NavigatableMap, target : Vector.Point }
-
-
-type alias NavigatableMap =
-    { timeToCrossField : Vector.Point -> Maybe Float
-    , getCircumjacentFields : Vector.Point -> Bool -> List Vector.Point
-    , getMinDistanceBetween : Vector.Point -> Vector.Point -> Float
-    }
-
-
-type alias PathTailLookup =
-    Dict Int ()
-
-
-type alias PathTails =
-    List PathPart
 
 
 getClosestFreeFieldAt : Vector.Point -> NavigatableMap -> Dict Int () -> Vector.Point
