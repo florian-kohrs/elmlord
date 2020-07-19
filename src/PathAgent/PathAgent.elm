@@ -1,16 +1,42 @@
-module PathAgent exposing (getAgent, moveAlongPath, pathPartsToTime, remainingMovement, resetUsedMovement, setUsedMovement, simulateDistance)
+module PathAgent exposing (getAgent, moveAlongPath, pathPartsToTime, remainingMovement, resetLordUsedMovement, resetUsedMovement, setUsedMovement, simulateDistance)
 
 import Dict exposing (Dict)
+import Entities
+import Entities.Model
+import Map.Model
 import MapData
 import MaybeExt
 import PathAgent.Model exposing (..)
+import Pathfinder
 import Pathfinder.Model
 import Vector
+
+
+moveLordOnPath : Map.Model.Map -> Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord
+moveLordOnPath map l target =
+    case Pathfinder.getPathTo l.entity.position target map of
+        Nothing ->
+            l
+
+        Just path ->
+            let
+                ( usedMove, point ) =
+                    moveAlongPath path l.entity.position l.agent
+            in
+            { l
+                | agent = setUsedMovement usedMove l.agent
+                , entity = Entities.setPosition l.entity point
+            }
 
 
 remainingMovement : Agent -> Float
 remainingMovement a =
     a.speed - a.usedMovement
+
+
+resetLordUsedMovement : Entities.Model.Lord -> Entities.Model.Lord
+resetLordUsedMovement l =
+    { l | agent = resetUsedMovement l.agent }
 
 
 resetUsedMovement : Agent -> Agent

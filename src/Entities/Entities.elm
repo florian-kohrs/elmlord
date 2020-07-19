@@ -6,7 +6,6 @@ import Entities.Model exposing (..)
 import Faction
 import List
 import OperatorExt
-import PathAgent
 import Troops
 import Vector
 
@@ -18,14 +17,6 @@ import Vector
 
 type LordList
     = Cons Lord (List Lord)
-
-
-lordSettlementCount : Lord -> Int
-lordSettlementCount l =
-    List.foldl
-        (always ((+) 1))
-        0
-        l.land
 
 
 lordSettlementCount : Lord -> Int
@@ -272,11 +263,6 @@ isLordInOwnSettlement lord =
 isLordOnSettlement : Lord -> Settlement -> Bool
 isLordOnSettlement lord s =
     lord.entity.position == s.entity.position && lord.entity.faction == s.entity.faction
-
-
-resetUsedMovement : Lord -> Lord
-resetUsedMovement lord =
-    { lord | agent = PathAgent.resetUsedMovement lord.agent }
 
 
 updatePlayer : LordList -> Lord -> LordList

@@ -11,6 +11,11 @@ import Svg
 import Vector
 
 
+hasActionOnPoint : Vector.Point -> MapTileMsg -> MapClickAction -> Bool
+hasActionOnPoint p msg dict =
+    List.member msg (actionsOnPoint p dict)
+
+
 isZAllowedOn : Int -> Int -> Bool
 isZAllowedOn z main =
     ((main /= MapData.lordZIndex && main /= MapData.settlementZIndex) || z /= MapData.imageTileZIndex)

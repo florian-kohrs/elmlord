@@ -94,14 +94,9 @@ getPlayer model =
 ----------------------------------------------------------
 
 
-hasActionOnPoint : Vector.Point -> MapAction.SubModel.MapTileMsg -> MapAction.Model.MapClickAction -> Bool
-hasActionOnPoint p msg dict =
-    List.member msg (MapAction.actionsOnPoint p dict)
-
-
 canMoveToPoint : MapAction.Model.MapClickAction -> Vector.Point -> Bool
 canMoveToPoint dict p =
-    hasActionOnPoint p (MapAction.SubModel.MoveTo p) dict
+    MapAction.hasActionOnPoint p (MapAction.SubModel.MoveTo p) dict
 
 
 buildAllMapSvgs : Model -> MapAction.Model.MapClickAction
@@ -408,7 +403,7 @@ view model =
                             [ Svg.Attributes.viewBox "0 0 850 1000"
                             , Svg.Attributes.fill "none"
                             ]
-                            (MapDrawer.allSvgs allClickActions)
+                            (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
                    , span [] [ Html.text (Debug.toString (Entities.getPlayer model.lords).land) ]
@@ -498,7 +493,7 @@ updateAI lord =
 
 endRoundForLord : Entities.Model.Lord -> Entities.Model.Lord
 endRoundForLord l =
-    Entities.applyLordGoldIncome l |> Entities.resetUsedMovement |> Entities.applyLordNewRecruits
+    Entities.applyLordGoldIncome l |> PathAgent.resetLordUsedMovement |> Entities.applyLordNewRecruits
 
 
 

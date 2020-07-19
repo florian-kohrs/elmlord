@@ -4,16 +4,17 @@ import Balancing
 import Building
 import Dict
 import Entities
+import Entities.Model
 import ListExt
 import MaybeExt
 import PathAgent
-import PathAgentExt
 import Pathfinder
+import Troops
 import Vector
 
 
 type alias AI =
-    { lord : Entities.Lord, strategy : ActionMultipliers }
+    { lord : Entities.Model.Lord, strategy : ActionMultipliers }
 
 
 type alias ActionMultipliers =
@@ -35,22 +36,22 @@ type AiRoundActions
 
 
 type BasicAction
-    = AttackLord Entities.Lord
-    | HireTroops (Dict.Dict Troops.TroopType Int) Entities.Settlement
-    | SwapTroops (Dict.Dict Troops.TroopType Int) Entities.Settlement
-    | SiegeSettlement Entities.Settlement
-    | ImproveBuilding Entities.Settlement Building.Building
+    = AttackLord Entities.Model.Lord
+    | HireTroops (Dict.Dict Troops.TroopType Int) Entities.Model.Settlement
+    | SwapTroops (Dict.Dict Troops.TroopType Int) Entities.Model.Settlement
+    | SiegeSettlement Entities.Model.Settlement
+    | ImproveBuilding Entities.Model.Settlement Building.Building
 
 
 type alias EnemyStatus =
-    { strengthDiff : Float, turnsTillReached : Float, settlement : Entities.Settlement }
+    { strengthDiff : Float, turnsTillReached : Float, settlement : Entities.Model.Settlement }
 
 
 type alias SettlmentDefenseRating =
-    { settlement : Entities.Settlement, armyStrengthVariance : Float }
+    { settlement : Entities.Model.Settlement, armyStrengthVariance : Float }
 
 
-updateAi : AI -> AiRoundActions -> (Entities.Lord -> Vector.Point -> Entities.Lord) -> AI
+updateAi : AI -> AiRoundActions -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> AI
 updateAi ai action moveTowards =
     case action of
         EndRound ->
@@ -63,7 +64,7 @@ updateAi ai action moveTowards =
             ai
 
 
-getAiAction : AI -> (Entities.Lord -> Vector.Point -> Int) -> List Entities.Lord -> AiRoundActions
+getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> List Entities.Model.Lord -> AiRoundActions
 getAiAction ai distanceTo enemies =
     case
         List.head
@@ -76,7 +77,11 @@ getAiAction ai distanceTo enemies =
             action.action
 
 
-getAiActions : AI -> (Entities.Lord -> Vector.Point -> Int) -> List Entities.Lord -> List AiRoundActionPreference
+getAiActions :
+    AI
+    -> (Entities.Model.Lord -> Vector.Point -> Int)
+    -> List Entities.Model.Lord
+    -> List AiRoundActionPreference
 getAiActions ai getTurnsToPoint enemies =
     let
         ownSettlementDefenseRatings =
@@ -106,12 +111,14 @@ evaluateSettlementDefense ai settlementDefenseRating =
         Nothing
 
     else
-        AiRoundActionPreference
-            (DoSomething (SwapTroops Dict.empty settlementDefenseRating.settlement))
-            (settlementDefenseRating.armyStrengthVariance / ai.strategy.defendMultiplier)
+        Just
+            (AiRoundActionPreference
+                (DoSomething (SwapTroops Dict.empty settlementDefenseRating.settlement))
+                (settlementDefenseRating.armyStrengthVariance / ai.strategy.defendMultiplier)
+            )
 
 
-estimatedNormalPlayerTroopStrength : Entities.Lord -> Float
+estimatedNormalPlayerTroopStrength : Entities.Model.Lord -> Float
 estimatedNormalPlayerTroopStrength l =
     let
         x =
@@ -120,12 +127,12 @@ estimatedNormalPlayerTroopStrength l =
     toFloat <| 300 + 50 * x
 
 
-estimatedNormalVillageTroopStrength : Entities.Lord -> Float
+estimatedNormalVillageTroopStrength : Entities.Model.Lord -> Float
 estimatedNormalVillageTroopStrength l =
     toFloat 250
 
 
-estimatedNormalCastleTroopStrength : Entities.Lord -> Float
+estimatedNormalCastleTroopStrength : Entities.Model.Lord -> Float
 estimatedNormalCastleTroopStrength l =
     let
         x =
@@ -134,17 +141,17 @@ estimatedNormalCastleTroopStrength l =
     400 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))
 
 
-rateSettlementDefense : Entities.Lord -> Int -> Entities.SettlementType -> Float
+rateSettlementDefense : Entities.Model.Lord -> Int -> Entities.Model.SettlementType -> Float
 rateSettlementDefense lord strength entityType =
     case entityType of
-        Entities.Village ->
+        Entities.Model.Village ->
             toFloat strength / estimatedNormalVillageTroopStrength lord
 
-        Entities.Castle ->
+        Entities.Model.Castle ->
             toFloat strength / estimatedNormalCastleTroopStrength lord
 
 
-settlementArmiesStrength : Entities.Lord -> List SettlmentDefenseRating
+settlementArmiesStrength : Entities.Model.Lord -> List SettlmentDefenseRating
 settlementArmiesStrength l =
     List.foldl
         (\s r ->
@@ -156,7 +163,7 @@ settlementArmiesStrength l =
         l.land
 
 
-lordArmyComparison : Entities.Lord -> Entities.Lord -> Float
+lordArmyComparison : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordArmyComparison l1 l2 =
     let
         diff =
@@ -165,12 +172,12 @@ lordArmyComparison l1 l2 =
     1 + Balancing.lordStrengthDiffFactor * diff
 
 
-lordStrength : Entities.Lord -> Float
+lordStrength : Entities.Model.Lord -> Float
 lordStrength l =
     toFloat (Troops.sumTroopStats l.entity.army)
         / estimatedNormalPlayerTroopStrength l
 
 
-lordStrengthDiff : Entities.Lord -> Entities.Lord -> Float
+lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordStrengthDiff attacker defender =
-    Troops.sumTroopStats attacker.entity.army / Troops.sumTroopStats defender.entity.army
+    toFloat (Troops.sumTroopStats attacker.entity.army) / toFloat (Troops.sumTroopStats defender.entity.army)
