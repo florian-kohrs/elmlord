@@ -1,14 +1,11 @@
-module PathAgent exposing (Agent, getAgent, moveAlongPath, pathPartsToTime, remainingMovement, resetUsedMovement, setUsedMovement, simulateDistance)
+module PathAgent exposing (getAgent, moveAlongPath, pathPartsToTime, remainingMovement, resetUsedMovement, setUsedMovement, simulateDistance)
 
 import Dict exposing (Dict)
 import MapData
 import MaybeExt
-import Pathfinder
+import PathAgent.Model exposing (..)
+import Pathfinder.Model
 import Vector
-
-
-type alias Agent =
-    { target : Maybe Vector.Point, speed : Float, usedMovement : Float }
 
 
 remainingMovement : Agent -> Float
@@ -40,7 +37,7 @@ moveSimulatorFromAgent a =
     newMoveSimulator a.speed a.usedMovement
 
 
-pathPartsToTime : Agent -> List Pathfinder.PathTile -> List ( Pathfinder.PathTile, Int )
+pathPartsToTime : Agent -> List Pathfinder.Model.PathTile -> List ( Pathfinder.Model.PathTile, Int )
 pathPartsToTime a ts =
     Tuple.first
         (List.foldl
@@ -56,6 +53,19 @@ pathPartsToTime a ts =
         )
 
 
+<<<<<<< Updated upstream:src/MapStuff/PathAgent.elm
+=======
+roundsToFinishPath : Agent -> List Pathfinder.Model.PathTile -> Int
+roundsToFinishPath a ps =
+    case List.head (List.reverse (pathPartsToTime a ps)) of
+        Nothing ->
+            0
+
+        Just t ->
+            Tuple.second t
+
+
+>>>>>>> Stashed changes:src/PathAgent/PathAgent.elm
 getAgent : Float -> Agent
 getAgent speed =
     { target = Nothing, speed = speed, usedMovement = 0.0 }
@@ -70,12 +80,12 @@ simulateDistance f sim =
         { sim | turn = sim.turn + 1, turnUsedMove = f }
 
 
-moveAlongPath : Pathfinder.Path -> Vector.Point -> Agent -> ( Float, Vector.Point )
+moveAlongPath : Pathfinder.Model.Path -> Vector.Point -> Agent -> ( Float, Vector.Point )
 moveAlongPath p start a =
     followPath (List.reverse (pathPartsToTime a p.path)) ( a.usedMovement, start )
 
 
-followPath : List ( Pathfinder.PathTile, Int ) -> ( Float, Vector.Point ) -> ( Float, Vector.Point )
+followPath : List ( Pathfinder.Model.PathTile, Int ) -> ( Float, Vector.Point ) -> ( Float, Vector.Point )
 followPath l ( used, p ) =
     case l of
         [] ->

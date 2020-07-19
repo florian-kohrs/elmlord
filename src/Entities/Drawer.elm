@@ -1,4 +1,4 @@
-module EntitiesDrawer exposing (..)
+module Entities.Drawer exposing (..)
 
 import BasicDrawing
 import Dict

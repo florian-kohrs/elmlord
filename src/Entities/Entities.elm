@@ -2,6 +2,7 @@ module Entities exposing (..)
 
 import Building
 import Dict
+import Entities.Model exposing (..)
 import Faction
 import List
 import OperatorExt
@@ -10,21 +11,9 @@ import Troops
 import Vector
 
 
-type alias Gold =
-    Float
-
-
 
 -- all the different types that are used for the model
 ----------------------------------------------------------
-
-
-type alias Lord =
-    { entity : WorldEntity
-    , gold : Gold
-    , land : List Settlement
-    , agent : PathAgent.Agent
-    }
 
 
 type alias BattleStats =
@@ -43,6 +32,7 @@ type LordList
     = Cons Lord (List Lord)
 
 
+<<<<<<< Updated upstream:src/Entities.elm
 type alias Settlement =
     { entity : WorldEntity
     , settlementType : SettlementType
@@ -72,6 +62,14 @@ type alias SettlementInfo =
     , name : String
     , faction : Faction.Faction
     }
+=======
+lordSettlementCount : Lord -> Int
+lordSettlementCount l =
+    List.foldl
+        (always ((+) 1))
+        0
+        l.land
+>>>>>>> Stashed changes:src/Entities/Entities.elm
 
 
 

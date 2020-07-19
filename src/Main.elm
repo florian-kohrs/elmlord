@@ -6,7 +6,7 @@ import Browser
 import DateExt
 import Dict
 import Entities
-import EntitiesDrawer
+import Entities.Drawer
 import Event
 import Faction
 import Html exposing (Html, div, span, text)
@@ -18,8 +18,13 @@ import MapDrawer
 import MapGenerator
 import OperatorExt
 import PathAgent
+<<<<<<< Updated upstream
 import PathDrawer
+=======
+import PathAgentExt
+>>>>>>> Stashed changes
 import Pathfinder
+import Pathfinder.Drawer
 import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -102,8 +107,8 @@ buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
             (List.foldl
-                (EntitiesDrawer.drawSettlement (getPlayer m))
-                (List.foldl (EntitiesDrawer.drawLord (getPlayer m)) (drawnMap m.map) (Entities.flattenLordList m.lords))
+                (Entities.Drawer.drawSettlement (getPlayer m))
+                (List.foldl (Entities.Drawer.drawLord (getPlayer m)) (drawnMap m.map) (Entities.flattenLordList m.lords))
                 (allSettlements m)
             )
         )

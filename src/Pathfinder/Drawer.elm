@@ -1,18 +1,18 @@
-module PathDrawer exposing (..)
+module Pathfinder.Drawer exposing (..)
 
 import BasicDrawing
 import MapData
 import MapDrawer
 import PathAgent
-import Pathfinder
+import PathAgent.Model
+import Pathfinder.Model
 import Svg
 import Svg.Attributes
 import Svg.Events
-import Types
 import Vector
 
 
-drawPath : PathAgent.Agent -> Pathfinder.Path -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawPath : PathAgent.Model.Agent -> Pathfinder.Path -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
 drawPath agent path dict =
     List.foldl
         (\( t, turns ) newDict ->

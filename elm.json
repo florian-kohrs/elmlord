@@ -5,7 +5,11 @@
         "src/MapStuff",
         "src/Drawers",
 	      "src/AI",
-        "src/Exts"
+        "src/Exts",
+        "src/Entities",
+        "src/PathAgent",
+        "src/Pathfinder"
+
     ],
     "elm-version": "0.19.1",
     "dependencies": {
