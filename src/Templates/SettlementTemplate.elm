@@ -247,7 +247,7 @@ displayBuildingBonus ( b, i ) =
 validateBuyTroops : Troops.TroopType -> Entities.Model.Settlement -> Entities.Model.Lord -> Bool
 validateBuyTroops t s l =
     not
-        ((l.gold - Troops.troopCost t > 0)
+        ((l.gold - (Troops.troopCost t * (1 - Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100)) >= 0)
             && MaybeExt.foldMaybe (\v -> v > 0) False (Dict.get (Troops.troopTypeToInt t) s.recruitLimits)
         )
 

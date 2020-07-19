@@ -408,7 +408,7 @@ view model =
                             [ Svg.Attributes.viewBox "0 0 850 1000"
                             , Svg.Attributes.fill "none"
                             ]
-                            (MapAction.allSvgs allClickActions)
+                            (MapDrawer.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
                    , span [] [ Html.text (Debug.toString (Entities.getPlayer model.lords).land) ]
