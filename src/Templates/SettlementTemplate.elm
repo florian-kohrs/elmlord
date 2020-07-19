@@ -3,14 +3,15 @@ module Templates.SettlementTemplate exposing (..)
 import Building
 import Dict
 import Entities
+import Entities.Model
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import MaybeExt
+import Msg
 import OperatorExt
 import Templates.HelperTemplate as Helper
 import Troops
-import Types
 
 
 {-| Returns the layout for the settlement modal (Enter/View [Settlement-Name])
@@ -20,12 +21,12 @@ import Types
     @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
 
 -}
-generateSettlementModalTemplate : Entities.Lord -> Entities.Settlement -> Types.UiSettlementState -> Html Types.Msg
+generateSettlementModalTemplate : Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> Html Msg.Msg
 generateSettlementModalTemplate lord settlement uistate =
     div [ Html.Attributes.class "modal-background" ]
         [ div [ Html.Attributes.class "settlement-modal" ]
             [ div [ Html.Attributes.class "settlement-modal-close-container" ]
-                [ div [ onClick Types.CloseModal, Html.Attributes.class "settlement-modal-close-btn" ]
+                [ div [ onClick Msg.CloseModal, Html.Attributes.class "settlement-modal-close-btn" ]
                     [ span [] [ Html.text "X" ]
                     ]
                 ]
@@ -56,13 +57,13 @@ generateSettlementModalTemplate lord settlement uistate =
     @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
 
 -}
-settlementStateToAction : Entities.Lord -> Entities.Settlement -> Types.UiSettlementState -> List (Html Types.Msg)
+settlementStateToAction : Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> List (Html Msg.Msg)
 settlementStateToAction lord settlement uistate =
     case uistate of
-        Types.StandardView ->
-            [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowBuyTroops settlement))) ] [ span [] [ Html.text "Recruit troops" ] ]
-            , button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowStationTroops settlement))) ] [ span [] [ Html.text "Station troops" ] ]
-            , button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowBuildings settlement))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
+        Msg.StandardView ->
+            [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuyTroops settlement))) ] [ span [] [ Html.text "Recruit troops" ] ]
+            , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowStationTroops settlement))) ] [ span [] [ Html.text "Station troops" ] ]
+            , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuildings settlement))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (settlement.income + Building.resolveBonusFromBuildings settlement.buildings Building.Marketplace) ++ " Ducats") ]
@@ -73,7 +74,7 @@ settlementStateToAction lord settlement uistate =
                 ]
             ]
 
-        Types.RecruitView ->
+        Msg.RecruitView ->
             [ div [ Html.Attributes.class "settlement-troop-recruiting" ]
                 (span [] [ Html.text "Recruit troops" ]
                     :: div [ Html.Attributes.class "troop-recruiting-header" ]
@@ -85,11 +86,11 @@ settlementStateToAction lord settlement uistate =
                             ]
                         ]
                     :: Dict.merge (\k v1 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 0 settlement lord :: r) (\k v1 v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 v2 settlement lord :: r) (\k v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 v2 settlement lord :: r) lord.entity.army settlement.recruitLimits []
-                    ++ [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
+                    ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
 
-        Types.StationView ->
+        Msg.StationView ->
             [ div [ Html.Attributes.class "settlement-troop-stationing" ]
                 (span [] [ Html.text "Station troops" ]
                     :: div [ Html.Attributes.class "troop-recruiting-header" ]
@@ -101,11 +102,11 @@ settlementStateToAction lord settlement uistate =
                             ]
                         ]
                     :: Dict.merge (\k v1 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 0 settlement :: r) (\k v1 v2 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 v2 settlement :: r) (\k v2 r -> generateStationTroopContainer (Troops.intToTroopType k) 0 v2 settlement :: r) lord.entity.army settlement.entity.army []
-                    ++ [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
+                    ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
 
-        Types.RestrictedView ->
+        Msg.RestrictedView ->
             validateSettlement lord settlement
                 ++ [ div [ Html.Attributes.class "settlement-info box-shadow" ]
                         [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
@@ -117,11 +118,11 @@ settlementStateToAction lord settlement uistate =
                         ]
                    ]
 
-        Types.BuildingView ->
+        Msg.BuildingView ->
             [ div [ Html.Attributes.class "settlement-building-upgrading" ]
                 [ span [] [ Html.text "Upgrade buildings" ]
                 , div [] (List.map displayBuildingComponents (List.map (\x -> ( x, lord, settlement )) settlement.buildings))
-                , div [] [ button [ onClick (Types.SettlementAction (Types.UIMsg (Types.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
+                , div [] [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 ]
             ]
 
@@ -133,7 +134,7 @@ The function is used for the List.map2 function.
     @param {(Troop, Settlement)}: Tuple with the current troop/unit and the settlement of this unit
 
 -}
-generateStationTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Settlement -> Html Types.Msg
+generateStationTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Model.Settlement -> Html Msg.Msg
 generateStationTroopContainer lt ltAmount stAmount sE =
     div [ Html.Attributes.class "troop-stationing-container" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName lt) ++ ".png") ] []
@@ -142,14 +143,14 @@ generateStationTroopContainer lt ltAmount stAmount sE =
             [ span [] [ Html.text ("[" ++ String.fromInt stAmount ++ "]") ]
             ]
         , button
-            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.TakeTroops lt sE)))
+            [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.TakeTroops lt sE)))
             , Html.Attributes.class (OperatorExt.ternary (validateStationTroops stAmount) "troop-disabled-button" "")
             , disabled (validateStationTroops stAmount)
             ]
             [ img [ Html.Attributes.class "troop-station-icon", src "./assets/images/general/arrow_up.png" ] []
             ]
         , button
-            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.StationTroops lt sE)))
+            [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.StationTroops lt sE)))
             , Html.Attributes.class (OperatorExt.ternary (validateStationTroops ltAmount) "troop-disabled-button" "tooltip")
             , disabled (validateStationTroops ltAmount)
             ]
@@ -165,7 +166,7 @@ generateStationTroopContainer lt ltAmount stAmount sE =
     @param {Lord}: Takes the current lord
 
 -}
-generateRecruitTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Settlement -> Entities.Lord -> Html Types.Msg
+generateRecruitTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Model.Settlement -> Entities.Model.Lord -> Html Msg.Msg
 generateRecruitTroopContainer t aAmount sAmount s l =
     div [ Html.Attributes.class "troop-recruiting-container" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
@@ -176,7 +177,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button
-            [ onClick (Types.SettlementAction (Types.TroopMsg (Types.BuyTroops t s)))
+            [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyTroops t s)))
             , Html.Attributes.class (OperatorExt.ternary (validateBuyTroops t s l) "troop-disabled-button" "tooltip")
             , disabled (validateBuyTroops t s l)
             ]
@@ -189,7 +190,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
         ]
 
 
-displayBuildingComponents : ( Building.Building, Entities.Lord, Entities.Settlement ) -> Html Types.Msg
+displayBuildingComponents : ( Building.Building, Entities.Model.Lord, Entities.Model.Settlement ) -> Html Msg.Msg
 displayBuildingComponents ( b, l, s ) =
     div [ Html.Attributes.class "settlement-building-component" ]
         [ div [] []
@@ -203,7 +204,7 @@ displayBuildingComponents ( b, l, s ) =
             ]
         , div []
             [ button
-                [ onClick (Types.SettlementAction (Types.TroopMsg (Types.UpgradeBuilding b s)))
+                [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.UpgradeBuilding b s)))
                 , Html.Attributes.class (OperatorExt.ternary (validateBuildingUpgrade b l) "troop-disabled-button" "tooltip")
                 , disabled (validateBuildingUpgrade b l)
                 ]
@@ -217,7 +218,7 @@ displayBuildingComponents ( b, l, s ) =
         ]
 
 
-displayBuildingBonus : ( Building.Building, Int ) -> Html Types.Msg
+displayBuildingBonus : ( Building.Building, Int ) -> Html Msg.Msg
 displayBuildingBonus ( b, i ) =
     div [ Html.Attributes.class "buildings-info-container" ]
         [ span [ Html.Attributes.class (OperatorExt.ternary (b.level >= i) "positive-income" "negative-income") ]
@@ -243,7 +244,7 @@ displayBuildingBonus ( b, i ) =
     @param {Lord}: Takes the current lord (to determine if the player has the gold)
 
 -}
-validateBuyTroops : Troops.TroopType -> Entities.Settlement -> Entities.Lord -> Bool
+validateBuyTroops : Troops.TroopType -> Entities.Model.Settlement -> Entities.Model.Lord -> Bool
 validateBuyTroops t s l =
     not
         ((l.gold - Troops.troopCost t > 0)
@@ -267,7 +268,7 @@ validateStationTroops amount =
     @param {Settlement}: Takes the current settlement
 
 -}
-validateSettlement : Entities.Lord -> Entities.Settlement -> List (Html Types.Msg)
+validateSettlement : Entities.Model.Lord -> Entities.Model.Settlement -> List (Html Msg.Msg)
 validateSettlement l s =
     [ div [ Html.Attributes.class "settlement-enemy-overview" ]
         [ span [] [ Html.text (OperatorExt.ternary (l.entity.faction == s.entity.faction) "This is our settlement!" "This is an enemy settlement!") ]
@@ -279,7 +280,7 @@ validateSettlement l s =
 --TODO: combine it with the other validate functions (troopcost)
 
 
-validateBuildingUpgrade : Building.Building -> Entities.Lord -> Bool
+validateBuildingUpgrade : Building.Building -> Entities.Model.Lord -> Bool
 validateBuildingUpgrade b l =
     not
         ((l.gold - (Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)) > 0) && b.level <= 2)

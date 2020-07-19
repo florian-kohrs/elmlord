@@ -50,3 +50,63 @@ type alias SettlementInfo =
 type SettlementType
     = Village
     | Castle
+
+
+
+-- around 15 names for castles and 30 for villages
+-- https://www.fantasynamegenerators.com/town_names.php was used as a source
+
+
+castleNames : List String
+castleNames =
+    [ "Stathford"
+    , "Wingston"
+    , "Boroughton"
+    , "Peterbrugh"
+    , "Wimborne"
+    , "Westwend"
+    , "Kingcardine"
+    , "Helmfirth"
+    , "Accrington"
+    , "Mournstead"
+    , "Alcombey"
+    , "Aeberuthey"
+    , "Bradford"
+    , "Bamborourgh"
+    , "Everton"
+    ]
+
+
+villageNames : List String
+villageNames =
+    [ "Haran"
+    , "Hillfar"
+    , "Waekefield"
+    , "Sudbury"
+    , "Murkwell"
+    , "Caerfyrddin"
+    , "Llanybydder"
+    , "Galssop"
+    , "Farnworth"
+    , "Porthaethwy"
+    , "Favorsham"
+    , "Kilead"
+    , "Kald"
+    , "Holsworthy"
+    , "Wolfwater"
+    , "Southwold"
+    , "Marnmouth"
+    , "Kilmarnock"
+    , "Far Water"
+    , "Aylesbury"
+    , "Dornwich"
+    , "Haran"
+    , "Murkwell"
+    , "Drumnacanvy"
+    , "Waeldestone"
+    , "Bracklewhyte"
+    , "Peatsland"
+    , "Ballachulish"
+    , "Arbington"
+    , "Torrine"
+    ]

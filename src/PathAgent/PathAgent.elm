@@ -53,8 +53,6 @@ pathPartsToTime a ts =
         )
 
 
-<<<<<<< Updated upstream:src/MapStuff/PathAgent.elm
-=======
 roundsToFinishPath : Agent -> List Pathfinder.Model.PathTile -> Int
 roundsToFinishPath a ps =
     case List.head (List.reverse (pathPartsToTime a ps)) of
@@ -65,7 +63,6 @@ roundsToFinishPath a ps =
             Tuple.second t
 
 
->>>>>>> Stashed changes:src/PathAgent/PathAgent.elm
 getAgent : Float -> Agent
 getAgent speed =
     { target = Nothing, speed = speed, usedMovement = 0.0 }

@@ -16,60 +16,16 @@ import Vector
 ----------------------------------------------------------
 
 
-type alias BattleStats =
-    { attacker : Lord
-    , defender : Lord
-    , round : Int
-    , attackerCasualties : Troops.Army
-    , defenderCasualties : Troops.Army
-    , settlement : Maybe Settlement
-    , siege : Bool
-    , finished : Bool
-    }
-
-
 type LordList
     = Cons Lord (List Lord)
 
 
-<<<<<<< Updated upstream:src/Entities.elm
-type alias Settlement =
-    { entity : WorldEntity
-    , settlementType : SettlementType
-    , recruitLimits : Troops.Army
-    , income : Float
-    , isSieged : Bool
-    , buildings : List Building.Building
-    }
-
-
-type alias WorldEntity =
-    { army : Troops.Army
-    , faction : Faction.Faction
-    , position : Vector.Point
-    , name : String
-    }
-
-
-type SettlementType
-    = Village
-    | Castle
-
-
-type alias SettlementInfo =
-    { sType : SettlementType
-    , position : Vector.Point
-    , name : String
-    , faction : Faction.Faction
-    }
-=======
 lordSettlementCount : Lord -> Int
 lordSettlementCount l =
     List.foldl
         (always ((+) 1))
         0
         l.land
->>>>>>> Stashed changes:src/Entities/Entities.elm
 
 
 
@@ -417,63 +373,3 @@ factionToImage fac =
 
         Faction.Faction4 ->
             "faction4.png"
-
-
-
--- around 15 names for castles and 30 for villages
--- https://www.fantasynamegenerators.com/town_names.php was used as a source
-
-
-castleNames : List String
-castleNames =
-    [ "Stathford"
-    , "Wingston"
-    , "Boroughton"
-    , "Peterbrugh"
-    , "Wimborne"
-    , "Westwend"
-    , "Kingcardine"
-    , "Helmfirth"
-    , "Accrington"
-    , "Mournstead"
-    , "Alcombey"
-    , "Aeberuthey"
-    , "Bradford"
-    , "Bamborourgh"
-    , "Everton"
-    ]
-
-
-villageNames : List String
-villageNames =
-    [ "Haran"
-    , "Hillfar"
-    , "Waekefield"
-    , "Sudbury"
-    , "Murkwell"
-    , "Caerfyrddin"
-    , "Llanybydder"
-    , "Galssop"
-    , "Farnworth"
-    , "Porthaethwy"
-    , "Favorsham"
-    , "Kilead"
-    , "Kald"
-    , "Holsworthy"
-    , "Wolfwater"
-    , "Southwold"
-    , "Marnmouth"
-    , "Kilmarnock"
-    , "Far Water"
-    , "Aylesbury"
-    , "Dornwich"
-    , "Haran"
-    , "Murkwell"
-    , "Drumnacanvy"
-    , "Waeldestone"
-    , "Bracklewhyte"
-    , "Peatsland"
-    , "Ballachulish"
-    , "Arbington"
-    , "Torrine"
-    ]

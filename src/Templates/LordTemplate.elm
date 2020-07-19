@@ -2,12 +2,13 @@ module Templates.LordTemplate exposing (..)
 
 import Dict
 import Entities
+import Entities.Model
 import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Msg
 import Templates.HelperTemplate as Helper
 import Troops
-import Types
 
 
 {-| Returns the layout for the lord modal (View [Lord-Name])
@@ -15,12 +16,12 @@ import Types
     @param {Lord}: Takes the chosen Lord
 
 -}
-generateLordTemplate : Entities.Lord -> Html Types.Msg
+generateLordTemplate : Entities.Model.Lord -> Html Msg.Msg
 generateLordTemplate l =
     div [ Html.Attributes.class "modal-background" ]
         [ div [ Html.Attributes.class "lord-modal" ]
             [ div [ Html.Attributes.class "settlement-modal-close-container" ]
-                [ div [ onClick Types.CloseModal, Html.Attributes.class "settlement-modal-close-btn lord-modal-close-btn" ]
+                [ div [ onClick Msg.CloseModal, Html.Attributes.class "settlement-modal-close-btn lord-modal-close-btn" ]
                     [ span [] [ Html.text "X" ]
                     ]
                 ]

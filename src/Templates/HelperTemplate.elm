@@ -2,8 +2,8 @@ module Templates.HelperTemplate exposing (roundDigits, troopToHtml)
 
 import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
+import Msg
 import Troops
-import Types
 
 
 {-| Returns a container for a troop overview (image, name and amount)
@@ -11,7 +11,7 @@ import Types
     @param {Troop}: Takes the troop that needs to be displayed
 
 -}
-troopToHtml : Troops.TroopType -> Int -> String -> Html Types.Msg
+troopToHtml : Troops.TroopType -> Int -> String -> Html Msg.Msg
 troopToHtml t amount cls =
     div [ Html.Attributes.class cls ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []

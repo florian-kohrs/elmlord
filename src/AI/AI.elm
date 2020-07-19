@@ -3,7 +3,6 @@ module AI exposing (..)
 import Entities
 import PathAgent
 import Pathfinder
-import Types
 import Vector
 
 

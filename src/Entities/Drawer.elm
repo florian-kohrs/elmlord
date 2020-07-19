@@ -2,43 +2,46 @@ module Entities.Drawer exposing (..)
 
 import BasicDrawing
 import Dict
-import Entities
+import Entities exposing (..)
+import Entities.Model exposing (..)
 import Faction
 import ListExt
 import Map
+import MapAction
+import MapAction.Model
+import MapAction.SubModel
 import MapData
-import MapDrawer
 import MaybeExt
+import Msg
 import Svg
 import Svg.Attributes exposing (..)
 import Svg.Events
-import Types
 import Vector
 
 
-drawLord : Entities.Lord -> Entities.Lord -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawLord : Lord -> Lord -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
 drawLord player l =
     let
         drawnLord =
-            MapDrawer.InteractableSvg (showLord l) (getLordAction player l)
+            MapAction.Model.InteractableSvg (showLord l) (getLordAction player l)
     in
-    MapDrawer.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
+    MapAction.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
 
 
-drawSettlement : Entities.Lord -> Entities.Settlement -> MapDrawer.MapClickAction -> MapDrawer.MapClickAction
+drawSettlement : Lord -> Settlement -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
 drawSettlement player s dict =
     let
         drawnSettlement =
-            MapDrawer.InteractableSvg (showSettlement s) (getSettlementAction player s)
+            MapAction.Model.InteractableSvg (showSettlement s) (getSettlementAction player s)
 
         drawnSettlementBorder =
-            MapDrawer.InteractableSvg (showSettlementBorder s) []
+            MapAction.Model.InteractableSvg (showSettlementBorder s) []
     in
-    MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement dict
-        |> MapDrawer.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlementBorder
+    MapAction.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement dict
+        |> MapAction.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlementBorder
 
 
-getLordAction : Entities.Lord -> Entities.Lord -> List Types.MapTileMsg
+getLordAction : Lord -> Lord -> List MapAction.SubModel.MapTileMsg
 getLordAction player lord =
     let
         action =
@@ -49,51 +52,51 @@ getLordAction player lord =
                     /= player.entity.name
                     && not (Entities.isLordInOwnSettlement lord)
             then
-                Just Types.EngageLord
+                Just MapAction.SubModel.EngageLord
 
             else
                 Nothing
     in
-    Types.LordMsg Types.ViewLord lord
-        :: MaybeExt.foldMaybe (\a -> [ Types.LordMsg a lord ])
+    MapAction.SubModel.LordMsg MapAction.SubModel.ViewLord lord
+        :: MaybeExt.foldMaybe (\a -> [ MapAction.SubModel.LordMsg a lord ])
             []
             action
 
 
-getSettlementAction : Entities.Lord -> Entities.Settlement -> List Types.MapTileMsg
+getSettlementAction : Lord -> Settlement -> List MapAction.SubModel.MapTileMsg
 getSettlementAction player s =
     let
         action =
             if player.entity.position == s.entity.position then
                 if List.member s.entity.position (List.map (\l -> l.entity.position) player.land) then
-                    Just Types.EnterSettlement
+                    Just MapAction.SubModel.EnterSettlement
 
                 else
-                    Just Types.SiegeSettlement
+                    Just MapAction.SubModel.SiegeSettlement
 
             else
                 Nothing
     in
-    Types.SettlementMsg Types.ViewSettlement s
-        :: MaybeExt.foldMaybe (\a -> [ Types.SettlementMsg a s ]) [] action
+    MapAction.SubModel.SettlementMsg MapAction.SubModel.ViewSettlement s
+        :: MaybeExt.foldMaybe (\a -> [ MapAction.SubModel.SettlementMsg a s ]) [] action
 
 
-showLord : Entities.Lord -> MapDrawer.SvgItem
+showLord : Lord -> MapAction.Model.SvgItem
 showLord lord =
-    MapDrawer.SvgItem MapData.lordZIndex (getSvgForLord lord)
+    MapAction.Model.SvgItem MapData.lordZIndex (getSvgForLord lord)
 
 
-showSettlement : Entities.Settlement -> MapDrawer.SvgItem
+showSettlement : Settlement -> MapAction.Model.SvgItem
 showSettlement s =
-    MapDrawer.SvgItem MapData.settlementZIndex (getSvgForSettlement s)
+    MapAction.Model.SvgItem MapData.settlementZIndex (getSvgForSettlement s)
 
 
-showSettlementBorder : Entities.Settlement -> MapDrawer.SvgItem
+showSettlementBorder : Settlement -> MapAction.Model.SvgItem
 showSettlementBorder s =
-    MapDrawer.SvgItem MapData.settlementBorderZIndex (getSvgBorderForSettlement s)
+    MapAction.Model.SvgItem MapData.settlementBorderZIndex (getSvgBorderForSettlement s)
 
 
-getSvgForLord : Entities.Lord -> Svg.Svg Types.Msg
+getSvgForLord : Lord -> Svg.Svg Msg.Msg
 getSvgForLord l =
     BasicDrawing.getImage
         (Entities.lordToMapIcon l)
@@ -101,20 +104,20 @@ getSvgForLord l =
         1
 
 
-getSvgBorderForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
+getSvgBorderForSettlement : Settlement -> Svg.Svg Msg.Msg
 getSvgBorderForSettlement s =
     Svg.polygon
-        [ Svg.Events.onClick (Types.Click s.entity.position)
+        [ Svg.Events.onClick (Msg.Click s.entity.position)
         , overflow "visible"
         , stroke (Faction.factionColor s.entity.faction)
         , strokeWidth (String.fromInt MapData.settlementStrokeWidth ++ "px")
-        , points (Map.pointsToHexagonPoints (Map.generateHexagonPoints (MapData.mapPositionForIndex s.entity.position) MapData.hexRadius))
+        , points (BasicDrawing.pointsToHexagonPoints (BasicDrawing.calculateHexagonPoints (MapData.mapPositionForIndex s.entity.position) MapData.hexRadius))
         , opacity "0.8"
         ]
         []
 
 
-getSvgForSettlement : Entities.Settlement -> Svg.Svg Types.Msg
+getSvgForSettlement : Settlement -> Svg.Svg Msg.Msg
 getSvgForSettlement s =
     BasicDrawing.getImage
         (Entities.getSettlementImage s)
