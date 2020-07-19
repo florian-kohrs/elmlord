@@ -22,6 +22,7 @@ type alias ActionMultipliers =
     , defendMultiplier : Float
     , battleMultiplier : Float
     , growArmyMultiplier : Float
+    , improveSettlements : Float
     }
 
 
@@ -84,16 +85,39 @@ getAiActions :
     -> List AiRoundActionPreference
 getAiActions ai getTurnsToPoint enemies =
     let
-        ownSettlementDefenseRatings =
-            settlementArmiesStrength ai.lord
+        ownSettlementDefenseActions =
+            getSettlementDefenseActions ai getTurnsToPoint enemies
 
         enemySettlementStates =
             List.foldl (\l r -> settlementArmiesStrength l ++ r) [] enemies
-
-        roundActions =
-            ListExt.justList (List.foldl (\s r -> evaluateSettlementDefense ai s :: r) [] ownSettlementDefenseRatings)
     in
-    roundActions
+    ownSettlementDefenseActions
+
+
+getSettlementDefenseActions :
+    AI
+    -> (Entities.Model.Lord -> Vector.Point -> Int)
+    -> List Entities.Model.Lord
+    -> List AiRoundActionPreference
+getSettlementDefenseActions ai getTurnsToPoint enemies =
+    ListExt.justList <|
+        List.foldl
+            (\s r -> evaluateSettlementDefense ai s :: r)
+            []
+            (settlementDefenseArmyRating ai.lord)
+
+
+getSettlementAttackActions :
+    AI
+    -> (Entities.Model.Lord -> Vector.Point -> Int)
+    -> List Entities.Model.Lord
+    -> List AiRoundActionPreference
+getSettlementAttackActions ai getTurnsToPoint enemies =
+    ListExt.justList <|
+        List.foldl
+            (\s r -> evaluateSettlementDefense ai s :: r)
+            []
+            (settlementDefenseArmyRating ai.lord)
 
 
 
@@ -151,8 +175,8 @@ rateSettlementDefense lord strength entityType =
             toFloat strength / estimatedNormalCastleTroopStrength lord
 
 
-settlementArmiesStrength : Entities.Model.Lord -> List SettlmentDefenseRating
-settlementArmiesStrength l =
+settlementDefenseArmyRating : Entities.Model.Lord -> List SettlmentDefenseRating
+settlementDefenseArmyRating l =
     List.foldl
         (\s r ->
             SettlmentDefenseRating s
@@ -163,18 +187,36 @@ settlementArmiesStrength l =
         l.land
 
 
+settlementDefenseStrength :
+    AI
+    -> Entities.Model.Settlement
+    -> List Entities.Model.Lord
+    -> Int
+settlementDefenseStrength ai s enemies =
+    let
+        settlementDefenseStrength =
+            entityStrength s
+    in
+    case Entities.landlordOnSettlement s enemies of
+        Nothing ->
+            settlementDefenseStrength
+
+        Just l ->
+            entityStrength l + settlementDefenseStrength
+
+
 lordArmyComparison : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordArmyComparison l1 l2 =
     let
         diff =
-            lordStrength l1 / lordStrength l2
+            lordStrength l1.entity / lordStrength l2.entity
     in
     1 + Balancing.lordStrengthDiffFactor * diff
 
 
-lordStrength : Entities.Model.Lord -> Float
-lordStrength l =
-    toFloat (Troops.sumTroopStats l.entity.army)
+entityStrength : Entities.Model.WorldEntity -> Float
+entityStrength e =
+    toFloat (Troops.sumTroopStats e.army)
         / estimatedNormalPlayerTroopStrength l
 
 

@@ -43,5 +43,10 @@ lordStrengthDiffFactor =
     2
 
 
+improveBuildingFactor : Float
+improveBuildingFactor =
+    0.5
+
+
 
 -- should also consider speed difference

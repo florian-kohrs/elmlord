@@ -265,6 +265,24 @@ isLordOnSettlement lord s =
     lord.entity.position == s.entity.position && lord.entity.faction == s.entity.faction
 
 
+landlordOnSettlement : Settlement -> List Lord -> Maybe Lord
+landlordOnSettlement s =
+    List.foldl
+        (\l r ->
+            if isLandlord s l && isLordOnSettlement l s then
+                Just l
+
+            else
+                r
+        )
+        Nothing
+
+
+isLandlord : Settlement -> Lord -> Bool
+isLandlord s l =
+    List.foldl (\s2 b -> b || s2.entity.name == s.entity.name) False l.land
+
+
 updatePlayer : LordList -> Lord -> LordList
 updatePlayer (Cons _ ps) np =
     Cons np ps
