@@ -18,12 +18,20 @@ type Msg
     = EndRound
     | EndGame Bool
     | CloseModal
+    | MenueAction MenueMsg
     | BattleAction BattleMsg
     | SettlementAction SettlementMsg
     | MapTileAction MapAction.SubModel.MapTileMsg
     | EventAction EventMsg
     | Click Vector.Point
 
+
+type MenueMsg
+    = StartGame
+    | ShowMenue
+    | SetCampaingn
+    | ShowDocumentation
+    | ShowCredits
 
 type SettlementMsg
     = UIMsg SettlementUIMsg

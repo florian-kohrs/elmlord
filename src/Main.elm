@@ -39,6 +39,7 @@ import Templates.HeaderTemplate as HeaderTemplate
 import Templates.LordTemplate as LordTemplate
 import Templates.MapActionTemplate as MapActionTemplate
 import Templates.SettlementTemplate as SettlementTemplate
+import Templates.StartTemplate as StartTemplate
 import Troops
 import Vector
 
@@ -61,12 +62,11 @@ type alias Model =
 
 type GameState
     = GameSetup UiState
-    | GameOver Bool -- true = gewonnen, false = verloren
+    | GameOver Bool
 
 
 type UiState
     = MainMenue
-    | SaveLoad
     | NewCampain
     | GameMenue
     | BattleView Battle.Model.BattleStats
@@ -393,6 +393,32 @@ getSafeSettlementInfo i m dict =
 
 view : Model -> Html Msg.Msg
 view model =
+    case model.gameState of
+        GameSetup uistate ->
+            case uistate of
+                MainMenue ->
+                    setMenueView model
+
+                NewCampain -> 
+                    setCampaignView model
+
+                _ ->
+                    setGameView model
+
+        GameOver _ ->
+            setGameView model
+
+
+setMenueView : Model -> Html Msg.Msg
+setMenueView model =
+    div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate)
+
+setCampaignView : Model -> Html Msg.Msg
+setCampaignView model = 
+    div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startCampaign)
+
+setGameView : Model -> Html Msg.Msg
+setGameView model =
     let
         allClickActions =
             buildAllMapSvgs model
@@ -472,6 +498,9 @@ update msg model =
 
         Msg.BattleAction bmsg ->
             updateBattle bmsg model
+
+        Msg.MenueAction mmsg ->
+            updateMenue mmsg model
 
         Msg.SettlementAction action ->
             updateSettlement action model
@@ -746,6 +775,30 @@ checkLordLost k n l =
 
     else
         l
+
+
+
+-- updae function for the menue
+----------------------------------------------------------
+
+
+updateMenue : Msg.MenueMsg -> Model -> Model
+updateMenue msg model =
+    case msg of
+        Msg.StartGame ->
+            { model | gameState = GameSetup GameMenue }
+
+        Msg.ShowMenue ->
+            { model | gameState = GameSetup MainMenue }
+
+        Msg.ShowDocumentation ->
+            { model | gameState = GameSetup GameMenue }
+
+        Msg.SetCampaingn -> 
+            { model | gameState = GameSetup NewCampain }
+
+        Msg.ShowCredits -> 
+            { model | gameState = GameSetup GameMenue }
 
 
 
