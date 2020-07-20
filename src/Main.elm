@@ -12,7 +12,7 @@ import Entities.Drawer
 import Entities.Model
 import Event
 import Faction
-import Html exposing (Html, div, span, text)
+import Html exposing (Html, audio, div, span, text)
 import Html.Attributes exposing (..)
 import ListExt
 import Map
@@ -29,6 +29,7 @@ import PathAgent
 import Pathfinder
 import Pathfinder.Drawer
 import Pathfinder.Model
+import Ports exposing (links, playSound, startMusic)
 import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -66,12 +67,16 @@ type GameState
 
 
 type UiState
-    = MainMenue
-    | NewCampain
+    = MainMenue MainMenueState
     | GameMenue
     | BattleView Battle.Model.BattleStats
     | SettlementView Entities.Model.Lord Entities.Model.Settlement Msg.UiSettlementState
     | LordView Entities.Model.Lord
+
+
+type MainMenueState
+    = Menue
+    | Campaign
 
 
 villagesPerLord : Int
@@ -252,9 +257,9 @@ testLord =
 ----------------------------------------------------------
 
 
-startGame : Int -> Model
+startGame : Int -> ( Model, Cmd Msg.Msg )
 startGame playerCount =
-    initPlayers initialModel playerCount
+    ( initPlayers initialModel playerCount, Cmd.none )
 
 
 initialModel : Model
@@ -263,7 +268,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model (Entities.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState
+    Model (Entities.Cons testLord []) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState
 
 
 
@@ -393,29 +398,34 @@ getSafeSettlementInfo i m dict =
 
 view : Model -> Html Msg.Msg
 view model =
-    case model.gameState of
-        GameSetup uistate ->
-            case uistate of
-                MainMenue ->
-                    setMenueView model
+    div []
+        ((case model.gameState of
+            GameSetup uistate ->
+                case uistate of
+                    MainMenue state ->
+                        setMenueView model state
 
-                NewCampain -> 
-                    setCampaignView model
+                    _ ->
+                        setGameView model
 
-                _ ->
-                    setGameView model
+            GameOver _ ->
+                setGameView model
+         )
+            :: [ audio [ src "./assets/sounds/menue.mp3", Html.Attributes.id "audio-player" ] [] ]
+        )
 
-        GameOver _ ->
-            setGameView model
 
+setMenueView : Model -> MainMenueState -> Html Msg.Msg
+setMenueView model state =
+    div [ Html.Attributes.class "main-container" ]
+        (case state of
+            Menue ->
+                List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate
 
-setMenueView : Model -> Html Msg.Msg
-setMenueView model =
-    div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate)
+            Campaign ->
+                List.map addStylesheet stylessheets ++ StartTemplate.startCampaign
+        )
 
-setCampaignView : Model -> Html Msg.Msg
-setCampaignView model = 
-    div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startCampaign)
 
 setGameView : Model -> Html Msg.Msg
 setGameView model =
@@ -484,35 +494,44 @@ stylessheets =
 ----------------------------------------------------------
 
 
-update : Msg.Msg -> Model -> Model
+update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     case msg of
         Msg.EndRound ->
-            { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.npcs model.lords)) }
+            appendCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.npcs model.lords)) }
 
         Msg.EndGame bool ->
-            { model | gameState = GameOver bool }
+            appendCmd { model | gameState = GameOver bool }
 
         Msg.CloseModal ->
-            { model | gameState = GameSetup GameMenue }
+            appendCmd { model | gameState = GameSetup GameMenue }
 
         Msg.BattleAction bmsg ->
-            updateBattle bmsg model
+            appendCmd (updateBattle bmsg model)
 
         Msg.MenueAction mmsg ->
             updateMenue mmsg model
 
         Msg.SettlementAction action ->
-            updateSettlement action model
+            appendCmd (updateSettlement action model)
 
         Msg.EventAction emsg ->
-            updateEvent emsg model
+            appendCmd (updateEvent emsg model)
 
         Msg.MapTileAction action ->
-            updateMaptileAction model action
+            appendCmd (updateMaptileAction model action)
 
         Msg.Click p ->
-            { model | selectedPoint = Just p }
+            appendCmd { model | selectedPoint = Just p }
+
+
+
+-- TODO: Temp function to remove
+
+
+appendCmd : Model -> ( Model, Cmd Msg.Msg )
+appendCmd m =
+    ( m, Cmd.none )
 
 
 updateAIsAfterPlayerRound : List Entities.Model.Lord -> List Entities.Model.Lord
@@ -782,23 +801,23 @@ checkLordLost k n l =
 ----------------------------------------------------------
 
 
-updateMenue : Msg.MenueMsg -> Model -> Model
+updateMenue : Msg.MenueMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateMenue msg model =
     case msg of
         Msg.StartGame ->
-            { model | gameState = GameSetup GameMenue }
+            ({ model | gameState = GameSetup GameMenue }, startMusic "play" )
 
         Msg.ShowMenue ->
-            { model | gameState = GameSetup MainMenue }
+            appendCmd { model | gameState = GameSetup (MainMenue Menue) }
 
         Msg.ShowDocumentation ->
-            { model | gameState = GameSetup GameMenue }
+            appendCmd { model | gameState = GameSetup (MainMenue Menue) }
 
-        Msg.SetCampaingn -> 
-            { model | gameState = GameSetup NewCampain }
+        Msg.SetCampaingn ->
+            appendCmd { model | gameState = GameSetup (MainMenue Campaign) }
 
-        Msg.ShowCredits -> 
-            { model | gameState = GameSetup GameMenue }
+        Msg.ShowCredits ->
+            appendCmd { model | gameState = GameSetup (MainMenue Menue) }
 
 
 
@@ -821,4 +840,4 @@ updateEvent msg model =
 
 main : Program () Model Msg.Msg
 main =
-    Browser.sandbox { init = startGame 4, view = view, update = update }
+    Browser.element { init = \_ -> startGame 4, view = view, update = update, subscriptions = \_ -> Sub.none }
