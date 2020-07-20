@@ -29,7 +29,7 @@ import PathAgent
 import Pathfinder
 import Pathfinder.Drawer
 import Pathfinder.Model
-import Ports exposing (links, playSound, startMusic)
+import Ports exposing (openLink, playSound, startMusic)
 import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -399,24 +399,24 @@ getSafeSettlementInfo i m dict =
 view : Model -> Html Msg.Msg
 view model =
     div []
-        ((case model.gameState of
+        [ case model.gameState of
             GameSetup uistate ->
                 case uistate of
                     MainMenue state ->
-                        setMenueView model state
+                        setMenueView state
 
                     _ ->
                         setGameView model
 
             GameOver _ ->
                 setGameView model
-         )
-            :: [ audio [ src "./assets/sounds/menue.mp3", Html.Attributes.id "audio-player" ] [] ]
-        )
+        , audio [ src "./assets/sounds/menue.mp3", Html.Attributes.id "audio-player" ] []
+        , audio [ Html.Attributes.id "sound-player" ] []
+        ]
 
 
-setMenueView : Model -> MainMenueState -> Html Msg.Msg
-setMenueView model state =
+setMenueView : MainMenueState -> Html Msg.Msg
+setMenueView state =
     div [ Html.Attributes.class "main-container" ]
         (case state of
             Menue ->
@@ -479,6 +479,11 @@ findModalWindow model =
             EndTemplate.generateEndTemplate bool
 
 
+
+-- for the implementation of design during the development
+----------------------------------------------------------
+
+
 addStylesheet : String -> Html Msg.Msg
 addStylesheet href =
     Html.node "link" [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" ("./assets/styles/" ++ href ++ ".css") ] []
@@ -498,40 +503,31 @@ update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     case msg of
         Msg.EndRound ->
-            appendCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.npcs model.lords)) }
+            emptyCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.npcs model.lords)) }
 
         Msg.EndGame bool ->
-            appendCmd { model | gameState = GameOver bool }
+            emptyCmd { model | gameState = GameOver bool }
 
         Msg.CloseModal ->
-            appendCmd { model | gameState = GameSetup GameMenue }
+            emptyCmd { model | gameState = GameSetup GameMenue }
 
         Msg.BattleAction bmsg ->
-            appendCmd (updateBattle bmsg model)
+            emptyCmd (updateBattle bmsg model)
 
         Msg.MenueAction mmsg ->
             updateMenue mmsg model
 
         Msg.SettlementAction action ->
-            appendCmd (updateSettlement action model)
+            emptyCmd (updateSettlement action model)
 
         Msg.EventAction emsg ->
-            appendCmd (updateEvent emsg model)
+            emptyCmd (updateEvent emsg model)
 
         Msg.MapTileAction action ->
-            appendCmd (updateMaptileAction model action)
+            emptyCmd (updateMaptileAction model action)
 
         Msg.Click p ->
-            appendCmd { model | selectedPoint = Just p }
-
-
-
--- TODO: Temp function to remove
-
-
-appendCmd : Model -> ( Model, Cmd Msg.Msg )
-appendCmd m =
-    ( m, Cmd.none )
+            emptyCmd { model | selectedPoint = Just p }
 
 
 updateAIsAfterPlayerRound : List Entities.Model.Lord -> List Entities.Model.Lord
@@ -770,7 +766,7 @@ updateBattle msg model =
                             Battle.siegeBattleAftermath bS settle
 
                         newEnemyLords =
-                            checkLordLost
+                            Entities.checkLordBattleAftermath
                                 lordKilled
                                 newDefender.entity.name
                                 (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
@@ -787,15 +783,6 @@ updateLordsAfterBattle player enemyLords model state =
     { model | lords = Entities.Cons player enemyLords, gameState = state }
 
 
-checkLordLost : Bool -> String -> List Entities.Model.Lord -> List Entities.Model.Lord
-checkLordLost k n l =
-    if k then
-        List.filter (\x -> x.entity.name /= n) l
-
-    else
-        l
-
-
 
 -- updae function for the menue
 ----------------------------------------------------------
@@ -805,19 +792,19 @@ updateMenue : Msg.MenueMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateMenue msg model =
     case msg of
         Msg.StartGame ->
-            ({ model | gameState = GameSetup GameMenue }, startMusic "play" )
+            ( { model | gameState = GameSetup GameMenue }, startMusic "play" )
 
         Msg.ShowMenue ->
-            appendCmd { model | gameState = GameSetup (MainMenue Menue) }
+            emptyCmd { model | gameState = GameSetup (MainMenue Menue) }
 
         Msg.ShowDocumentation ->
-            appendCmd { model | gameState = GameSetup (MainMenue Menue) }
+            ( { model | gameState = GameSetup (MainMenue Menue) }, openLink "https://github.com/flofe104/elmlord" )
 
         Msg.SetCampaingn ->
-            appendCmd { model | gameState = GameSetup (MainMenue Campaign) }
+            emptyCmd { model | gameState = GameSetup (MainMenue Campaign) }
 
         Msg.ShowCredits ->
-            appendCmd { model | gameState = GameSetup (MainMenue Menue) }
+            ( { model | gameState = GameSetup (MainMenue Menue) }, openLink "https://github.com/flofe104/elmlord" )
 
 
 
@@ -836,6 +823,11 @@ updateEvent msg model =
 
         Msg.ClearEvents ->
             { model | event = Event.clearEvents model.event }
+
+
+emptyCmd : Model -> ( Model, Cmd Msg.Msg )
+emptyCmd m =
+    ( m, Cmd.none )
 
 
 main : Program () Model Msg.Msg

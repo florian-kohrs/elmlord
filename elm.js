@@ -6759,7 +6759,7 @@ var $author$project$DateExt$addMonths = F2(
 			$author$project$DateExt$monthToInt(date.month) + i);
 		return A2($author$project$DateExt$Date, date.year + newYears, newMonth);
 	});
-var $author$project$Main$appendCmd = function (m) {
+var $author$project$Main$emptyCmd = function (m) {
 	return _Utils_Tuple2(m, $elm$core$Platform$Cmd$none);
 };
 var $elm$core$Dict$merge = F6(
@@ -7035,7 +7035,7 @@ var $author$project$Main$BattleView = function (a) {
 	return {$: 'BattleView', a: a};
 };
 var $elm$core$Basics$neq = _Utils_notEqual;
-var $author$project$Main$checkLordLost = F3(
+var $author$project$Entities$checkLordBattleAftermath = F3(
 	function (k, n, l) {
 		return k ? A2(
 			$elm$core$List$filter,
@@ -7587,7 +7587,7 @@ var $author$project$Main$updateBattle = F2(
 					var newDefender = _v2.b;
 					var lordKilled = _v2.c;
 					var newEnemyLords = A3(
-						$author$project$Main$checkLordLost,
+						$author$project$Entities$checkLordBattleAftermath,
 						lordKilled,
 						newDefender.entity.name,
 						A2(
@@ -8406,6 +8406,7 @@ var $author$project$Main$updateMaptileAction = F2(
 	});
 var $author$project$Main$Campaign = {$: 'Campaign'};
 var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$Ports$openLink = _Platform_outgoingPort('openLink', $elm$json$Json$Encode$string);
 var $author$project$Ports$startMusic = _Platform_outgoingPort('startMusic', $elm$json$Json$Encode$string);
 var $author$project$Main$updateMenue = F2(
 	function (msg, model) {
@@ -8419,7 +8420,7 @@ var $author$project$Main$updateMenue = F2(
 						}),
 					$author$project$Ports$startMusic('play'));
 			case 'ShowMenue':
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					_Utils_update(
 						model,
 						{
@@ -8427,15 +8428,16 @@ var $author$project$Main$updateMenue = F2(
 								$author$project$Main$MainMenue($author$project$Main$Menue))
 						}));
 			case 'ShowDocumentation':
-				return $author$project$Main$appendCmd(
+				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
 							gameState: $author$project$Main$GameSetup(
 								$author$project$Main$MainMenue($author$project$Main$Menue))
-						}));
+						}),
+					$author$project$Ports$openLink('https://github.com/flofe104/elmlord'));
 			case 'SetCampaingn':
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					_Utils_update(
 						model,
 						{
@@ -8443,13 +8445,14 @@ var $author$project$Main$updateMenue = F2(
 								$author$project$Main$MainMenue($author$project$Main$Campaign))
 						}));
 			default:
-				return $author$project$Main$appendCmd(
+				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
 							gameState: $author$project$Main$GameSetup(
 								$author$project$Main$MainMenue($author$project$Main$Menue))
-						}));
+						}),
+					$author$project$Ports$openLink('https://github.com/flofe104/elmlord'));
 		}
 	});
 var $author$project$Msg$BuildingView = {$: 'BuildingView'};
@@ -9175,7 +9178,7 @@ var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'EndRound':
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					_Utils_update(
 						model,
 						{
@@ -9189,14 +9192,14 @@ var $author$project$Main$update = F2(
 						}));
 			case 'EndGame':
 				var bool = msg.a;
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					_Utils_update(
 						model,
 						{
 							gameState: $author$project$Main$GameOver(bool)
 						}));
 			case 'CloseModal':
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					_Utils_update(
 						model,
 						{
@@ -9204,26 +9207,26 @@ var $author$project$Main$update = F2(
 						}));
 			case 'BattleAction':
 				var bmsg = msg.a;
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					A2($author$project$Main$updateBattle, bmsg, model));
 			case 'MenueAction':
 				var mmsg = msg.a;
 				return A2($author$project$Main$updateMenue, mmsg, model);
 			case 'SettlementAction':
 				var action = msg.a;
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					A2($author$project$Main$updateSettlement, action, model));
 			case 'EventAction':
 				var emsg = msg.a;
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					A2($author$project$Main$updateEvent, emsg, model));
 			case 'MapTileAction':
 				var action = msg.a;
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					A2($author$project$Main$updateMaptileAction, model, action));
 			default:
 				var p = msg.a;
-				return $author$project$Main$appendCmd(
+				return $author$project$Main$emptyCmd(
 					_Utils_update(
 						model,
 						{
@@ -12521,6 +12524,8 @@ var $author$project$Templates$StartTemplate$startCampaign = _List_fromArray(
 			]))
 	]);
 var $author$project$Msg$SetCampaingn = {$: 'SetCampaingn'};
+var $author$project$Msg$ShowCredits = {$: 'ShowCredits'};
+var $author$project$Msg$ShowDocumentation = {$: 'ShowDocumentation'};
 var $author$project$Templates$StartTemplate$startMenuTemplate = _List_fromArray(
 	[
 		A2(
@@ -12607,6 +12612,8 @@ var $author$project$Templates$StartTemplate$startMenuTemplate = _List_fromArray(
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
+										$elm$html$Html$Events$onClick(
+										$author$project$Msg$MenueAction($author$project$Msg$ShowDocumentation)),
 										$elm$html$Html$Attributes$class('start-buttons')
 									]),
 								_List_fromArray(
@@ -12629,6 +12636,8 @@ var $author$project$Templates$StartTemplate$startMenuTemplate = _List_fromArray(
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
+										$elm$html$Html$Events$onClick(
+										$author$project$Msg$MenueAction($author$project$Msg$ShowCredits)),
 										$elm$html$Html$Attributes$class('start-buttons')
 									]),
 								_List_fromArray(
@@ -12645,39 +12654,38 @@ var $author$project$Templates$StartTemplate$startMenuTemplate = _List_fromArray(
 					]))
 			]))
 	]);
-var $author$project$Main$setMenueView = F2(
-	function (model, state) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('main-container')
-				]),
-			function () {
-				if (state.$ === 'Menue') {
-					return _Utils_ap(
-						A2($elm$core$List$map, $author$project$Main$addStylesheet, $author$project$Main$stylessheets),
-						$author$project$Templates$StartTemplate$startMenuTemplate);
-				} else {
-					return _Utils_ap(
-						A2($elm$core$List$map, $author$project$Main$addStylesheet, $author$project$Main$stylessheets),
-						$author$project$Templates$StartTemplate$startCampaign);
-				}
-			}());
-	});
+var $author$project$Main$setMenueView = function (state) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('main-container')
+			]),
+		function () {
+			if (state.$ === 'Menue') {
+				return _Utils_ap(
+					A2($elm$core$List$map, $author$project$Main$addStylesheet, $author$project$Main$stylessheets),
+					$author$project$Templates$StartTemplate$startMenuTemplate);
+			} else {
+				return _Utils_ap(
+					A2($elm$core$List$map, $author$project$Main$addStylesheet, $author$project$Main$stylessheets),
+					$author$project$Templates$StartTemplate$startCampaign);
+			}
+		}());
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
-		A2(
-			$elm$core$List$cons,
-			function () {
+		_List_fromArray(
+			[
+				function () {
 				var _v0 = model.gameState;
 				if (_v0.$ === 'GameSetup') {
 					var uistate = _v0.a;
 					if (uistate.$ === 'MainMenue') {
 						var state = uistate.a;
-						return A2($author$project$Main$setMenueView, model, state);
+						return $author$project$Main$setMenueView(state);
 					} else {
 						return $author$project$Main$setGameView(model);
 					}
@@ -12685,17 +12693,22 @@ var $author$project$Main$view = function (model) {
 					return $author$project$Main$setGameView(model);
 				}
 			}(),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$audio,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$src('./assets/sounds/menue.mp3'),
-							$elm$html$Html$Attributes$id('audio-player')
-						]),
-					_List_Nil)
-				])));
+				A2(
+				$elm$html$Html$audio,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$src('./assets/sounds/menue.mp3'),
+						$elm$html$Html$Attributes$id('audio-player')
+					]),
+				_List_Nil),
+				A2(
+				$elm$html$Html$audio,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('sound-player')
+					]),
+				_List_Nil)
+			]));
 };
 var $author$project$Main$main = $elm$browser$Browser$element(
 	{
