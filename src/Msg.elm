@@ -24,6 +24,7 @@ type Msg
     | MapTileAction MapAction.SubModel.MapTileMsg
     | EventAction EventMsg
     | Click Vector.Point
+    | AiRoundTick
 
 
 type MenueMsg
@@ -32,6 +33,7 @@ type MenueMsg
     | SetCampaingn
     | ShowDocumentation
     | ShowCredits
+
 
 type SettlementMsg
     = UIMsg SettlementUIMsg

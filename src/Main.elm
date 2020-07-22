@@ -41,6 +41,7 @@ import Templates.LordTemplate as LordTemplate
 import Templates.MapActionTemplate as MapActionTemplate
 import Templates.SettlementTemplate as SettlementTemplate
 import Templates.StartTemplate as StartTemplate
+import Time
 import Troops
 import Vector
 
@@ -74,6 +75,11 @@ type UiState
     | BattleView Battle.Model.BattleStats
     | SettlementView Entities.Model.Lord Entities.Model.Settlement Msg.UiSettlementState
     | LordView Entities.Model.Lord
+
+
+aiTickFrequenz : Float
+aiTickFrequenz =
+    0.1
 
 
 villagesPerLord : Int
@@ -840,6 +846,20 @@ updateEvent msg model =
             { model | event = Event.clearEvents model.event }
 
 
+tickSub : Model -> Sub Msg.Msg
+tickSub model =
+    if model.playersTurn == 0 then
+        Sub.none
+
+    else
+        Time.every aiTickFrequenz (\_ -> Msg.AiRoundTick)
+
+
 main : Program () Model Msg.Msg
 main =
-    Browser.sandbox { init = startGame 4, view = view, update = update }
+    Browser.element
+        { init = \_ -> startGame 4
+        , subscriptions = \m -> tickSub m
+        , view = view
+        , update = update
+        }
