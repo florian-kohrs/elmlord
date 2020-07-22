@@ -2,6 +2,7 @@ module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, 
 
 import Battle.Model exposing (..)
 import Dict
+import DictExt
 import Entities
 import Entities.Model
 import Map
@@ -260,7 +261,7 @@ evaluateBattle w army ter siegeBonus =
 calculateEntityCasualties : Troops.Army -> Troops.Army -> Troops.Army
 calculateEntityCasualties armyBefore armyAfter =
     Dict.merge
-        (\k v r -> Dict.insert k 0 r)
+        (\k v r -> Dict.insert k -v r)
         (\k v1 v2 r -> Dict.insert k (v2 - v1) r)
         (\k v2 r -> Dict.insert k 0 r)
         armyBefore
