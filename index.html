@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Elmlord</title>
+  <script type="text/javascript" src="elm.js"></script>
+</head>
+
+<body>
+    <div id="myapp"></div>
+</body>
+
+<script type="text/javascript">
+
+var app = Elm.Main.init({
+    node: document.getElementById('myapp')
+});
+
+document.getElementById("audio-player").volume = 0.1;
+document.getElementById("sound-player").volume = 0.1;
+
+
+app.ports.startMusic.subscribe(function() {
+    document.getElementById("audio-player").play();
+});
+
+app.ports.openLink.subscribe((link) => {
+    window.open(link, '_blank');
+});
+
+
+</script>
+
+</html>

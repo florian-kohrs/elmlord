@@ -13,7 +13,7 @@ import Entities.Lords
 import Entities.Model
 import Event
 import Faction
-import Html exposing (Html, div, span, text)
+import Html exposing (Html, audio, div, span, text)
 import Html.Attributes exposing (..)
 import ListExt
 import Map
@@ -30,6 +30,7 @@ import PathAgent
 import Pathfinder
 import Pathfinder.Drawer
 import Pathfinder.Model
+import Ports exposing (openLink, playSound, startMusic)
 import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -69,8 +70,7 @@ type GameState
 
 
 type UiState
-    = MainMenue
-    | NewCampain
+    = MainMenue MainMenueState
     | GameMenue
     | BattleView Battle.Model.BattleStats
     | SettlementView Entities.Model.Lord Entities.Model.Settlement Msg.UiSettlementState
@@ -80,6 +80,11 @@ type UiState
 aiTickFrequenz : Float
 aiTickFrequenz =
     0.1
+
+
+type MainMenueState
+    = Menue
+    | Campaign
 
 
 villagesPerLord : Int
@@ -255,18 +260,18 @@ testLord =
 ----------------------------------------------------------
 
 
-startGame : Int -> Model
+startGame : Int -> ( Model, Cmd Msg.Msg )
 startGame playerCount =
-    initPlayers initialModel playerCount
+    ( initialModel playerCount, Cmd.none )
 
 
-initialModel : Model
-initialModel =
+initialModel : Int -> Model
+initialModel playerCount =
     let
         map =
             MapGenerator.createMap
     in
-    Model (Entities.Lords.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0
+    Model (initPlayers map playerCount) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0
 
 
 
@@ -292,17 +297,14 @@ testEvents =
     ]
 
 
-initPlayers : Model -> Int -> Model
+initPlayers : Map.Model.Map -> Int -> Entities.Lords.LordList
 initPlayers m count =
-    { m
-        | lords =
-            Entities.Lords.Cons
-                (initPlayer m.map 0 (2 * 0.125))
-                (List.map
-                    (\i -> initAI (initPlayer m.map i (2 * (toFloat i / toFloat count + 0.125))) (toFloat i))
-                    (List.range 1 (count - 1))
-                )
-    }
+    Entities.Lords.Cons
+        (initPlayer m 0 (2 * 0.125))
+        (List.map
+            (\i -> initAI (initPlayer m i (2 * (toFloat i / toFloat count + 0.125))) (toFloat i))
+            (List.range 1 (count - 1))
+        )
 
 
 initAI : Entities.Model.Lord -> Float -> AI.AI
@@ -410,30 +412,33 @@ getSafeSettlementInfo i m dict =
 
 view : Model -> Html Msg.Msg
 view model =
-    case model.gameState of
-        GameSetup uistate ->
-            case uistate of
-                MainMenue ->
-                    setMenueView model
+    div []
+        [ case model.gameState of
+            GameSetup uistate ->
+                case uistate of
+                    MainMenue state ->
+                        setMenueView state
 
-                NewCampain ->
-                    setCampaignView model
+                    _ ->
+                        setGameView model
 
-                _ ->
-                    setGameView model
-
-        GameOver _ ->
-            setGameView model
-
-
-setMenueView : Model -> Html Msg.Msg
-setMenueView model =
-    div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate)
+            GameOver _ ->
+                setGameView model
+        , audio [ src "./assets/sounds/menue.mp3", Html.Attributes.id "audio-player" ] []
+        , audio [ Html.Attributes.id "sound-player" ] []
+        ]
 
 
-setCampaignView : Model -> Html Msg.Msg
-setCampaignView model =
-    div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startCampaign)
+setMenueView : MainMenueState -> Html Msg.Msg
+setMenueView state =
+    div [ Html.Attributes.class "main-container" ]
+        (case state of
+            Menue ->
+                List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate
+
+            Campaign ->
+                List.map addStylesheet stylessheets ++ StartTemplate.startCampaign
+        )
 
 
 setGameView : Model -> Html Msg.Msg
@@ -488,6 +493,11 @@ findModalWindow model =
             EndTemplate.generateEndTemplate bool
 
 
+
+-- for the implementation of design during the development
+----------------------------------------------------------
+
+
 addStylesheet : String -> Html Msg.Msg
 addStylesheet href =
     Html.node "link" [ attribute "Rel" "stylesheet", attribute "property" "stylesheet", attribute "href" ("./assets/styles/" ++ href ++ ".css") ] []
@@ -503,35 +513,35 @@ stylessheets =
 ----------------------------------------------------------
 
 
-update : Msg.Msg -> Model -> Model
+update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     case msg of
         Msg.EndRound ->
-            { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.Lords.getAis model.lords)) }
+            emptyCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.getAis model.lords)) }
 
         Msg.EndGame bool ->
-            { model | gameState = GameOver bool }
+            emptyCmd { model | gameState = GameOver bool }
 
         Msg.CloseModal ->
-            { model | gameState = GameSetup GameMenue }
+            emptyCmd { model | gameState = GameSetup GameMenue }
 
         Msg.BattleAction bmsg ->
-            updateBattle bmsg model
+            emptyCmd (updateBattle bmsg model)
 
         Msg.MenueAction mmsg ->
             updateMenue mmsg model
 
         Msg.SettlementAction action ->
-            updateSettlement action model
+            emptyCmd (updateSettlement action model)
 
         Msg.EventAction emsg ->
-            updateEvent emsg model
+            emptyCmd (updateEvent emsg model)
 
         Msg.MapTileAction action ->
-            updateMaptileAction model action
+            emptyCmd (updateMaptileAction model action)
 
         Msg.Click p ->
-            { model | selectedPoint = Just p }
+            emptyCmd { model | selectedPoint = Just p }
 
 
 updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
@@ -809,23 +819,23 @@ filterDefeatedLord k n ais =
 ----------------------------------------------------------
 
 
-updateMenue : Msg.MenueMsg -> Model -> Model
+updateMenue : Msg.MenueMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateMenue msg model =
     case msg of
         Msg.StartGame ->
-            { model | gameState = GameSetup GameMenue }
+            ( { model | gameState = GameSetup GameMenue }, startMusic "play" )
 
         Msg.ShowMenue ->
-            { model | gameState = GameSetup MainMenue }
+            emptyCmd { model | gameState = GameSetup (MainMenue Menue) }
 
         Msg.ShowDocumentation ->
-            { model | gameState = GameSetup GameMenue }
+            ( { model | gameState = GameSetup (MainMenue Menue) }, openLink "https://github.com/flofe104/elmlord" )
 
         Msg.SetCampaingn ->
-            { model | gameState = GameSetup NewCampain }
+            emptyCmd { model | gameState = GameSetup (MainMenue Campaign) }
 
         Msg.ShowCredits ->
-            { model | gameState = GameSetup GameMenue }
+            ( { model | gameState = GameSetup (MainMenue Menue) }, openLink "https://github.com/flofe104/elmlord" )
 
 
 
@@ -853,6 +863,11 @@ tickSub model =
 
     else
         Time.every aiTickFrequenz (\_ -> Msg.AiRoundTick)
+
+
+emptyCmd : Model -> ( Model, Cmd Msg.Msg )
+emptyCmd m =
+    ( m, Cmd.none )
 
 
 main : Program () Model Msg.Msg

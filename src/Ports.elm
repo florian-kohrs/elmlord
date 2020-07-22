@@ -1,5 +1,7 @@
-port module Ports exposing (sounds, links)
+port module Ports exposing (startMusic, playSound, openLink)
 
-port sounds : String -> Cmd msg
+port startMusic : String -> Cmd msg
 
-port links : String -> Cmd msg
+port playSound :  String -> Cmd msg
+
+port openLink : String -> Cmd msg
