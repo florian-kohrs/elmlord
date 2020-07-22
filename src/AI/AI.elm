@@ -52,6 +52,16 @@ type alias SettlmentDefenseRating =
     { settlement : Entities.Model.Settlement, armyStrengthVariance : Float }
 
 
+getAiActionMultiplier : Float -> Float
+getAiActionMultiplier f =
+    1 + sin (2 * pi * f) / 3
+
+
+setLord : AI -> Entities.Model.Lord -> AI
+setLord ai l =
+    { ai | lord = l }
+
+
 updateAi : AI -> AiRoundActions -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> AI
 updateAi ai action moveTowards =
     case action of
@@ -89,7 +99,7 @@ getAiActions ai getTurnsToPoint enemies =
             getSettlementDefenseActions ai getTurnsToPoint enemies
 
         enemySettlementStates =
-            List.foldl (\l r -> settlementArmiesStrength l ++ r) [] enemies
+            getSettlementAttackActions ai getTurnsToPoint enemies
     in
     ownSettlementDefenseActions
 
@@ -115,9 +125,32 @@ getSettlementAttackActions :
 getSettlementAttackActions ai getTurnsToPoint enemies =
     ListExt.justList <|
         List.foldl
-            (\s r -> evaluateSettlementDefense ai s :: r)
+            (\s r -> evaluateSettlementSiegeAction ai s enemies :: r)
             []
-            (settlementDefenseArmyRating ai.lord)
+            (List.concat <| List.map (\l -> l.land) enemies)
+
+
+evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities.Model.Lord -> Maybe AiRoundActionPreference
+evaluateSettlementSiegeAction ai s ls =
+    let
+        siegeStrengthDiff =
+            toFloat (Troops.sumTroopStats ai.lord.entity.army)
+                / toFloat (settlementDefenseStrength ai s ls)
+    in
+    if
+        siegeStrengthDiff
+            >= 1
+    then
+        Just
+            (AiRoundActionPreference
+                (DoSomething (SiegeSettlement s))
+                (siegeStrengthDiff
+                    * ai.strategy.siegeMultiplier
+                )
+            )
+
+    else
+        Nothing
 
 
 
@@ -138,7 +171,7 @@ evaluateSettlementDefense ai settlementDefenseRating =
         Just
             (AiRoundActionPreference
                 (DoSomething (SwapTroops Dict.empty settlementDefenseRating.settlement))
-                (settlementDefenseRating.armyStrengthVariance / ai.strategy.defendMultiplier)
+                ((settlementDefenseRating.armyStrengthVariance ^ -1) * ai.strategy.defendMultiplier)
             )
 
 
@@ -194,22 +227,22 @@ settlementDefenseStrength :
     -> Int
 settlementDefenseStrength ai s enemies =
     let
-        settlementDefenseStrength =
-            entityStrength s
+        settlementDefense =
+            round <| entityStrength s.entity
     in
     case Entities.landlordOnSettlement s enemies of
         Nothing ->
-            settlementDefenseStrength
+            settlementDefense
 
         Just l ->
-            entityStrength l + settlementDefenseStrength
+            round (entityStrength l.entity) + settlementDefense
 
 
 lordArmyComparison : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordArmyComparison l1 l2 =
     let
         diff =
-            lordStrength l1.entity / lordStrength l2.entity
+            entityStrength l1.entity / entityStrength l2.entity
     in
     1 + Balancing.lordStrengthDiffFactor * diff
 
@@ -217,9 +250,8 @@ lordArmyComparison l1 l2 =
 entityStrength : Entities.Model.WorldEntity -> Float
 entityStrength e =
     toFloat (Troops.sumTroopStats e.army)
-        / estimatedNormalPlayerTroopStrength l
 
 
 lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordStrengthDiff attacker defender =
-    toFloat (Troops.sumTroopStats attacker.entity.army) / toFloat (Troops.sumTroopStats defender.entity.army)
+    entityStrength attacker.entity / entityStrength defender.entity

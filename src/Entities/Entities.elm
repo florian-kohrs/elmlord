@@ -10,13 +10,14 @@ import Troops
 import Vector
 
 
+setLordEntity : Lord -> WorldEntity -> Lord
+setLordEntity l e =
+    { l | entity = e }
+
+
 
 -- all the different types that are used for the model
 ----------------------------------------------------------
-
-
-type LordList
-    = Cons Lord (List Lord)
 
 
 lordSettlementCount : Lord -> Int
@@ -245,16 +246,6 @@ getSettlementFor info =
 ----------------------------------------------------------
 
 
-npcs : LordList -> List Lord
-npcs (Cons _ ls) =
-    ls
-
-
-getPlayer : LordList -> Lord
-getPlayer (Cons p _) =
-    p
-
-
 isLordInOwnSettlement : Lord -> Bool
 isLordInOwnSettlement lord =
     List.any ((==) lord.entity.position) (List.map (\s -> s.entity.position) lord.land)
@@ -281,21 +272,6 @@ landlordOnSettlement s =
 isLandlord : Settlement -> Lord -> Bool
 isLandlord s l =
     List.foldl (\s2 b -> b || s2.entity.name == s.entity.name) False l.land
-
-
-updatePlayer : LordList -> Lord -> LordList
-updatePlayer (Cons _ ps) np =
-    Cons np ps
-
-
-tailLordList : LordList -> List Lord
-tailLordList (Cons _ ps) =
-    ps
-
-
-flattenLordList : LordList -> List Lord
-flattenLordList (Cons p ps) =
-    p :: ps
 
 
 findLordWithSettlement : Settlement -> List Lord -> Maybe Lord

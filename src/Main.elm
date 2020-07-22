@@ -9,6 +9,7 @@ import DateExt
 import Dict
 import Entities
 import Entities.Drawer
+import Entities.Lords
 import Entities.Model
 import Event
 import Faction
@@ -50,13 +51,14 @@ import Vector
 
 
 type alias Model =
-    { lords : Entities.LordList
+    { lords : Entities.Lords.LordList
     , gameState : GameState
     , selectedPoint : Maybe Vector.Point
     , date : DateExt.Date
     , map : Map.Model.Map
     , errorMsg : String
     , event : Event.EventState
+    , playersTurn : Int
     }
 
 
@@ -86,7 +88,7 @@ villageCaptialDistance =
 
 getPlayer : Model -> Entities.Model.Lord
 getPlayer model =
-    Entities.getPlayer model.lords
+    Entities.Lords.getPlayer model.lords
 
 
 
@@ -105,7 +107,7 @@ buildAllMapSvgs m =
         (buildPathSvgs m
             (List.foldl
                 (Entities.Drawer.drawSettlement (getPlayer m))
-                (List.foldl (Entities.Drawer.drawLord (getPlayer m)) (drawnMap m.map) (Entities.flattenLordList m.lords))
+                (List.foldl (Entities.Drawer.drawLord (getPlayer m)) (drawnMap m.map) (Entities.Lords.lordListToList m.lords))
                 (allSettlements m)
             )
         )
@@ -133,7 +135,7 @@ buildPathSvgs : Model -> MapAction.Model.MapClickAction -> MapAction.Model.MapCl
 buildPathSvgs m mapDict =
     let
         player =
-            Entities.getPlayer m.lords
+            Entities.Lords.getPlayer m.lords
     in
     case getSelectedPath m of
         Nothing ->
@@ -150,7 +152,7 @@ getSelectedPath : Model -> Maybe Pathfinder.Model.Path
 getSelectedPath m =
     let
         player =
-            Entities.getPlayer m.lords
+            Entities.Lords.getPlayer m.lords
     in
     case m.selectedPoint of
         Nothing ->
@@ -173,7 +175,7 @@ getPathTo from to map =
 
 allSettlements : Model -> List Entities.Model.Settlement
 allSettlements m =
-    List.concat (List.map .land (Entities.flattenLordList m.lords))
+    List.concat (List.map .land (Entities.Lords.lordListToList m.lords))
 
 
 drawnMap : Map.Model.Map -> MapAction.Model.MapClickAction
@@ -258,7 +260,7 @@ initialModel =
         map =
             MapGenerator.createMap
     in
-    Model (Entities.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState
+    Model (Entities.Lords.Cons testLord []) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0
 
 
 
@@ -286,13 +288,27 @@ testEvents =
 
 initPlayers : Model -> Int -> Model
 initPlayers m count =
-    let
-        lords =
-            List.map
-                (\i -> initPlayer m.map i (2 * (toFloat i / toFloat count + 0.125)))
-                (List.range 0 (count - 1))
-    in
-    { m | lords = Entities.Cons testLord lords }
+    { m
+        | lords =
+            Entities.Lords.Cons
+                (initPlayer m.map 0 (2 * 0.125))
+                (List.map
+                    (\i -> initAI (initPlayer m.map i (2 * (toFloat i / toFloat count + 0.125))) (toFloat i))
+                    (List.range 1 (count - 1))
+                )
+    }
+
+
+initAI : Entities.Model.Lord -> Float -> AI.AI
+initAI l i =
+    AI.AI l
+        (AI.ActionMultipliers
+            (AI.getAiActionMultiplier 0.7 + i / 5)
+            (AI.getAiActionMultiplier 0.3 + i / 7)
+            (AI.getAiActionMultiplier 0.5 + i / 3)
+            (AI.getAiActionMultiplier 0.7 + i / 5)
+            (AI.getAiActionMultiplier 0.9 + i / 7)
+        )
 
 
 initPlayer : Map.Model.Map -> Int -> Float -> Entities.Model.Lord
@@ -394,7 +410,7 @@ view model =
                 MainMenue ->
                     setMenueView model
 
-                NewCampain -> 
+                NewCampain ->
                     setCampaignView model
 
                 _ ->
@@ -408,9 +424,11 @@ setMenueView : Model -> Html Msg.Msg
 setMenueView model =
     div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate)
 
+
 setCampaignView : Model -> Html Msg.Msg
-setCampaignView model = 
+setCampaignView model =
     div [ Html.Attributes.class "main-container" ] (List.map addStylesheet stylessheets ++ StartTemplate.startCampaign)
+
 
 setGameView : Model -> Html Msg.Msg
 setGameView model =
@@ -420,7 +438,7 @@ setGameView model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , HeaderTemplate.generateHeaderTemplate (Entities.getPlayer model.lords) model.date
+        , HeaderTemplate.generateHeaderTemplate (Entities.Lords.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             (List.map addStylesheet stylessheets
                 ++ [ MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
@@ -432,7 +450,7 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] [ Html.text (Debug.toString (Entities.getPlayer model.lords).land) ]
+                   , span [] [ Html.text (Debug.toString (Entities.Lords.getPlayer model.lords).land) ]
                    ]
             )
         ]
@@ -483,7 +501,7 @@ update : Msg.Msg -> Model -> Model
 update msg model =
     case msg of
         Msg.EndRound ->
-            { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.npcs model.lords)) }
+            { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.Lords.getAis model.lords)) }
 
         Msg.EndGame bool ->
             { model | gameState = GameOver bool }
@@ -510,14 +528,14 @@ update msg model =
             { model | selectedPoint = Just p }
 
 
-updateAIsAfterPlayerRound : List Entities.Model.Lord -> List Entities.Model.Lord
-updateAIsAfterPlayerRound lords =
-    List.map (\l -> updateAI l |> endRoundForLord) lords
+updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
+updateAIsAfterPlayerRound ais =
+    List.map (\ai -> AI.setLord ai (endRoundForLord (.lord (updateAI ai)))) ais
 
 
-updateAI : Entities.Model.Lord -> Entities.Model.Lord
-updateAI lord =
-    { lord | entity = Entities.setPosition lord.entity (Vector.addPoints (Vector.Point 1 1) lord.entity.position) }
+updateAI : AI.AI -> AI.AI
+updateAI ai =
+    { ai | lord = Entities.setLordEntity ai.lord (Entities.setPosition ai.lord.entity (Vector.addPoints (Vector.Point 1 1) ai.lord.entity.position)) }
 
 
 endRoundForLord : Entities.Model.Lord -> Entities.Model.Lord
@@ -548,7 +566,7 @@ updateMaptileAction model ma =
                 MapAction.SubModel.SiegeSettlement ->
                     let
                         defender =
-                            Entities.findLordWithSettlement settlement (Entities.flattenLordList model.lords)
+                            Entities.findLordWithSettlement settlement (Entities.Lords.lordListToList model.lords)
                     in
                     case defender of
                         Nothing ->
@@ -591,7 +609,7 @@ updateMaptileAction model ma =
                                 , entity = Entities.setPosition player.entity point
                             }
                     in
-                    { model | lords = Entities.Cons newPlayer (Entities.npcs model.lords) }
+                    { model | lords = Entities.Lords.Cons newPlayer (Entities.Lords.getAis model.lords) }
 
 
 updateLordAction : MapAction.SubModel.LordTileMsg -> Entities.Model.Lord -> Model -> Model
@@ -638,16 +656,16 @@ updateSettlementUI : Msg.SettlementUIMsg -> Model -> Model
 updateSettlementUI msg model =
     case msg of
         Msg.ShowBuyTroops s ->
-            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Msg.RecruitView) }
+            { model | gameState = GameSetup (SettlementView (Entities.Lords.getPlayer model.lords) s Msg.RecruitView) }
 
         Msg.ShowStationTroops s ->
-            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Msg.StationView) }
+            { model | gameState = GameSetup (SettlementView (Entities.Lords.getPlayer model.lords) s Msg.StationView) }
 
         Msg.ShowSettlement s ->
-            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Msg.StandardView) }
+            { model | gameState = GameSetup (SettlementView (Entities.Lords.getPlayer model.lords) s Msg.StandardView) }
 
         Msg.ShowBuildings s ->
-            { model | gameState = GameSetup (SettlementView (Entities.getPlayer model.lords) s Msg.BuildingView) }
+            { model | gameState = GameSetup (SettlementView (Entities.Lords.getPlayer model.lords) s Msg.BuildingView) }
 
 
 updateSettlementStats : Msg.SettlementArmyMsg -> Model -> Model
@@ -655,38 +673,38 @@ updateSettlementStats msg model =
     case msg of
         Msg.BuyTroops t s ->
             updateMultipleTroopStats
-                (Entities.updatePlayer model.lords (Entities.buyTroops (Entities.getPlayer model.lords) t s))
+                (Entities.Lords.updatePlayer model.lords (Entities.buyTroops (Entities.Lords.getPlayer model.lords) t s))
                 s
                 Msg.RecruitView
                 model
 
         Msg.StationTroops t s ->
             updateMultipleTroopStats
-                (Entities.updatePlayer model.lords (Entities.stationTroops (Entities.getPlayer model.lords) t s))
+                (Entities.Lords.updatePlayer model.lords (Entities.stationTroops (Entities.Lords.getPlayer model.lords) t s))
                 s
                 Msg.StationView
                 model
 
         Msg.TakeTroops t s ->
             updateMultipleTroopStats
-                (Entities.updatePlayer model.lords (Entities.takeTroops (Entities.getPlayer model.lords) t s))
+                (Entities.Lords.updatePlayer model.lords (Entities.takeTroops (Entities.Lords.getPlayer model.lords) t s))
                 s
                 Msg.StationView
                 model
 
         Msg.UpgradeBuilding b s ->
             updateMultipleTroopStats
-                (Entities.updatePlayer model.lords (Entities.upgradeBuilding (Entities.getPlayer model.lords) b s))
+                (Entities.Lords.updatePlayer model.lords (Entities.upgradeBuilding (Entities.Lords.getPlayer model.lords) b s))
                 s
                 Msg.BuildingView
                 model
 
 
-updateMultipleTroopStats : Entities.LordList -> Entities.Model.Settlement -> Msg.UiSettlementState -> Model -> Model
+updateMultipleTroopStats : Entities.Lords.LordList -> Entities.Model.Settlement -> Msg.UiSettlementState -> Model -> Model
 updateMultipleTroopStats l s u m =
     let
         newSettle =
-            Entities.getSettlementByName (Entities.getPlayer l).land s.entity.name
+            Entities.getSettlementByName (Entities.Lords.getPlayer l).land s.entity.name
     in
     case newSettle of
         Nothing ->
@@ -695,7 +713,7 @@ updateMultipleTroopStats l s u m =
         Just x ->
             { m
                 | lords = l
-                , gameState = GameSetup (SettlementView (Entities.getPlayer l) x u)
+                , gameState = GameSetup (SettlementView (Entities.Lords.getPlayer l) x u)
             }
 
 
@@ -727,7 +745,15 @@ updateBattle msg model =
         Msg.FleeBattle bS ->
             updateLordsAfterBattle
                 (Battle.fleeBattle bS)
-                (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
+                (List.map
+                    (\ai ->
+                        OperatorExt.ternary
+                            (ai.lord.entity.name == bS.defender.entity.name)
+                            (AI.setLord ai bS.defender)
+                            ai
+                    )
+                    (Entities.Lords.getAis model.lords)
+                )
                 model
                 (GameSetup GameMenue)
 
@@ -736,7 +762,7 @@ updateBattle msg model =
                 Nothing ->
                     updateLordsAfterBattle
                         bS.attacker
-                        (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
+                        (List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == bS.defender.entity.name) (AI.setLord ai bS.defender) ai) (Entities.Lords.getAis model.lords))
                         model
                         (GameSetup GameMenue)
 
@@ -746,30 +772,30 @@ updateBattle msg model =
                             Battle.siegeBattleAftermath bS settle
 
                         newEnemyLords =
-                            checkLordLost
+                            filterDefeatedLord
                                 lordKilled
                                 newDefender.entity.name
-                                (List.map (\x -> OperatorExt.ternary (x.entity.name == bS.defender.entity.name) bS.defender x) (Entities.tailLordList model.lords))
+                                (List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == bS.defender.entity.name) (AI.setLord ai bS.defender) ai) (Entities.Lords.getAis model.lords))
                     in
                     updateLordsAfterBattle
                         newAttacker
                         newEnemyLords
                         model
-                        (OperatorExt.ternary (List.length (Entities.tailLordList model.lords) > 0) (GameSetup GameMenue) (GameOver True))
+                        (OperatorExt.ternary (List.length (Entities.Lords.npcs model.lords) > 0) (GameSetup GameMenue) (GameOver True))
 
 
-updateLordsAfterBattle : Entities.Model.Lord -> List Entities.Model.Lord -> Model -> GameState -> Model
+updateLordsAfterBattle : Entities.Model.Lord -> List AI.AI -> Model -> GameState -> Model
 updateLordsAfterBattle player enemyLords model state =
-    { model | lords = Entities.Cons player enemyLords, gameState = state }
+    { model | lords = Entities.Lords.Cons player enemyLords, gameState = state }
 
 
-checkLordLost : Bool -> String -> List Entities.Model.Lord -> List Entities.Model.Lord
-checkLordLost k n l =
+filterDefeatedLord : Bool -> String -> List AI.AI -> List AI.AI
+filterDefeatedLord k n ais =
     if k then
-        List.filter (\x -> x.entity.name /= n) l
+        List.filter (\x -> x.lord.entity.name /= n) ais
 
     else
-        l
+        ais
 
 
 
@@ -789,10 +815,10 @@ updateMenue msg model =
         Msg.ShowDocumentation ->
             { model | gameState = GameSetup GameMenue }
 
-        Msg.SetCampaingn -> 
+        Msg.SetCampaingn ->
             { model | gameState = GameSetup NewCampain }
 
-        Msg.ShowCredits -> 
+        Msg.ShowCredits ->
             { model | gameState = GameSetup GameMenue }
 
 
