@@ -1,6 +1,7 @@
 module Templates.LordTemplate exposing (..)
 
 import Dict
+import DictExt
 import Entities
 import Entities.Model
 import Html exposing (Html, div, img, span, text)
@@ -43,7 +44,12 @@ generateLordTemplate l =
                 , div [ Html.Attributes.class "lord-troops box-shadow" ]
                     (div [ Html.Attributes.class "lord-troop-header" ]
                         [ span [] [ Html.text "Current-Army" ] ]
-                        :: Dict.foldr (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "lord-troop-container" :: r) [] l.entity.army
+                        :: DictExt.foldlOverKeys
+                            (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "lord-troop-container" :: r)
+                            (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "lord-troop-container" :: r)
+                            []
+                            l.entity.army
+                            Troops.troopKeyList
                     )
                 ]
             ]

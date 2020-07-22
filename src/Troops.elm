@@ -57,7 +57,12 @@ intToTroopType i =
 
 troopTypeList : List TroopType
 troopTypeList =
-    [ Sword, Spear, Archer, Knight ]
+    [ Knight, Archer, Spear, Sword ]
+
+
+troopKeyList : List Int
+troopKeyList =
+    List.map troopTypeToInt troopTypeList
 
 
 updateTroops : Army -> TroopType -> Int -> Army

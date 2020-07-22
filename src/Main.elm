@@ -517,7 +517,7 @@ update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     case msg of
         Msg.EndRound ->
-            emptyCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) }
+            emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
 
         Msg.EndGame bool ->
             emptyCmd { model | gameState = GameOver bool }
@@ -545,6 +545,11 @@ update msg model =
 
         Msg.AiRoundTick ->
             emptyCmd model
+
+
+endAnyRound : Model -> Model
+endAnyRound m =
+    { m | playersTurn = modBy (List.length <| Entities.Lords.lordListToList m.lords) (m.playersTurn + 1) }
 
 
 updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
