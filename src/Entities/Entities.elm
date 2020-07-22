@@ -292,14 +292,6 @@ applyLordNewRecruits lord =
     { lord | land = applySettlementNewRecruits lord.land }
 
 
-checkLordBattleAftermath : Bool -> String -> List Entities.Model.Lord -> List Entities.Model.Lord
-checkLordBattleAftermath k n l =
-    if k then
-        List.filter (\x -> x.entity.name /= n) l
-
-    else
-        l
-
 
 -- functions for income calculation of the lord
 ----------------------------------------------------------

@@ -271,7 +271,7 @@ initialModel playerCount =
         map =
             MapGenerator.createMap
     in
-    Model (initPlayers map playerCount) (GameSetup MainMenue) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0
+    Model (initPlayers map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0
 
 
 
@@ -517,7 +517,7 @@ update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     case msg of
         Msg.EndRound ->
-            emptyCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Cons (endRoundForLord (getPlayer model)) (updateAIsAfterPlayerRound (Entities.getAis model.lords)) }
+            emptyCmd { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) }
 
         Msg.EndGame bool ->
             emptyCmd { model | gameState = GameOver bool }
@@ -542,6 +542,9 @@ update msg model =
 
         Msg.Click p ->
             emptyCmd { model | selectedPoint = Just p }
+
+        Msg.AiRoundTick ->
+            emptyCmd model
 
 
 updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
