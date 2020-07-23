@@ -80,7 +80,7 @@ type UiState
 
 aiTickFrequenz : Float
 aiTickFrequenz =
-    500
+    1
 
 
 type MainMenueState
@@ -579,7 +579,7 @@ update msg model =
             else
                 case msg of
                     Msg.AiRoundTick ->
-                        emptyCmd <| endAnyRound <| playAiTurn model
+                        emptyCmd <| playAiTurn model
 
                     _ ->
                         emptyCmd <| { model | errorMsg = "Its not your turn" }
@@ -599,7 +599,7 @@ playAiTurn : Model -> Model
 playAiTurn m =
     case ListExt.getElementAt (m.playersTurn - 1) (Entities.Lords.getAis m.lords) of
         Nothing ->
-            endAnyRound m
+            m
 
         Just ai ->
             let
@@ -607,23 +607,36 @@ playAiTurn m =
                     AI.getAiAction
                         ai
                         (PathAgent.lordsTurnToReachDestination m.map)
-                        (Entities.Lords.getLordsExceptIndex m.lords m.playersTurn)
+                        (PathAgent.canMoveTowardsInTurn m.map)
+                        (Entities.Lords.getLordsExcept m.lords ai.lord)
             in
             case action of
                 AI.EndRound ->
-                    endAnyRound m
+                    endAnyRound <|
+                        { m
+                            | lords =
+                                Entities.Lords.replaceAi m.lords
+                                    (AI.setLord ai (endRoundForLord ai.lord))
+                        }
 
                 other ->
                     { m
                         | lords =
                             Entities.Lords.replaceAi m.lords
-                                (updateAI (AI.updateAi ai other (PathAgent.moveLordOnPath m.map)))
+                                {- updateAI -} (AI.updateAi ai other (PathAgent.moveLordOnPath m.map))
+                        , event =
+                            Event.setEvents m.event
+                                (Event.appendEvent m.event.events (ai.lord.entity.name ++ " " ++ String.fromFloat (PathAgent.remainingMovement ai.lord.agent)) (AI.showAiRoundAction other) Event.Minor)
                     }
 
 
 updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
 updateAIsAfterPlayerRound ais =
     List.map (\ai -> AI.setLord ai (endRoundForLord (.lord (updateAI ai)))) ais
+
+
+
+--test function
 
 
 updateAI : AI.AI -> AI.AI

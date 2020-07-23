@@ -1,5 +1,6 @@
 module PathAgent exposing
-    ( getAgent
+    ( canMoveTowardsInTurn
+    , getAgent
     , lordsTurnToReachDestination
     , moveAlongPath
     , moveLordOnPath
@@ -58,6 +59,26 @@ resetUsedMovement a =
 setUsedMovement : Float -> Agent -> Agent
 setUsedMovement f a =
     { a | usedMovement = f }
+
+
+canMoveTowardsInTurn : Map.Model.Map -> Entities.Model.Lord -> Vector.Point -> Bool
+canMoveTowardsInTurn m l p =
+    case Pathfinder.getPathTo l.entity.position p m of
+        Nothing ->
+            True
+
+        Just path ->
+            enoughMovementToMove path l.agent
+
+
+enoughMovementToMove : Pathfinder.Model.Path -> Agent -> Bool
+enoughMovementToMove path agent =
+    case .path <| Pathfinder.cutFirstStepFromPath path of
+        [] ->
+            True
+
+        p :: _ ->
+            canReachInRound agent.speed agent.usedMovement p.timeLoss
 
 
 type alias MoveSimulator =

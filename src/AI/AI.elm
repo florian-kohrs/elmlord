@@ -36,12 +36,76 @@ type AiRoundActions
     | DoSomething BasicAction
 
 
+showAiRoundAction : AiRoundActions -> String
+showAiRoundAction aiRoundActions =
+    case aiRoundActions of
+        EndRound ->
+            "End Round"
+
+        GoSomeWhere p ->
+            "Go to " ++ Vector.showPoint p
+
+        DoSomething basicAction ->
+            showBasicAction basicAction
+
+
+getAiRoundActionDestination : AiRoundActions -> Maybe Vector.Point
+getAiRoundActionDestination a =
+    case a of
+        EndRound ->
+            Nothing
+
+        GoSomeWhere p ->
+            Just p
+
+        DoSomething basicAction ->
+            Just <| getBasicActionDestination basicAction
+
+
 type BasicAction
     = AttackLord Entities.Model.Lord
     | HireTroops (Dict.Dict Troops.TroopType Int) Entities.Model.Settlement
     | SwapTroops (Dict.Dict Troops.TroopType Int) Entities.Model.Settlement
     | SiegeSettlement Entities.Model.Settlement
     | ImproveBuilding Entities.Model.Settlement Building.Building
+
+
+getBasicActionDestination : BasicAction -> Vector.Point
+getBasicActionDestination basicAction =
+    case basicAction of
+        AttackLord l ->
+            l.entity.position
+
+        HireTroops _ s ->
+            s.entity.position
+
+        SwapTroops _ s ->
+            s.entity.position
+
+        SiegeSettlement s ->
+            s.entity.position
+
+        ImproveBuilding s _ ->
+            s.entity.position
+
+
+showBasicAction : BasicAction -> String
+showBasicAction basicAction =
+    case basicAction of
+        AttackLord _ ->
+            "Attack Lord"
+
+        HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
+            "Hire Troops"
+
+        SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
+            "Swap Troops"
+
+        SiegeSettlement settlementModelEntities ->
+            "Siege Settlement: " ++ settlementModelEntities.entity.name
+
+        ImproveBuilding settlementModelEntities buildingBuilding ->
+            "Improve Building"
 
 
 type alias EnemyStatus =
@@ -72,11 +136,30 @@ updateAi ai action moveTowards =
             { ai | lord = moveTowards ai.lord p }
 
         DoSomething basicAction ->
+            executeBasicAiAction ai basicAction moveTowards
+
+
+executeBasicAiAction : AI -> BasicAction -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> AI
+executeBasicAiAction ai action moveTowards =
+    case action of
+        SiegeSettlement s ->
+            let
+                movedAI =
+                    { ai | lord = moveTowards ai.lord s.entity.position }
+            in
+            if movedAI.lord.entity.position == s.entity.position then
+                movedAI
+                --implement / search ui acion form main
+
+            else
+                movedAI
+
+        _ ->
             ai
 
 
-getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> List Entities.Model.Lord -> AiRoundActions
-getAiAction ai distanceTo enemies =
+getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> (Entities.Model.Lord -> Vector.Point -> Bool) -> List Entities.Model.Lord -> AiRoundActions
+getAiAction ai distanceTo canMoveInTurn enemies =
     case
         List.head
             (List.sortBy (\action -> action.actionValue) (getAiActions ai distanceTo enemies))
@@ -85,7 +168,16 @@ getAiAction ai distanceTo enemies =
             EndRound
 
         Just action ->
-            action.action
+            case getAiRoundActionDestination action.action of
+                Nothing ->
+                    EndRound
+
+                Just p ->
+                    if canMoveInTurn ai.lord p then
+                        action.action
+
+                    else
+                        EndRound
 
 
 getAiActions :
@@ -101,7 +193,11 @@ getAiActions ai getTurnsToPoint enemies =
         enemySettlementStates =
             getSettlementAttackActions ai getTurnsToPoint enemies
     in
-    ownSettlementDefenseActions
+    if PathAgent.remainingMovement ai.lord.agent == 0 then
+        []
+
+    else
+        enemySettlementStates
 
 
 getSettlementDefenseActions :

@@ -39,19 +39,18 @@ replaceAi lordList newAi =
         )
 
 
-getLordsExceptIndex : LordList -> Int -> List Lord
-getLordsExceptIndex ls i =
-    Tuple.first <|
-        List.foldr
-            (\l ( r, count ) ->
-                if count == i then
-                    ( r, count + 1 )
+getLordsExcept : LordList -> Lord -> List Lord
+getLordsExcept ls lord =
+    List.foldr
+        (\l r ->
+            if l.entity.name == lord.entity.name then
+                r
 
-                else
-                    ( l :: r, count + 1 )
-            )
-            ( [], 0 )
-            (lordListToList ls)
+            else
+                l :: r
+        )
+        []
+        (lordListToList ls)
 
 
 updatePlayer : LordList -> Lord -> LordList

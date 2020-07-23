@@ -14,9 +14,14 @@ acceptedSettlementLackOfDefense =
 -}
 
 
-distanceFromActionPenalty : Int -> Float
-distanceFromActionPenalty turns =
+distanceFromAggresiveActionPenalty : Int -> Float
+distanceFromAggresiveActionPenalty turns =
     toFloat turns * 0.1
+
+
+distanceFromDefensiveActionPenalty : Int -> Float
+distanceFromDefensiveActionPenalty turns =
+    toFloat turns * 0.05
 
 
 
