@@ -337,7 +337,7 @@ initPlayer m i rad =
     in
     Entities.Model.Lord
         entity
-        250
+        25000
         (initSettlementsFor m Dict.empty entity i)
         (PathAgent.getAgent 5)
 
