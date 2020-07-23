@@ -208,12 +208,7 @@ checkDefenderArmy defender settle =
             Troops.sumTroops s.entity.army == 0
 
 
-handleSettlementTransfer :
-    Entities.Model.Lord
-    -> Entities.Model.Lord
-    -> (Entities.Model.Settlement -> Bool)
-    -> List Entities.Model.Settlement
-    -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
+handleSettlementTransfer : Entities.Model.Lord -> Entities.Model.Lord -> (Entities.Model.Settlement -> Bool) -> List Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
 handleSettlementTransfer attacker defender aFunc ndl =
     ( { attacker
         | land =

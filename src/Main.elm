@@ -461,7 +461,7 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] [ Html.text (Debug.toString (Entities.Lords.getPlayer model.lords).land) ]
+                   , span [] [ Html.text (Debug.toString (model.lords)) ]
                    ]
             )
         ]
@@ -802,8 +802,8 @@ updateBattle msg model =
                         newEnemyLords =
                             filterDefeatedLord
                                 lordKilled
-                                newDefender.entity.name
-                                (List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == bS.defender.entity.name) (AI.setLord ai bS.defender) ai) (Entities.Lords.getAis model.lords))
+                                newDefender
+                                (Entities.Lords.getAis model.lords)
                     in
                     updateLordsAfterBattle
                         newAttacker
@@ -817,13 +817,13 @@ updateLordsAfterBattle player enemyLords model state =
     { model | lords = Entities.Lords.Cons player enemyLords, gameState = state }
 
 
-filterDefeatedLord : Bool -> String -> List AI.AI -> List AI.AI
-filterDefeatedLord k n ais =
+filterDefeatedLord : Bool -> Entities.Model.Lord -> List AI.AI -> List AI.AI
+filterDefeatedLord k d ais =
     if k then
-        List.filter (\x -> x.lord.entity.name /= n) ais
+        List.filter (\x -> x.lord.entity.name /= d.entity.name) ais
 
     else
-        ais
+        List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == d.entity.name) (AI.setLord ai d) ai) ais
 
 
 

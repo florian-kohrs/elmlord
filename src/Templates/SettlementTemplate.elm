@@ -65,7 +65,7 @@ settlementStateToAction pF lord settlement uistate =
         Msg.StandardView ->
             [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuyTroops settlement))) ] [ span [] [ Html.text "Recruit troops" ] ]
             , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowStationTroops settlement))) ] [ span [] [ Html.text "Station troops" ] ]
-            , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuildings settlement))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
+            , checkBuildingCapabilities settlement
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (settlement.income + Building.resolveBonusFromBuildings settlement.buildings Building.Marketplace) ++ " Ducats") ]
@@ -158,6 +158,13 @@ settlementStateToAction pF lord settlement uistate =
                 ]
             ]
 
+
+checkBuildingCapabilities : Entities.Model.Settlement -> Html Msg.Msg
+checkBuildingCapabilities s = 
+    if s.settlementType == Entities.Model.Castle then
+        button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuildings s))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
+    else 
+        div [] []
 
 {-| Returns the listview with the stationed troops, the player can take units out or station new troops to the settlement.
 The function is used for the List.map2 function.
