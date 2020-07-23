@@ -542,45 +542,47 @@ stylessheets =
 
 update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
-    if isPlayersTurn model then
-        case msg of
-            Msg.EndRound ->
-                emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
+    case msg of
+        Msg.EventAction emsg ->
+            emptyCmd (updateEvent emsg model)
 
-            Msg.EndGame bool ->
-                emptyCmd { model | gameState = GameOver bool }
+        Msg.EndGame bool ->
+            emptyCmd { model | gameState = GameOver bool }
 
-            Msg.CloseModal ->
-                emptyCmd { model | gameState = GameSetup GameMenue }
+        other ->
+            if isPlayersTurn model then
+                case other of
+                    Msg.EndRound ->
+                        emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
 
-            Msg.BattleAction bmsg ->
-                emptyCmd (updateBattle bmsg model)
+                    Msg.CloseModal ->
+                        emptyCmd { model | gameState = GameSetup GameMenue }
 
-            Msg.MenueAction mmsg ->
-                updateMenue mmsg model
+                    Msg.BattleAction bmsg ->
+                        emptyCmd (updateBattle bmsg model)
 
-            Msg.SettlementAction action ->
-                emptyCmd (updateSettlement action model)
+                    Msg.MenueAction mmsg ->
+                        updateMenue mmsg model
 
-            Msg.EventAction emsg ->
-                emptyCmd (updateEvent emsg model)
+                    Msg.SettlementAction action ->
+                        emptyCmd (updateSettlement action model)
 
-            Msg.MapTileAction action ->
-                emptyCmd (updateMaptileAction model action)
+                    Msg.MapTileAction action ->
+                        emptyCmd (updateMaptileAction model action)
 
-            Msg.Click p ->
-                emptyCmd { model | selectedPoint = Just p }
+                    Msg.Click p ->
+                        emptyCmd { model | selectedPoint = Just p }
 
-            _ ->
-                emptyCmd model
+                    _ ->
+                        emptyCmd model
 
-    else
-        case msg of
-            Msg.AiRoundTick ->
-                emptyCmd <| endAnyRound <| playAiTurn model
+            else
+                case msg of
+                    Msg.AiRoundTick ->
+                        emptyCmd <| endAnyRound <| playAiTurn model
 
-            _ ->
-                emptyCmd <| { model | errorMsg = "Its not your turn" }
+                    _ ->
+                        emptyCmd <| { model | errorMsg = "Its not your turn" }
 
 
 endAnyRound : Model -> Model
