@@ -80,7 +80,7 @@ type UiState
 
 aiTickFrequenz : Float
 aiTickFrequenz =
-    1
+    2
 
 
 type MainMenueState
@@ -626,7 +626,7 @@ playAiTurn m =
                                 {- updateAI -} (AI.updateAi ai other (PathAgent.moveLordOnPath m.map))
                         , event =
                             Event.setEvents m.event
-                                (Event.appendEvent m.event.events (ai.lord.entity.name ++ " " ++ String.fromFloat (PathAgent.remainingMovement ai.lord.agent)) (AI.showAiRoundAction other) Event.Minor)
+                                (Event.appendEvent m.event.events ai.lord.entity.name (AI.showAiRoundAction other) Event.Minor)
                     }
 
 

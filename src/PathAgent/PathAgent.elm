@@ -123,7 +123,7 @@ pathPartsToTime a ts =
 
 roundsToFinishPath : Agent -> List Pathfinder.Model.PathTile -> Int
 roundsToFinishPath a ps =
-    case List.head (List.reverse (pathPartsToTime a ps)) of
+    case List.head (pathPartsToTime a ps) of
         Nothing ->
             0
 

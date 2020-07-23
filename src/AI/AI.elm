@@ -162,7 +162,10 @@ getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> (Entities.Mo
 getAiAction ai distanceTo canMoveInTurn enemies =
     case
         List.head
-            (List.sortBy (\action -> action.actionValue) (getAiActions ai distanceTo enemies))
+            (List.sortBy
+                (\action -> -action.actionValue)
+                (AiRoundActionPreference EndRound 0.0 :: getAiActions ai distanceTo enemies)
+            )
     of
         Nothing ->
             EndRound
@@ -221,17 +224,24 @@ getSettlementAttackActions :
 getSettlementAttackActions ai getTurnsToPoint enemies =
     ListExt.justList <|
         List.foldl
-            (\s r -> evaluateSettlementSiegeAction ai s enemies :: r)
+            (\s r -> evaluateSettlementSiegeAction ai s (getTurnsToPoint ai.lord s.entity.position) enemies :: r)
             []
             (List.concat <| List.map (\l -> l.land) enemies)
 
 
-evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities.Model.Lord -> Maybe AiRoundActionPreference
-evaluateSettlementSiegeAction ai s ls =
+evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> Int -> List Entities.Model.Lord -> Maybe AiRoundActionPreference
+evaluateSettlementSiegeAction ai s turnsTillReached ls =
     let
         siegeStrengthDiff =
             toFloat (Troops.sumTroopStats ai.lord.entity.army)
-                / toFloat (settlementDefenseStrength ai s ls)
+                / (toFloat (settlementDefenseStrength ai s ls)
+                    * MaybeExt.foldMaybe
+                        (\l ->
+                            1 + Balancing.settlementDefenseBoni s l
+                        )
+                        1
+                        (Entities.landlordOnSettlement s ls)
+                  )
     in
     if
         siegeStrengthDiff
@@ -242,6 +252,7 @@ evaluateSettlementSiegeAction ai s ls =
                 (DoSomething (SiegeSettlement s))
                 (siegeStrengthDiff
                     * ai.strategy.siegeMultiplier
+                    - Balancing.distanceFromAggresiveActionPenalty turnsTillReached
                 )
             )
 
