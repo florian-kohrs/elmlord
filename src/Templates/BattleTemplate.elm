@@ -3,6 +3,7 @@ module Templates.BattleTemplate exposing (generateBattleTemplate)
 import Battle
 import Battle.Model
 import Dict
+import DictExt
 import Entities
 import Entities.Model
 import Html exposing (Html, button, div, img, span, text)
@@ -70,12 +71,14 @@ generateArmyOverview we image casu =
         [ img [ src image ] []
         , span [] [ Html.text we.name ]
         , div []
-            (Dict.merge
+            (DictExt.mergeKeys
                 (\k v1 r -> generateTroopOverview (Troops.intToTroopType k) v1 0 :: r)
                 (\k v1 v2 r -> generateTroopOverview (Troops.intToTroopType k) v1 v2 :: r)
                 (\k v2 r -> generateTroopOverview (Troops.intToTroopType k) 0 v2 :: r)
+                (\k r -> generateTroopOverview (Troops.intToTroopType k) 0 0 :: r)
                 we.army
                 casu
+                Troops.troopKeyList
                 []
             )
         ]

@@ -2,6 +2,7 @@ module Templates.HeaderTemplate exposing (..)
 
 import DateExt
 import Dict
+import DictExt
 import Entities
 import Entities.Model
 import Html exposing (Html, audio, div, img, span, text)
@@ -91,7 +92,7 @@ headerTroopTemplate lord =
                 , span [] [ Html.text "Stantioned" ]
                 ]
             , div []
-                (Dict.foldr
+                (DictExt.foldlOverKeys
                     (\k v r ->
                         case Dict.get k lordSettlementTroops of
                             Nothing ->
@@ -100,8 +101,10 @@ headerTroopTemplate lord =
                             Just amount ->
                                 generateTroopTooltip (Troops.intToTroopType k) v amount :: r
                     )
+                    (\k r -> generateTroopTooltip (Troops.intToTroopType k) 0 0 :: r)
                     []
                     lord.entity.army
+                    Troops.troopKeyList
                 )
             ]
         ]

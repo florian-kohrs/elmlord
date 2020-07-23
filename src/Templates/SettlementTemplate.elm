@@ -2,6 +2,7 @@ module Templates.SettlementTemplate exposing (..)
 
 import Building
 import Dict
+import DictExt
 import Entities
 import Entities.Model
 import Html exposing (Html, button, div, img, span, text)
@@ -70,7 +71,14 @@ settlementStateToAction pF lord settlement uistate =
                 , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (settlement.income + Building.resolveBonusFromBuildings settlement.buildings Building.Marketplace) ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                    , div [] (Dict.foldr (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "stationed-troop-container troop-container" :: r) [] settlement.entity.army)
+                    , div []
+                        (DictExt.foldlOverKeys
+                            (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "stationed-troop-container troop-container" :: r)
+                            (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "stationed-troop-container troop-container" :: r)
+                            []
+                            settlement.entity.army
+                            Troops.troopKeyList
+                        )
                     ]
                 ]
             ]
@@ -86,7 +94,15 @@ settlementStateToAction pF lord settlement uistate =
                             [ img [ src (Entities.getSettlementImage settlement) ] []
                             ]
                         ]
-                    :: Dict.merge (\k v1 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 0 settlement lord :: r) (\k v1 v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 v2 settlement lord :: r) (\k v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 v2 settlement lord :: r) lord.entity.army settlement.recruitLimits []
+                    :: DictExt.mergeKeys
+                        (\k v1 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 0 settlement lord :: r)
+                        (\k v1 v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) v1 v2 settlement lord :: r)
+                        (\k v2 r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 v2 settlement lord :: r)
+                        (\k r -> generateRecruitTroopContainer (Troops.intToTroopType k) 0 0 settlement lord :: r)
+                        lord.entity.army
+                        settlement.recruitLimits
+                        Troops.troopKeyList
+                        []
                     ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
@@ -102,7 +118,15 @@ settlementStateToAction pF lord settlement uistate =
                             [ img [ src (Entities.getSettlementImage settlement) ] []
                             ]
                         ]
-                    :: Dict.merge (\k v1 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 0 settlement :: r) (\k v1 v2 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 v2 settlement :: r) (\k v2 r -> generateStationTroopContainer (Troops.intToTroopType k) 0 v2 settlement :: r) lord.entity.army settlement.entity.army []
+                    :: DictExt.mergeKeys
+                        (\k v1 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 0 settlement :: r)
+                        (\k v1 v2 r -> generateStationTroopContainer (Troops.intToTroopType k) v1 v2 settlement :: r)
+                        (\k v2 r -> generateStationTroopContainer (Troops.intToTroopType k) 0 v2 settlement :: r)
+                        (\k r -> generateStationTroopContainer (Troops.intToTroopType k) 0 0 settlement :: r)
+                        lord.entity.army
+                        settlement.entity.army
+                        Troops.troopKeyList
+                        []
                     ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]
@@ -114,7 +138,14 @@ settlementStateToAction pF lord settlement uistate =
                         , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
                         , div [ Html.Attributes.class "stationed-troops-overview" ]
                             [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
-                            , div [] (Dict.foldr (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "stationed-troop-container troop-container" :: r) [] settlement.entity.army)
+                            , div []
+                                (DictExt.foldlOverKeys
+                                    (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "stationed-troop-container troop-container" :: r)
+                                    (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "stationed-troop-container troop-container" :: r)
+                                    []
+                                    settlement.entity.army
+                                    Troops.troopKeyList
+                                )
                             ]
                         ]
                    ]
