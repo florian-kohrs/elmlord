@@ -19,17 +19,17 @@ import Vector
 -}
 generateMapActionTemplate : Maybe Vector.Point -> MapAction.Model.MapClickAction -> Html Msg.Msg
 generateMapActionTemplate p dict =
-    case p of
-        Nothing ->
-            div [] []
+    let
+        actions =
+            case p of
+                Nothing ->
+                    []
 
-        Just x ->
-            let
-                actions =
+                Just x ->
                     MapAction.actionsOnPoint x dict
-            in
-            div [ Html.Attributes.class "map-action-menu" ]
-                (span [] [ Html.text "Map Actions" ] :: List.map generateMapActionButtons actions)
+    in
+    div [ Html.Attributes.class "map-action-menu" ]
+        (span [] [ Html.text "Map Actions" ] :: List.map generateMapActionButtons actions)
 
 
 {-| Function for map, that displays a button for each possible action

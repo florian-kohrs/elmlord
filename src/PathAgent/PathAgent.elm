@@ -1,4 +1,15 @@
-module PathAgent exposing (getAgent, moveAlongPath, pathPartsToTime, remainingMovement, resetLordUsedMovement, resetUsedMovement, setUsedMovement, simulateDistance)
+module PathAgent exposing
+    ( getAgent
+    , lordsTurnToReachDestination
+    , moveAlongPath
+    , moveLordOnPath
+    , pathPartsToTime
+    , remainingMovement
+    , resetLordUsedMovement
+    , resetUsedMovement
+    , setUsedMovement
+    , simulateDistance
+    )
 
 import Dict exposing (Dict)
 import Entities
@@ -61,6 +72,16 @@ newMoveSimulator move usedMove =
 moveSimulatorFromAgent : Agent -> MoveSimulator
 moveSimulatorFromAgent a =
     newMoveSimulator a.speed a.usedMovement
+
+
+lordsTurnToReachDestination : Map.Model.Map -> Entities.Model.Lord -> Vector.Point -> Int
+lordsTurnToReachDestination m l p =
+    case Pathfinder.getPathTo l.entity.position p m of
+        Nothing ->
+            9000
+
+        Just path ->
+            roundsToFinishPath l.agent path.path
 
 
 pathPartsToTime : Agent -> List Pathfinder.Model.PathTile -> List ( Pathfinder.Model.PathTile, Int )
