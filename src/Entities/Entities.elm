@@ -9,7 +9,6 @@ import OperatorExt
 import Troops
 import Vector
 
-
 setLordEntity : Lord -> WorldEntity -> Lord
 setLordEntity l e =
     { l | entity = e }
@@ -291,7 +290,9 @@ applyLordNewRecruits : Lord -> Lord
 applyLordNewRecruits lord =
     { lord | land = applySettlementNewRecruits lord.land }
 
-
+factionToLord : Faction.Faction -> List Lord -> Maybe Lord
+factionToLord f l = 
+    List.head (List.filter (\x -> x.entity.faction == f) l)
 
 -- functions for income calculation of the lord
 ----------------------------------------------------------

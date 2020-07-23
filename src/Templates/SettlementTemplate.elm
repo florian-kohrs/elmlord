@@ -12,6 +12,7 @@ import Msg
 import OperatorExt
 import Templates.HelperTemplate as Helper
 import Troops
+import Faction exposing (Faction)
 
 
 {-| Returns the layout for the settlement modal (Enter/View [Settlement-Name])
@@ -21,8 +22,8 @@ import Troops
     @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
 
 -}
-generateSettlementModalTemplate : Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> Html Msg.Msg
-generateSettlementModalTemplate lord settlement uistate =
+generateSettlementModalTemplate : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> Html Msg.Msg
+generateSettlementModalTemplate pF lord settlement uistate =
     div [ Html.Attributes.class "modal-background" ]
         [ div [ Html.Attributes.class "settlement-modal" ]
             [ div [ Html.Attributes.class "settlement-modal-close-container" ]
@@ -35,16 +36,16 @@ generateSettlementModalTemplate lord settlement uistate =
                 ]
             , div [ Html.Attributes.class "settlement-lordship box-shadow" ]
                 [ div []
-                    [ img [ src ("./assets/images/profiles/" ++ Entities.factionToImage lord.entity.faction), Html.Attributes.class "settlement-lord-icon" ] []
+                    [ img [ src ("./assets/images/profiles/" ++ Entities.factionToImage settlement.entity.faction), Html.Attributes.class "settlement-lord-icon" ] []
                     ]
                 , div []
                     [ span [ Html.Attributes.class "settlement-lord-text" ] [ Html.text lord.entity.name ]
                     ]
                 ]
             , div [ Html.Attributes.class "settlement-action-container" ]
-                (settlementStateToAction lord settlement uistate)
+                (settlementStateToAction pF lord settlement uistate)
             , div [ Html.Attributes.class "settlement-illustration-container box-shadow" ]
-                [ img [ src "./assets/images/illustrations/example_ilustration.png" ] []
+                [ img [ src ("./assets/images/illustrations/" ++ String.toLower (Entities.getSettlementNameByType settlement.settlementType) ++ ".png") ] []
                 ]
             ]
         ]
@@ -57,8 +58,8 @@ generateSettlementModalTemplate lord settlement uistate =
     @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
 
 -}
-settlementStateToAction : Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> List (Html Msg.Msg)
-settlementStateToAction lord settlement uistate =
+settlementStateToAction : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> List (Html Msg.Msg)
+settlementStateToAction pF lord settlement uistate =
     case uistate of
         Msg.StandardView ->
             [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuyTroops settlement))) ] [ span [] [ Html.text "Recruit troops" ] ]
@@ -107,7 +108,7 @@ settlementStateToAction lord settlement uistate =
             ]
 
         Msg.RestrictedView ->
-            validateSettlement lord settlement
+            validateSettlement pF lord settlement
                 ++ [ div [ Html.Attributes.class "settlement-info box-shadow" ]
                         [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
                         , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
@@ -268,10 +269,10 @@ validateStationTroops amount =
     @param {Settlement}: Takes the current settlement
 
 -}
-validateSettlement : Entities.Model.Lord -> Entities.Model.Settlement -> List (Html Msg.Msg)
-validateSettlement l s =
+validateSettlement : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> List (Html Msg.Msg)
+validateSettlement pF l s =
     [ div [ Html.Attributes.class "settlement-enemy-overview" ]
-        [ span [] [ Html.text (OperatorExt.ternary (l.entity.faction == s.entity.faction) "This is our settlement!" "This is an enemy settlement!") ]
+        [ span [] [ Html.text (OperatorExt.ternary (pF == s.entity.faction) "This is our settlement!" "This is an enemy settlement!") ]
         ]
     ]
 

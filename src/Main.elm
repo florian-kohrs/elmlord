@@ -478,7 +478,7 @@ findModalWindow model =
         GameSetup uistate ->
             case uistate of
                 SettlementView l s u ->
-                    SettlementTemplate.generateSettlementModalTemplate l s u
+                    SettlementTemplate.generateSettlementModalTemplate (getPlayer model).entity.faction l s u
 
                 LordView l ->
                     LordTemplate.generateLordTemplate l
@@ -577,7 +577,12 @@ updateMaptileAction model ma =
         MapAction.SubModel.SettlementMsg msg settlement ->
             case msg of
                 MapAction.SubModel.ViewSettlement ->
-                    { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.RestrictedView) }
+                    case Entities.factionToLord settlement.entity.faction (Entities.Lords.lordListToList model.lords) of
+                        Nothing -> 
+                            { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.RestrictedView) }
+
+                        Just lord ->
+                            { model | gameState = GameSetup (SettlementView lord settlement Msg.RestrictedView) } 
 
                 MapAction.SubModel.EnterSettlement ->
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.StandardView) }
@@ -653,7 +658,6 @@ updateLordAction msg lord m =
                             }
                         )
             }
-
 
 
 -- update function for the settlement messages
