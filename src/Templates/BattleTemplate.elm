@@ -48,7 +48,7 @@ determineBattleMap bS t =
             Just settle ->
                 [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
                 , generateActionOverview bS t
-                , generateArmyOverview settle.entity (Entities.getSettlementImage settle) bS.defenderCasualties
+                , generateArmyOverview (Tuple.second (Battle.siegeBattleSetDefender bS settle)).entity (Entities.getSettlementImage settle) bS.defenderCasualties
                 ]
 
     else

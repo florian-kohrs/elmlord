@@ -327,7 +327,10 @@ initPlayer m i rad =
                 Troops.startTroops
                 (Faction.getFaction i)
                 (Pathfinder.getClosestFreeFieldAt (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad)) (Pathfinder.getNav m) Dict.empty)
-                ("Lord " ++ String.fromInt i)
+                (Maybe.withDefault
+                    ("Lord " ++ String.fromInt i)
+                    (ListExt.getElementAt i Entities.Model.aiNames)
+                )
     in
     Entities.Model.Lord
         entity

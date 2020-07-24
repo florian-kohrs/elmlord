@@ -1,4 +1,4 @@
-module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, skipBattle)
+module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
 import Battle.Model exposing (..)
 import Dict
@@ -9,6 +9,8 @@ import Map
 import Map.Model
 import OperatorExt
 import Troops
+import Balancing
+import Entities.Model exposing (Gold)
 
 
 battleFleeTroopLoss : Float
@@ -157,13 +159,13 @@ siegeBattleAftermath bS s =
     in
     if Troops.sumTroops s.entity.army <= 0 then
         if s.settlementType == Entities.Model.Castle then
-            handleSettlementTransfer attacker defender (\y -> y.settlementType /= Entities.Model.Castle) []
+            handleSettlementTransfer (getGoldBonus attacker) defender (\y -> y.settlementType /= Entities.Model.Castle) []
 
         else
             handleSettlementTransfer attacker defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
 
     else
-        ( attacker, defender, False )
+        ( attacker, { defender | land = updateSettlementBattleField s defender.land }, False )
 
 
 fleeBattle : BattleStats -> Entities.Model.Lord
@@ -183,6 +185,9 @@ skipBattle bS ter =
     else
         skipBattle newBattleStats ter
 
+getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord 
+getGoldBonus lord = 
+    { lord | gold = lord.gold + Balancing.addGoldCastle }
 
 
 -- helper functions for the construction of the battle result
@@ -219,6 +224,20 @@ handleSettlementTransfer attacker defender aFunc ndl =
     , { defender | land = ndl }
     , List.length ndl == 0
     )
+
+
+updateSettlementBattleField : Entities.Model.Settlement -> List Entities.Model.Settlement -> List Entities.Model.Settlement
+updateSettlementBattleField s l =
+    case l of
+        [] ->
+            []
+
+        x :: xs ->
+            if x.entity.name == s.entity.name then
+                s :: updateSettlementBattleField s xs
+
+            else
+                x :: updateSettlementBattleField s xs
 
 
 {-| Transfers the troops of a lord to the besieged settlement (only if the player stands on this settlement)

@@ -48,5 +48,9 @@ improveBuildingFactor =
     0.5
 
 
+addGoldCastle : Float 
+addGoldCastle = 
+    500.00
+
 
 -- should also consider speed difference

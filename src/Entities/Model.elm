@@ -52,6 +52,15 @@ type SettlementType
     | Castle
 
 
+aiNames : List String
+aiNames =
+    [ "Player"
+    , "Jan von Haskell"
+    , "Herzog K. Willi"
+    , "Sir Quicknuss"
+    ]
+
+
 
 -- around 15 names for castles and 30 for villages
 -- https://www.fantasynamegenerators.com/town_names.php was used as a source
