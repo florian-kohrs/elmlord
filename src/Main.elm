@@ -42,6 +42,7 @@ import Templates.LordTemplate as LordTemplate
 import Templates.MapActionTemplate as MapActionTemplate
 import Templates.SettlementTemplate as SettlementTemplate
 import Templates.StartTemplate as StartTemplate
+import Templates.TroopTemplate as TroopTemplate
 import Time
 import Troops
 import Vector
@@ -73,6 +74,7 @@ type UiState
     = MainMenue MainMenueState
     | GameMenue
     | BattleView Battle.Model.BattleStats
+    | TroopView Entities.Model.Lord
     | SettlementView Entities.Model.Lord Entities.Model.Settlement Msg.UiSettlementState
     | LordView Entities.Model.Lord
 
@@ -464,7 +466,7 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] [ Html.text (Debug.toString (model.lords)) ]
+                   , span [] []--[ Html.text (Debug.toString (model.lords)) ]
                    ]
             )
         ]
@@ -489,6 +491,9 @@ findModalWindow model =
                 BattleView bS ->
                     BattleTemplate.generateBattleTemplate bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
 
+                TroopView l -> 
+                    TroopTemplate.generateTroopTemplate l
+
                 _ ->
                     div [] []
 
@@ -508,7 +513,7 @@ addStylesheet href =
 
 stylessheets : List String
 stylessheets =
-    [ "main_styles", "battle_styles", "end_styles", "event_styles", "header_styles", "lord_styles", "mapaction_styles", "settlement_styles", "start_styles", "tooltip_styles" ]
+    [ "main_styles", "battle_styles", "end_styles", "event_styles", "header_styles", "lord_styles", "mapaction_styles", "settlement_styles", "start_styles", "tooltip_styles", "troop_styles" ]
 
 
 
@@ -540,6 +545,9 @@ update msg model =
         Msg.EventAction emsg ->
             emptyCmd (updateEvent emsg model)
 
+        Msg.TroopAction tomsg -> 
+            emptyCmd (updateTroopOverView model tomsg)
+
         Msg.MapTileAction action ->
             emptyCmd (updateMaptileAction model action)
 
@@ -569,6 +577,22 @@ endRoundForLord : Entities.Model.Lord -> Entities.Model.Lord
 endRoundForLord l =
     Entities.applyLordGoldIncome l |> PathAgent.resetLordUsedMovement |> Entities.applyLordNewRecruits
 
+
+
+-- update function for troop overview in the header
+----------------------------------------------------------
+
+updateTroopOverView : Model -> Msg.TroopOverviewMsg -> Model
+updateTroopOverView model msg =
+    case msg of 
+        Msg.TroopActionMsg -> 
+            { model | gameState = GameSetup (TroopView (getPlayer model))}
+        
+        Msg.TroopArmyMsg t ->
+            let
+                newLords = Entities.Lords.updatePlayer model.lords (Entities.disbandTroops (Entities.Lords.getPlayer model.lords) t)
+            in
+            { model | lords = newLords, gameState = GameSetup (TroopView (Entities.Lords.getPlayer newLords)) }
 
 
 -- update function for the map action messages

@@ -22,6 +22,7 @@ type Msg
     | BattleAction BattleMsg
     | SettlementAction SettlementMsg
     | MapTileAction MapAction.SubModel.MapTileMsg
+    | TroopAction TroopOverviewMsg
     | EventAction EventMsg
     | Click Vector.Point
     | AiRoundTick
@@ -34,6 +35,10 @@ type MenueMsg
     | ShowDocumentation
     | ShowCredits
 
+
+type TroopOverviewMsg
+    = TroopActionMsg
+    | TroopArmyMsg Troops.TroopType
 
 type SettlementMsg
     = UIMsg SettlementUIMsg

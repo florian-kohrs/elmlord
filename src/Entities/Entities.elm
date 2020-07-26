@@ -83,6 +83,14 @@ takeTroops l t s =
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity, land = updateSettlementTroops l.land s.entity.name t (-1 * amount) }
 
 
+disbandTroops : Lord -> Troops.TroopType -> Lord
+disbandTroops l t = 
+    let
+        amount =
+            getPossibleTroopAmount l.entity.army t
+    in
+    { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity }
+
 upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
 upgradeBuilding l b s =
     { l | gold = l.gold - (Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)), land = updateSettlementBuildings l.land s.entity.name b.buildingType }

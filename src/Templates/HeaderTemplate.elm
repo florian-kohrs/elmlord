@@ -82,7 +82,7 @@ headerTroopTemplate lord =
             Entities.sumLordSettlementTroops lord
     in
     [ img [ src "./assets/images/troops/troop_icon.png", Html.Attributes.class "page-header-images" ] []
-    , div [ Html.Attributes.class "tooltip" ]
+    , div [ onClick (Msg.TroopAction Msg.TroopActionMsg), Html.Attributes.class "tooltip" ]
         [ span [ Html.Attributes.class "page-header-span" ] [ Html.text (String.fromInt (Dict.foldl (\k v r -> v + r) 0 lord.entity.army) ++ " Troops") ]
         , div [ Html.Attributes.class "tooltiptext troop-tooltip" ]
             [ span [] [ Html.text "Current Troops" ]

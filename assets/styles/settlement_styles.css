@@ -40,6 +40,10 @@
     margin-left: 90% !important;
 }
 
+.troop-modal-close-btn {
+    margin-left: 61% !important;
+}
+
 .settlement-modal-close-btn > span {
     font-size: 25px;
     display: block;
