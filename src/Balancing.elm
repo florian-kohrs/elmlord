@@ -1,5 +1,9 @@
 module Balancing exposing (..)
 
+import Entities.Model
+
+
+
 -- AI
 
 
@@ -14,9 +18,14 @@ acceptedSettlementLackOfDefense =
 -}
 
 
-distanceFromActionPenalty : Int -> Float
-distanceFromActionPenalty turns =
+distanceFromAggresiveActionPenalty : Int -> Float
+distanceFromAggresiveActionPenalty turns =
     toFloat turns * 0.1
+
+
+distanceFromDefensiveActionPenalty : Int -> Float
+distanceFromDefensiveActionPenalty turns =
+    toFloat turns * 0.05
 
 
 
@@ -54,3 +63,13 @@ addGoldCastle =
 
 
 -- should also consider speed difference
+
+
+settlementDefenseBoni : Entities.Model.Settlement -> Entities.Model.Lord -> Float
+settlementDefenseBoni s landlord =
+    case s.settlementType of
+        Entities.Model.Village ->
+            0.1
+
+        Entities.Model.Castle ->
+            toFloat (List.length landlord.land - 1) * 0.15

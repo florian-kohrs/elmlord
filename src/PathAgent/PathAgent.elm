@@ -1,4 +1,16 @@
-module PathAgent exposing (getAgent, moveAlongPath, pathPartsToTime, remainingMovement, resetLordUsedMovement, resetUsedMovement, setUsedMovement, simulateDistance)
+module PathAgent exposing
+    ( canMoveTowardsInTurn
+    , getAgent
+    , lordsTurnToReachDestination
+    , moveAlongPath
+    , moveLordOnPath
+    , pathPartsToTime
+    , remainingMovement
+    , resetLordUsedMovement
+    , resetUsedMovement
+    , setUsedMovement
+    , simulateDistance
+    )
 
 import Dict exposing (Dict)
 import Entities
@@ -49,6 +61,26 @@ setUsedMovement f a =
     { a | usedMovement = f }
 
 
+canMoveTowardsInTurn : Map.Model.Map -> Entities.Model.Lord -> Vector.Point -> Bool
+canMoveTowardsInTurn m l p =
+    case Pathfinder.getPathTo l.entity.position p m of
+        Nothing ->
+            True
+
+        Just path ->
+            enoughMovementToMove path l.agent
+
+
+enoughMovementToMove : Pathfinder.Model.Path -> Agent -> Bool
+enoughMovementToMove path agent =
+    case .path <| Pathfinder.cutFirstStepFromPath path of
+        [] ->
+            True
+
+        p :: _ ->
+            canReachInRound agent.speed agent.usedMovement p.timeLoss
+
+
 type alias MoveSimulator =
     { turn : Int, turnUsedMove : Float, maxMove : Float }
 
@@ -61,6 +93,16 @@ newMoveSimulator move usedMove =
 moveSimulatorFromAgent : Agent -> MoveSimulator
 moveSimulatorFromAgent a =
     newMoveSimulator a.speed a.usedMovement
+
+
+lordsTurnToReachDestination : Map.Model.Map -> Entities.Model.Lord -> Vector.Point -> Int
+lordsTurnToReachDestination m l p =
+    case Pathfinder.getPathTo l.entity.position p m of
+        Nothing ->
+            9000
+
+        Just path ->
+            roundsToFinishPath l.agent path.path
 
 
 pathPartsToTime : Agent -> List Pathfinder.Model.PathTile -> List ( Pathfinder.Model.PathTile, Int )
@@ -81,7 +123,7 @@ pathPartsToTime a ts =
 
 roundsToFinishPath : Agent -> List Pathfinder.Model.PathTile -> Int
 roundsToFinishPath a ps =
-    case List.head (List.reverse (pathPartsToTime a ps)) of
+    case List.head (pathPartsToTime a ps) of
         Nothing ->
             0
 

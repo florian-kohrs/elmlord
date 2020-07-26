@@ -34,11 +34,6 @@ mapSize =
     15
 
 
-mapScale : Float
-mapScale =
-    1
-
-
 seed : Int
 seed =
     3

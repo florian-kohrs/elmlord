@@ -19,7 +19,7 @@ getElementAt i l =
         List.head l
 
     else
-        Maybe.andThen (\tail -> getElementAt (i - 1) tail) (List.tail l)
+        Maybe.andThen (getElementAt (i - 1)) (List.tail l)
 
 
 indexOf_ : Int -> (a -> Bool) -> List a -> Int

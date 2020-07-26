@@ -24,6 +24,7 @@ import MapAction.Model
 import MapAction.SubModel
 import MapData
 import MapGenerator
+import MaybeExt
 import Msg
 import OperatorExt
 import PathAgent
@@ -82,7 +83,7 @@ type UiState
 
 aiTickFrequenz : Float
 aiTickFrequenz =
-    0.1
+    2
 
 
 type MainMenueState
@@ -103,6 +104,11 @@ villageCaptialDistance =
 getPlayer : Model -> Entities.Model.Lord
 getPlayer model =
     Entities.Lords.getPlayer model.lords
+
+
+isPlayersTurn : Model -> Bool
+isPlayersTurn model =
+    model.playersTurn == 0
 
 
 
@@ -458,7 +464,7 @@ setGameView model =
         , HeaderTemplate.generateHeaderTemplate (Entities.Lords.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             (List.map addStylesheet stylessheets
-                ++ [ MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
+                ++ [ buildMapActionTemplate model allClickActions
                    , div []
                         [ Svg.svg
                             [ Svg.Attributes.viewBox "0 0 850 1000"
@@ -471,6 +477,27 @@ setGameView model =
                    ]
             )
         ]
+
+
+buildMapActionTemplate : Model -> MapAction.Model.MapClickAction -> Html Msg.Msg
+buildMapActionTemplate model allClickActions =
+    if isPlayersTurn model then
+        MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
+
+    else
+        let
+            lordName =
+                MaybeExt.foldMaybe
+                    (\l -> l.entity.name)
+                    "Unkown Enemy"
+                    (ListExt.getElementAt
+                        model.playersTurn
+                        (Entities.Lords.lordListToList model.lords)
+                    )
+        in
+        div [ Html.Attributes.class "map-action-menu" ]
+            --add enemy turn skip button
+            (span [] [ Html.text ("It`s " ++ lordName ++ "`s turn") ] :: [])
 
 
 
@@ -525,43 +552,94 @@ stylessheets =
 update : Msg.Msg -> Model -> ( Model, Cmd Msg.Msg )
 update msg model =
     case msg of
-        Msg.EndRound ->
-            emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
+        Msg.EventAction emsg ->
+            emptyCmd (updateEvent emsg model)
 
         Msg.EndGame bool ->
             emptyCmd { model | gameState = GameOver bool }
 
-        Msg.CloseModal ->
-            emptyCmd { model | gameState = GameSetup GameMenue }
+        other ->
+            if isPlayersTurn model then
+                case other of
+                    Msg.EndRound ->
+                        emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
 
-        Msg.BattleAction bmsg ->
-            emptyCmd (updateBattle bmsg model)
+                    Msg.CloseModal ->
+                        emptyCmd { model | gameState = GameSetup GameMenue }
 
-        Msg.MenueAction mmsg ->
-            updateMenue mmsg model
+                    Msg.BattleAction bmsg ->
+                        emptyCmd (updateBattle bmsg model)
 
-        Msg.SettlementAction action ->
-            emptyCmd (updateSettlement action model)
+                    Msg.MenueAction mmsg ->
+                        updateMenue mmsg model
 
-        Msg.EventAction emsg ->
-            emptyCmd (updateEvent emsg model)
+                    Msg.SettlementAction action ->
+                        emptyCmd (updateSettlement action model)
 
-        Msg.TroopAction tomsg ->
-            emptyCmd (updateTroopOverView model tomsg)
+                    Msg.MapTileAction action ->
+                        emptyCmd (updateMaptileAction model action)
 
-        Msg.MapTileAction action ->
-            emptyCmd (updateMaptileAction model action)
+                    Msg.TroopAction tomsg ->
+                        emptyCmd (updateTroopOverView model tomsg)
 
-        Msg.Click p ->
-            emptyCmd { model | selectedPoint = Just p }
+                    Msg.Click p ->
+                        emptyCmd { model | selectedPoint = Just p }
 
-        Msg.AiRoundTick ->
-            emptyCmd model
+                    _ ->
+                        emptyCmd model
+
+            else
+                case msg of
+                    Msg.AiRoundTick ->
+                        emptyCmd <| playAiTurn model
+
+                    _ ->
+                        emptyCmd <| { model | errorMsg = "Its not your turn" }
 
 
 endAnyRound : Model -> Model
 endAnyRound m =
-    { m | playersTurn = modBy (List.length <| Entities.Lords.lordListToList m.lords) (m.playersTurn + 1) }
+    if m.playersTurn + 1 >= 4 then
+        --(List.length <| Entities.Lords.lordListToList m.lords) then
+        { m | playersTurn = 0 }
+
+    else
+        { m | playersTurn = m.playersTurn + 1 }
+
+
+playAiTurn : Model -> Model
+playAiTurn m =
+    case ListExt.getElementAt (m.playersTurn - 1) (Entities.Lords.getAis m.lords) of
+        Nothing ->
+            m
+
+        Just ai ->
+            let
+                action =
+                    AI.getAiAction
+                        ai
+                        (PathAgent.lordsTurnToReachDestination m.map)
+                        (PathAgent.canMoveTowardsInTurn m.map)
+                        (Entities.Lords.getLordsExcept m.lords ai.lord)
+            in
+            case action of
+                AI.EndRound ->
+                    endAnyRound <|
+                        { m
+                            | lords =
+                                Entities.Lords.replaceAi m.lords
+                                    (AI.setLord ai (endRoundForLord ai.lord))
+                        }
+
+                other ->
+                    { m
+                        | lords =
+                            Entities.Lords.replaceAi m.lords
+                                {- updateAI -} (AI.updateAi ai other (PathAgent.moveLordOnPath m.map))
+                        , event =
+                            Event.setEvents m.event
+                                (Event.appendEvent m.event.events ai.lord.entity.name (AI.showAiRoundAction other) Event.Minor)
+                    }
 
 
 updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
@@ -569,9 +647,19 @@ updateAIsAfterPlayerRound ais =
     List.map (\ai -> AI.setLord ai (endRoundForLord (.lord (updateAI ai)))) ais
 
 
+
+--test function
+
+
 updateAI : AI.AI -> AI.AI
 updateAI ai =
-    { ai | lord = Entities.setLordEntity ai.lord (Entities.setPosition ai.lord.entity (Vector.addPoints (Vector.Point 1 1) ai.lord.entity.position)) }
+    { ai
+        | lord =
+            Entities.setLordEntity ai.lord
+                (Entities.setPosition ai.lord.entity
+                    (Vector.addPoints (Vector.Point 1 1) ai.lord.entity.position)
+                )
+    }
 
 
 endRoundForLord : Entities.Model.Lord -> Entities.Model.Lord
@@ -898,7 +986,7 @@ updateEvent msg model =
 
 tickSub : Model -> Sub Msg.Msg
 tickSub model =
-    if model.playersTurn == 0 then
+    if isPlayersTurn model then
         Sub.none
 
     else
