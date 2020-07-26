@@ -62,6 +62,7 @@ type alias Model =
     , errorMsg : String
     , event : Event.EventState
     , playersTurn : Int
+    , playerInput : String
     }
 
 
@@ -273,7 +274,7 @@ initialModel playerCount =
         map =
             MapGenerator.createMap
     in
-    Model (initPlayers map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0
+    Model (initPlayers map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0 "Player"
 
 
 
@@ -422,7 +423,7 @@ view model =
             GameSetup uistate ->
                 case uistate of
                     MainMenue state ->
-                        setMenueView state
+                        setMenueView state model.playerInput
 
                     _ ->
                         setGameView model
@@ -434,15 +435,15 @@ view model =
         ]
 
 
-setMenueView : MainMenueState -> Html Msg.Msg
-setMenueView state =
+setMenueView : MainMenueState -> String -> Html Msg.Msg
+setMenueView state v =
     div [ Html.Attributes.class "main-container" ]
         (case state of
             Menue ->
                 List.map addStylesheet stylessheets ++ StartTemplate.startMenuTemplate
 
             Campaign ->
-                List.map addStylesheet stylessheets ++ StartTemplate.startCampaign
+                List.map addStylesheet stylessheets ++ StartTemplate.startCampaign v
         )
 
 
@@ -466,7 +467,7 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] []--[ Html.text (Debug.toString (model.lords)) ]
+                   , span [] [] --[ Html.text (Debug.toString (model.lords)) ]
                    ]
             )
         ]
@@ -491,7 +492,7 @@ findModalWindow model =
                 BattleView bS ->
                     BattleTemplate.generateBattleTemplate bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
 
-                TroopView l -> 
+                TroopView l ->
                     TroopTemplate.generateTroopTemplate l
 
                 _ ->
@@ -545,7 +546,7 @@ update msg model =
         Msg.EventAction emsg ->
             emptyCmd (updateEvent emsg model)
 
-        Msg.TroopAction tomsg -> 
+        Msg.TroopAction tomsg ->
             emptyCmd (updateTroopOverView model tomsg)
 
         Msg.MapTileAction action ->
@@ -582,17 +583,20 @@ endRoundForLord l =
 -- update function for troop overview in the header
 ----------------------------------------------------------
 
+
 updateTroopOverView : Model -> Msg.TroopOverviewMsg -> Model
 updateTroopOverView model msg =
-    case msg of 
-        Msg.TroopActionMsg -> 
-            { model | gameState = GameSetup (TroopView (getPlayer model))}
-        
+    case msg of
+        Msg.TroopActionMsg ->
+            { model | gameState = GameSetup (TroopView (getPlayer model)) }
+
         Msg.TroopArmyMsg t ->
             let
-                newLords = Entities.Lords.updatePlayer model.lords (Entities.disbandTroops (Entities.Lords.getPlayer model.lords) t)
+                newLords =
+                    Entities.Lords.updatePlayer model.lords (Entities.disbandTroops (Entities.Lords.getPlayer model.lords) t)
             in
             { model | lords = newLords, gameState = GameSetup (TroopView (Entities.Lords.getPlayer newLords)) }
+
 
 
 -- update function for the map action messages
@@ -610,11 +614,11 @@ updateMaptileAction model ma =
             case msg of
                 MapAction.SubModel.ViewSettlement ->
                     case Entities.factionToLord settlement.entity.faction (Entities.Lords.lordListToList model.lords) of
-                        Nothing -> 
+                        Nothing ->
                             { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.RestrictedView) }
 
                         Just lord ->
-                            { model | gameState = GameSetup (SettlementView lord settlement Msg.RestrictedView) } 
+                            { model | gameState = GameSetup (SettlementView lord settlement Msg.RestrictedView) }
 
                 MapAction.SubModel.EnterSettlement ->
                     { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.StandardView) }
@@ -690,6 +694,7 @@ updateLordAction msg lord m =
                             }
                         )
             }
+
 
 
 -- update function for the settlement messages
@@ -798,45 +803,38 @@ updateBattle msg model =
             { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
 
         Msg.FleeBattle bS ->
+            checkBattleAftermath model bS
+
+        Msg.EndBattle bS ->
+            checkBattleAftermath model bS
+
+
+checkBattleAftermath : Model -> Battle.Model.BattleStats -> Model
+checkBattleAftermath model bS =
+    case bS.settlement of
+        Nothing ->
             updateLordsAfterBattle
-                (Battle.fleeBattle bS)
-                (List.map
-                    (\ai ->
-                        OperatorExt.ternary
-                            (ai.lord.entity.name == bS.defender.entity.name)
-                            (AI.setLord ai bS.defender)
-                            ai
-                    )
-                    (Entities.Lords.getAis model.lords)
-                )
+                bS.attacker
+                (List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == bS.defender.entity.name) (AI.setLord ai bS.defender) ai) (Entities.Lords.getAis model.lords))
                 model
                 (GameSetup GameMenue)
 
-        Msg.EndBattle bS ->
-            case bS.settlement of
-                Nothing ->
-                    updateLordsAfterBattle
-                        bS.attacker
-                        (List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == bS.defender.entity.name) (AI.setLord ai bS.defender) ai) (Entities.Lords.getAis model.lords))
-                        model
-                        (GameSetup GameMenue)
+        Just settle ->
+            let
+                ( newAttacker, newDefender, lordKilled ) =
+                    Battle.siegeBattleAftermath bS settle
 
-                Just settle ->
-                    let
-                        ( newAttacker, newDefender, lordKilled ) =
-                            Battle.siegeBattleAftermath bS settle
-
-                        newEnemyLords =
-                            filterDefeatedLord
-                                lordKilled
-                                newDefender
-                                (Entities.Lords.getAis model.lords)
-                    in
-                    updateLordsAfterBattle
-                        newAttacker
-                        newEnemyLords
-                        model
-                        (OperatorExt.ternary (List.length (Entities.Lords.npcs model.lords) > 0) (GameSetup GameMenue) (GameOver True))
+                newEnemyLords =
+                    filterDefeatedLord
+                        lordKilled
+                        newDefender
+                        (Entities.Lords.getAis model.lords)
+            in
+            updateLordsAfterBattle
+                newAttacker
+                newEnemyLords
+                model
+                (OperatorExt.ternary (List.length (Entities.Lords.npcs model.lords) > 0) (GameSetup GameMenue) (GameOver True))
 
 
 updateLordsAfterBattle : Entities.Model.Lord -> List AI.AI -> Model -> GameState -> Model
@@ -861,8 +859,11 @@ filterDefeatedLord k d ais =
 updateMenue : Msg.MenueMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateMenue msg model =
     case msg of
-        Msg.StartGame ->
-            ( { model | gameState = GameSetup GameMenue }, startMusic "play" )
+        Msg.StartGame name ->
+            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Entities.changeLordName name (getPlayer model)) }, startMusic "play" )
+
+        Msg.ChangeName str ->
+            emptyCmd { model | playerInput = str }
 
         Msg.ShowMenue ->
             emptyCmd { model | gameState = GameSetup (MainMenue Menue) }

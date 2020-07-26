@@ -54,8 +54,7 @@ type SettlementType
 
 aiNames : List String
 aiNames =
-    [ "Player"
-    , "Jan von Haskell"
+    [ "Jan von Haskell"
     , "Herzog K. Willi"
     , "Sir Quicknuss"
     ]

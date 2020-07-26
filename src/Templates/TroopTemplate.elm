@@ -1,16 +1,11 @@
 module Templates.TroopTemplate exposing (..)
 
-import Battle
-import Battle.Model
-import Dict
 import DictExt
-import Entities
 import Entities.Model
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Msg
-import Templates.HelperTemplate as Helper
 import Troops
 import OperatorExt
 

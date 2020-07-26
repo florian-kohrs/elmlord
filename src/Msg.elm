@@ -29,7 +29,8 @@ type Msg
 
 
 type MenueMsg
-    = StartGame
+    = StartGame String
+    | ChangeName String
     | ShowMenue
     | SetCampaingn
     | ShowDocumentation

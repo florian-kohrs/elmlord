@@ -370,3 +370,15 @@ factionToImage fac =
 
         Faction.Faction4 ->
             "faction4.png"
+
+validatePlayerName : String -> Bool
+validatePlayerName v = 
+    List.any (\x -> x == v) Entities.Model.aiNames
+
+changeLordName : String -> Lord -> Lord
+changeLordName name lord = 
+    { lord | entity = changeEntitiyName name lord.entity}
+
+changeEntitiyName : String -> Entities.Model.WorldEntity -> Entities.Model.WorldEntity
+changeEntitiyName name we = 
+    { we | name = name } 

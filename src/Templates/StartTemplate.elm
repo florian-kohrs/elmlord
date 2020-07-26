@@ -1,13 +1,13 @@
 module Templates.StartTemplate exposing (..)
 
-import Html exposing (Html, button, div, img, input, option, select, span, text)
+import Html exposing (Html, button, div, img, input, span, text)
 import Html.Attributes as HtmlAttr
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import List exposing (..)
 import Msg
 import String exposing (..)
-
-
+import OperatorExt
+import Entities exposing (validatePlayerName)
 
 -- Start menu with some menu selections
 
@@ -27,8 +27,8 @@ startMenuTemplate =
     ]
 
 
-startCampaign : List (Html Msg.Msg)
-startCampaign =
+startCampaign : String -> List (Html Msg.Msg)
+startCampaign v =
     [ div [ HtmlAttr.class "start-logo-container" ] [ img [ HtmlAttr.src "./assets/images/general/logo.png" ] [] ]
     , div [ HtmlAttr.class "campaign-container" ]
         [ div [ HtmlAttr.class "start-header" ]
@@ -36,12 +36,27 @@ startCampaign =
         , div [ HtmlAttr.class "campaign-actions" ]
             [ div [ HtmlAttr.class "campaign-name-container" ]
                 [ span [ HtmlAttr.class "campaign-name" ] [ Html.text "Name:" ]
-                , input [ HtmlAttr.class "campaign-input" ] []
+                , input [ HtmlAttr.class "campaign-input", HtmlAttr.value v, onInput resolveOnChangeMsg] []
                 ]
+            , div [ HtmlAttr.style "text-align" "center" ] [
+                generateInputMsg v
+            ]
             , div [ HtmlAttr.class "campaign-buttons-container" ]
-                [ div [] [ button [ onClick (Msg.MenueAction Msg.StartGame), HtmlAttr.class "start-buttons start-campaign-button" ] [ span [] [ Html.text "Start Campaign" ] ] ]
+                [ div [] [ button [ onClick (Msg.MenueAction (Msg.StartGame v)), HtmlAttr.class "start-buttons start-campaign-button" ] [ span [] [ Html.text "Start Campaign" ] ] ]
                 ]
             ]
         , div [] [ button [ onClick (Msg.MenueAction Msg.ShowMenue), HtmlAttr.class "back-btn" ] [ span [] [ Html.text "Back" ] ] ]
         ]
     ]
+
+resolveOnChangeMsg : String -> Msg.Msg
+resolveOnChangeMsg str = 
+    Msg.MenueAction (Msg.ChangeName str)
+
+
+generateInputMsg : String -> Html Msg.Msg
+generateInputMsg str = 
+    if Entities.validatePlayerName str || str == "" then
+        span [ HtmlAttr.class "error-msg" ] [ Html.text "Invalid name, please take another name!" ]
+    else 
+        span [ ] [ ]
