@@ -220,7 +220,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
             , Html.Attributes.class (OperatorExt.ternary (validateBuyTroops t s l) "troop-disabled-button" "tooltip")
             , disabled (validateBuyTroops t s l)
             ]
-            [ span [] [ Html.text "+" ]
+            [ span [Html.Attributes.class "troop-recruit-button-text"] [ Html.text "+" ]
             , div [ Html.Attributes.class "tooltiptext troop-recruiting-tooltip" ]
                 [ span [] [ Html.text "Monthly wage" ]
                 , span [ Html.Attributes.class "negative-income" ] [ Html.text ("- " ++ String.fromFloat (Troops.troopWage t) ++ " Ducats") ]

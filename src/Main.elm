@@ -31,7 +31,7 @@ import PathAgent
 import Pathfinder
 import Pathfinder.Drawer
 import Pathfinder.Model
-import Ports exposing (openLink, playSound, startMusic)
+import Ports
 import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -64,7 +64,7 @@ type alias Model =
     , event : Event.EventState
     , playersTurn : Int
     , playerInput : String
-    , volumne: Int
+    , volumne : Int
     }
 
 
@@ -281,30 +281,7 @@ initialModel playerCount =
         map =
             MapGenerator.createMap
     in
-    Model (initPlayers map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" testEventState 0 "Player" 1
-
-
-
---TODO: delete it after you ve added events
-
-
-testEventState : Event.EventState
-testEventState =
-    { state = True, events = testEvents }
-
-
-testEvents : List Event.Event
-testEvents =
-    [ { index = 0, header = "Hallo leude", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Important }
-    , { index = 1, header = "Ich der zweite", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 2, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 3, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 4, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 5, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 6, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 7, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    , { index = 8, header = "WARUM?!??!", text = "lorem ipsum lorem ipsum lorem ipsum lorem ipsum", eventType = Event.Minor }
-    ]
+    Model (initPlayers map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 "Player" 10
 
 
 initPlayers : Map.Model.Map -> Int -> Entities.Lords.LordList
@@ -437,7 +414,7 @@ view model =
 
             GameOver _ ->
                 setGameView model
-        , audio [ src "./assets/sounds/menue.mp3", Html.Attributes.id "audio-player" ] []
+        , audio [ src "./assets/sounds/menue.wav", Html.Attributes.loop True, Html.Attributes.id "audio-player" ] []
         , audio [ Html.Attributes.id "sound-player" ] []
         ]
 
@@ -569,7 +546,7 @@ update msg model =
                         emptyCmd { model | gameState = GameSetup GameMenue }
 
                     Msg.BattleAction bmsg ->
-                        emptyCmd (updateBattle bmsg model)
+                        updateBattle bmsg model
 
                     Msg.MenueAction mmsg ->
                         updateMenue mmsg model
@@ -578,7 +555,7 @@ update msg model =
                         emptyCmd (updateSettlement action model)
 
                     Msg.MapTileAction action ->
-                        emptyCmd (updateMaptileAction model action)
+                        updateMaptileAction model action
 
                     Msg.TroopAction tomsg ->
                         emptyCmd (updateTroopOverView model tomsg)
@@ -693,7 +670,7 @@ updateTroopOverView model msg =
 ----------------------------------------------------------
 
 
-updateMaptileAction : Model -> MapAction.SubModel.MapTileMsg -> Model
+updateMaptileAction : Model -> MapAction.SubModel.MapTileMsg -> ( Model, Cmd Msg.Msg )
 updateMaptileAction model ma =
     case ma of
         MapAction.SubModel.LordMsg msg lord ->
@@ -704,13 +681,13 @@ updateMaptileAction model ma =
                 MapAction.SubModel.ViewSettlement ->
                     case Entities.factionToLord settlement.entity.faction (Entities.Lords.lordListToList model.lords) of
                         Nothing ->
-                            { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.RestrictedView) }
+                            emptyCmd { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.RestrictedView) }
 
                         Just lord ->
-                            { model | gameState = GameSetup (SettlementView lord settlement Msg.RestrictedView) }
+                            emptyCmd { model | gameState = GameSetup (SettlementView lord settlement Msg.RestrictedView) }
 
                 MapAction.SubModel.EnterSettlement ->
-                    { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.StandardView) }
+                    emptyCmd { model | gameState = GameSetup (SettlementView (getPlayer model) settlement Msg.StandardView) }
 
                 MapAction.SubModel.SiegeSettlement ->
                     let
@@ -719,10 +696,10 @@ updateMaptileAction model ma =
                     in
                     case defender of
                         Nothing ->
-                            model
+                            emptyCmd model
 
                         Just l ->
-                            { model
+                            ({ model
                                 | gameState =
                                     GameSetup
                                         (BattleView
@@ -736,7 +713,7 @@ updateMaptileAction model ma =
                                             , finished = False
                                             }
                                         )
-                            }
+                            }, Ports.playSound "KampfschreiLight")
 
         MapAction.SubModel.MoveTo p ->
             let
@@ -745,7 +722,7 @@ updateMaptileAction model ma =
             in
             case getPathTo player.entity.position p model.map of
                 Nothing ->
-                    model
+                    emptyCmd model
 
                 Just path ->
                     let
@@ -758,17 +735,17 @@ updateMaptileAction model ma =
                                 , entity = Entities.setPosition player.entity point
                             }
                     in
-                    { model | lords = Entities.Lords.Cons newPlayer (Entities.Lords.getAis model.lords) }
+                    emptyCmd { model | lords = Entities.Lords.Cons newPlayer (Entities.Lords.getAis model.lords) }
 
 
-updateLordAction : MapAction.SubModel.LordTileMsg -> Entities.Model.Lord -> Model -> Model
+updateLordAction : MapAction.SubModel.LordTileMsg -> Entities.Model.Lord -> Model -> ( Model, Cmd Msg.Msg )
 updateLordAction msg lord m =
     case msg of
         MapAction.SubModel.ViewLord ->
-            { m | gameState = GameSetup (LordView lord) }
+            emptyCmd { m | gameState = GameSetup (LordView lord) }
 
         MapAction.SubModel.EngageLord ->
-            { m
+            ( { m
                 | gameState =
                     GameSetup
                         (BattleView
@@ -782,7 +759,9 @@ updateLordAction msg lord m =
                             , finished = False
                             }
                         )
-            }
+              }
+            , Ports.playSound "KampfschreiLight"
+            )
 
 
 
@@ -872,7 +851,7 @@ updateMultipleTroopStats l s u m =
 ----------------------------------------------------------
 
 
-updateBattle : Msg.BattleMsg -> Model -> Model
+updateBattle : Msg.BattleMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateBattle msg model =
     case msg of
         Msg.StartSkirmish bS ->
@@ -880,22 +859,16 @@ updateBattle msg model =
                 newBattleStats =
                     Battle.evaluateBattleResult bS (Map.getTerrainForPoint bS.attacker.entity.position model.map)
             in
-            { model
-                | gameState =
-                    GameSetup
-                        (BattleView
-                            newBattleStats
-                        )
-            }
+            ( { model | gameState = GameSetup (BattleView newBattleStats) }, Ports.playSound "Kampfgeklirre2Sec" )
 
         Msg.SkipSkirmishes bS ->
-            { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
+            emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
 
         Msg.FleeBattle bS ->
-            checkBattleAftermath model bS
+            (checkBattleAftermath model bS, getBattleAftermathSound bS)
 
         Msg.EndBattle bS ->
-            checkBattleAftermath model bS
+            (checkBattleAftermath model bS, getBattleAftermathSound bS)
 
 
 checkBattleAftermath : Model -> Battle.Model.BattleStats -> Model
@@ -926,6 +899,15 @@ checkBattleAftermath model bS =
                 (OperatorExt.ternary (List.length (Entities.Lords.npcs model.lords) > 0) (GameSetup GameMenue) (GameOver True))
 
 
+getBattleAftermathSound : Battle.Model.BattleStats -> Cmd Msg.Msg
+getBattleAftermathSound bS =
+    if Troops.sumTroops bS.attacker.entity.army /= 0 then
+        Ports.transitSoundToMusic ("Kampfsieg", 3500)
+
+    else
+        Ports.startMusic "play"
+
+
 updateLordsAfterBattle : Entities.Model.Lord -> List AI.AI -> Model -> GameState -> Model
 updateLordsAfterBattle player enemyLords model state =
     { model | lords = Entities.Lords.Cons player enemyLords, gameState = state }
@@ -949,25 +931,25 @@ updateMenue : Msg.MenueMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateMenue msg model =
     case msg of
         Msg.StartGame name ->
-            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Entities.changeLordName name (getPlayer model)) }, startMusic "play" )
+            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Entities.changeLordName name (getPlayer model)) }, Ports.startMusic "play" )
 
         Msg.ChangeName str ->
             emptyCmd { model | playerInput = str }
 
         Msg.ChangeVolumne vol ->
-            emptyCmd { model | volumne = vol }
+            ( { model | volumne = vol }, Ports.updateVolumne vol )
 
         Msg.ShowMenue ->
             emptyCmd { model | gameState = GameSetup (MainMenue Menue) }
 
         Msg.ShowDocumentation ->
-            ( { model | gameState = GameSetup (MainMenue Menue) }, openLink "https://github.com/flofe104/elmlord" )
+            ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord" )
 
         Msg.SetCampaingn ->
             emptyCmd { model | gameState = GameSetup (MainMenue Campaign) }
 
         Msg.ShowCredits ->
-            ( { model | gameState = GameSetup (MainMenue Menue) }, openLink "https://github.com/flofe104/elmlord" )
+            ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord" )
 
 
 

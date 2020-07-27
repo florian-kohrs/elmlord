@@ -1,0 +1,88 @@
+.troop-modal {
+    width: 500px;
+    height: 450px;
+    background: #b8bbc0;
+    border-radius: 20px;
+    position: absolute;
+    margin-top: calc(30% - 225px);
+    margin-left: calc(50% - 250px);
+    display: grid;
+    grid-template-rows: 20px 1fr;
+    grid-row-gap: 10px;
+    border: 1px solid #49505c;
+}
+
+.troop-header {
+    text-align: center;
+    color: #49505c;
+}
+
+.troop-header > span {
+    font-size: 25px;
+}
+
+.troop-modal-close-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+}
+
+.troop-modal-close {
+    width: 50px;
+    height: 50px;
+    border-radius: 30px;
+    margin-top: -2.5%;
+    position: absolute;
+    border: 2px solid #49505c;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    margin-left: 94% !important;
+}
+
+.troop-modal-close > span {
+    font-size: 25px;
+    display: block;
+    padding-top: 12px;
+    color: #49505c;
+}
+
+div > .disband-troop-container {
+    height: 30px;
+    display: grid;
+    margin: 40px auto;
+    grid-template-columns: 25% 1fr 25%;
+    text-align: center;
+}
+
+.disband-troop-container > img {
+    height: 50px;
+    width: 50px;
+    display: block;
+    margin: 0 auto;
+}
+
+.disband-troop-container > span {
+    font-size: 20px;
+    color: #49505c;
+    padding-top: 19.5px;
+}
+
+.disband-button {
+    margin: 0 auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 40%;
+    height: 50px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+@media only screen and (min-width: 1550px) and (min-height: 900px) {
+    .troop-modal {
+        margin-top: calc(25% - 225px) !important;
+    }
+}
