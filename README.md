@@ -35,4 +35,5 @@ The tasks were divided among ourselves as follows:
 
 Special thanks to [MDomroese](https://gitlab.com/MDomroese) for the settlement illustration and the great lord profile pictures.
 
+Background-Style: [old paper or parchment - The Misguided Millennial](https://www.pinterest.de/pin/817333032353382769/)
 
