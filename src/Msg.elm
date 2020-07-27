@@ -31,6 +31,7 @@ type Msg
 type MenueMsg
     = StartGame String
     | ChangeName String
+    | ChangeVolumne Int
     | ShowMenue
     | SetCampaingn
     | ShowDocumentation

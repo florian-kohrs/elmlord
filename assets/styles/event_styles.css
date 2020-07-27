@@ -5,6 +5,7 @@
     background: #deb887;
     border-radius: 20px;
     height: 90%;
+    max-height: 700px;
     margin: 5px 0;
 
     display: grid;
@@ -81,6 +82,7 @@
 @media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
     .event-logs {
         height: 70%;
+        max-height: 650px;
     }
 
     .event-logs-component > div > span {
@@ -91,6 +93,7 @@
 @media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 800px) {
     .event-logs {
         height: 75%;
+        max-height: 650px;
     }
 
     .event-logs-component > div > span {

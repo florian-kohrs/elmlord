@@ -2,6 +2,7 @@ body {
     margin: 0
 }
 
+
 .main-container {
     height: 100vh;
     width: 100vw;
@@ -10,14 +11,13 @@ body {
 
 .start-logo-container {
     height: 200px;
-    width: 450px;
+    width: 100%;
 }
 
 .start-logo-container > img {
-    width: 80%;
-    height: 125px;
-    margin: 40px auto;
-    margin-left: 50px;
+    width: 450px;
+    margin: 0px auto;
+    display: block;
 }
 
 .start-container {
@@ -25,7 +25,7 @@ body {
     height: 400px;
     position: absolute;
     margin-left: 35%;
-    margin-top: 0%;
+    margin-top: 5%;
 
     display: grid;
     grid-template-rows: 25% 1fr 10%;
@@ -93,12 +93,12 @@ body {
 .campaign-container {
     width: 30%;
     height: 450px;
-    margin: 0 auto;
+    margin: 75px auto;
 }
 
 
 .campaign-actions {
-    height: 175px;
+    height: 220px;
     margin-top: 40px;
     border-radius: 10px;
     border: 4px solid #c7994c;
@@ -106,7 +106,7 @@ body {
 
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: 1fr 20% 1fr;
 }
 
 .campaign-name-container {
@@ -122,6 +122,11 @@ body {
     padding-top: 30px;
     font-size: 22px;
     color: #323232;
+}
+
+.error-msg {
+    color: #ed2939;
+    font-size: 17px;
 }
 
 .campaign-input {

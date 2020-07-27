@@ -5,7 +5,7 @@ import Dict
 import DictExt
 import Entities
 import Entities.Model
-import Html exposing (Html, audio, div, img, span, text)
+import Html exposing (Html, audio, div, img, input, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Msg
@@ -19,13 +19,13 @@ import Troops
     @param {Date}: Takes the current (ingame)-date
 
 -}
-generateHeaderTemplate : Entities.Model.Lord -> DateExt.Date -> Html Msg.Msg
-generateHeaderTemplate lord date =
+generateHeaderTemplate : Int -> Entities.Model.Lord -> DateExt.Date -> Html Msg.Msg
+generateHeaderTemplate vol lord date =
     div [ Html.Attributes.class "page-header" ]
         [ div [ Html.Attributes.class "page-turn-header" ] (headerTurnTemplate date)
         , div [ Html.Attributes.class "page-gold-header" ] (headerGoldTemplate lord)
         , div [ Html.Attributes.class "page-troop-header" ] (headerTroopTemplate lord)
-        , div [ Html.Attributes.class "page-settings-header" ] headerSettingsTemplate
+        , div [ Html.Attributes.class "page-settings-header" ] (headerSettingsTemplate vol)
         ]
 
 
@@ -128,25 +128,29 @@ generateTroopTooltip aT aAmount sAmount =
 
 {-| Returns possible settings (save game and set audio) insided the header
 -}
-headerSettingsTemplate : List (Html Msg.Msg)
-headerSettingsTemplate =
+headerSettingsTemplate : Int -> List (Html Msg.Msg)
+headerSettingsTemplate vol =
     [ div [ Html.Attributes.class "page-setting-container tooltip" ]
         [ img [ src "./assets/images/general/audio_on_icon.png", Html.Attributes.class "page-image-settings" ] []
-
-        {- , audio [ src "./assets/sounds/title.mp3", id "audio-player", controls True] [] -}
-        , div [ Html.Attributes.class "tooltip" ]
-            [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Mute or unmute the gamesounds" ]
+        , div [ Html.Attributes.class "tooltiptext sound-tooltip" ]
+            [ input [ Html.Attributes.type_ "range", Html.Attributes.min "0", Html.Attributes.max "100", Html.Attributes.value (String.fromInt vol), Html.Events.onInput resolveOnChangeMsg ] []
+            , div [ Html.Attributes.style "text-align" "center" ]
+                [ span [ ] [ Html.text ("Current volumne: " ++ String.fromInt vol ++ "%") ] ]
             ]
         ]
     , div [ Html.Attributes.class "page-settings-grid" ]
         [ div [ onClick (Msg.EventAction Msg.SwitchEventView), Html.Attributes.class "page-setting-container tooltip" ]
             [ img [ src "./assets/images/general/event.png", Html.Attributes.class "page-image-settings" ] []
             , div [ Html.Attributes.class "tooltip" ]
-                [ span [ Html.Attributes.class "tooltiptext settings-tooltip" ] [ Html.text "Hide / Show the event logs" ]
+                [ span [ Html.Attributes.class "tooltiptext event-tooltip" ] [ Html.text "Hide / Show the event logs" ]
                 ]
             ]
         ]
     ]
+
+
+
+{- [ span [ Html.Attributes.class "tooltiptext sound-tooltip" ] [ Html.text "Mute or unmute the gamesounds" ]] -}
 
 
 {-| Calculates and returns the revenues of a lord in form of tuple ([Revenue-Type], [Value])
@@ -181,3 +185,7 @@ revenueToSpan ( name, value ) =
 
     else
         span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ Helper.roundDigits value ++ " Ducats") ]
+
+resolveOnChangeMsg : String -> Msg.Msg
+resolveOnChangeMsg str = 
+    Msg.MenueAction (Msg.ChangeVolumne (Maybe.withDefault 0 (String.toInt str)))
