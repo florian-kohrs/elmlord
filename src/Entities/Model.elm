@@ -55,7 +55,7 @@ type SettlementType
 aiNames : List String
 aiNames =
     [ ""
-    , "Jan von Haskell"
+    , "Baron Bodo"
     , "Herzog K. Willi"
     , "Sir Quicknuss"
     ]

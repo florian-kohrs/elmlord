@@ -57,10 +57,6 @@ improveBuildingFactor =
     0.5
 
 
-addGoldCastle : Float 
-addGoldCastle = 
-    500.00
-
 
 -- should also consider speed difference
 
@@ -73,3 +69,8 @@ settlementDefenseBoni s landlord =
 
         Entities.Model.Castle ->
             toFloat (List.length landlord.land - 1) * 0.15
+
+
+addGoldCastle : Float
+addGoldCastle =
+    500.0

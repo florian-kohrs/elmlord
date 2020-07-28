@@ -98,6 +98,16 @@ sumTroopStats =
 ----------------------------------------------------------
 
 
+averageTroopStrengthCostRatio : Float
+averageTroopStrengthCostRatio =
+    List.foldl (\t ( r, c ) -> ( r + (troopStrengthDeffSum t / troopCost t - r) / c, c + 1 )) ( 0, 1 ) troopTypeList
+
+
+troopStrengthDeffSum : TroopType -> Int
+troopStrengthDeffSum t =
+    troopDamage t + troopDefense t
+
+
 troopCost : TroopType -> Float
 troopCost t =
     case t of
@@ -160,22 +170,6 @@ troopDefense t =
 
         Knight ->
             100
-
-
-troopPriority : TroopType -> Float
-troopPriority t =
-    case t of
-        Archer ->
-            0.15
-
-        Spear ->
-            0.3
-
-        Sword ->
-            0.25
-
-        Knight ->
-            0.3
 
 
 troopName : TroopType -> String

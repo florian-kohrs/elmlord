@@ -9,6 +9,7 @@ import OperatorExt
 import Troops
 import Vector
 
+
 setLordEntity : Lord -> WorldEntity -> Lord
 setLordEntity l e =
     { l | entity = e }
@@ -84,16 +85,22 @@ takeTroops l t s =
 
 
 disbandTroops : Lord -> Troops.TroopType -> Lord
-disbandTroops l t = 
+disbandTroops l t =
     let
         amount =
             getPossibleTroopAmount l.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity }
 
+
 upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
 upgradeBuilding l b s =
-    { l | gold = l.gold - (Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)), land = updateSettlementBuildings l.land s.entity.name b.buildingType }
+    { l | gold = l.gold - upgradeBuildingCost b, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
+
+
+upgradeBuildingCost : Building.Building -> Float
+upgradeBuildingCost b =
+    Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)
 
 
 updateEntitiesArmy : Troops.Army -> WorldEntity -> WorldEntity
@@ -298,9 +305,12 @@ applyLordNewRecruits : Lord -> Lord
 applyLordNewRecruits lord =
     { lord | land = applySettlementNewRecruits lord.land }
 
+
 factionToLord : Faction.Faction -> List Lord -> Maybe Lord
-factionToLord f l = 
+factionToLord f l =
     List.head (List.filter (\x -> x.entity.faction == f) l)
+
+
 
 -- functions for income calculation of the lord
 ----------------------------------------------------------
@@ -371,14 +381,17 @@ factionToImage fac =
         Faction.Faction4 ->
             "faction4.png"
 
+
 validatePlayerName : String -> Bool
-validatePlayerName v = 
+validatePlayerName v =
     List.any (\x -> x == v) Entities.Model.aiNames
 
+
 changeLordName : String -> Lord -> Lord
-changeLordName name lord = 
-    { lord | entity = changeEntitiyName name lord.entity}
+changeLordName name lord =
+    { lord | entity = changeEntitiyName name lord.entity }
+
 
 changeEntitiyName : String -> Entities.Model.WorldEntity -> Entities.Model.WorldEntity
-changeEntitiyName name we = 
-    { we | name = name } 
+changeEntitiyName name we =
+    { we | name = name }
