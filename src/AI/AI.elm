@@ -14,6 +14,70 @@ import Troops
 import Vector
 
 
+getAiRoundActionDestination : AiRoundActions -> Maybe Vector.Point
+getAiRoundActionDestination a =
+    case a of
+        EndRound ->
+            Nothing
+
+        GoSomeWhere p ->
+            Just p
+
+        DoSomething basicAction ->
+            Just <| getBasicActionDestination basicAction
+
+
+getBasicActionDestination : BasicAction -> Vector.Point
+getBasicActionDestination basicAction =
+    case basicAction of
+        AttackLord l ->
+            l.entity.position
+
+        HireTroops _ s ->
+            s.entity.position
+
+        SwapTroops _ s ->
+            s.entity.position
+
+        SiegeSettlement s ->
+            s.entity.position
+
+        ImproveBuilding s _ ->
+            s.entity.position
+
+
+showAiRoundAction : AiRoundActions -> String
+showAiRoundAction aiRoundActions =
+    case aiRoundActions of
+        EndRound ->
+            "End Round"
+
+        GoSomeWhere p ->
+            "Go to " ++ Vector.showPoint p
+
+        DoSomething basicAction ->
+            showBasicAction basicAction
+
+
+showBasicAction : BasicAction -> String
+showBasicAction basicAction =
+    case basicAction of
+        AttackLord _ ->
+            "Attack Lord"
+
+        HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
+            "Hire Troops"
+
+        SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
+            "Swap Troops"
+
+        SiegeSettlement settlementModelEntities ->
+            "Siege Settlement: " ++ settlementModelEntities.entity.name
+
+        ImproveBuilding settlementModelEntities buildingBuilding ->
+            "Improve Building"
+
+
 getAiActionMultiplier : Float -> Float
 getAiActionMultiplier f =
     1 + sin (2 * pi * f) / 3

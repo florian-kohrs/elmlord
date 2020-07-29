@@ -1,8 +1,8 @@
 module AI.AISettlementHandling exposing (..)
 
-import AI.Model exposing (..)
 import AI.AIGoldManager exposing (..)
 import AI.AITroopHandling exposing (..)
+import AI.Model exposing (..)
 import Balancing
 import Building
 import Dict
@@ -18,12 +18,16 @@ import Vector
 
 checkSettlementsForTroops : Int -> AI -> List AiRoundActionPreference
 checkSettlementsForTroops targetStrength ai =
-  List.foldl (\s r ->
-    let
-      recruitableTroopsDict =
-        AI.AITroopHandling.tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
+    List.foldl
+        (\s r ->
+            let
+                recruitableTroopsDict =
+                    AI.AITroopHandling.tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
 
-      troopStrength =
-        Troops.sumTroopStats recruitableTroopsDict
-    in
-    case      ) [] ai.lord.land
+                troopStrength =
+                    Troops.sumTroopStats recruitableTroopsDict
+            in
+            AiRoundActionPreference (BasicAction (HireTroops recruitableTroopsDict s))
+        )
+        []
+        ai.lord.land

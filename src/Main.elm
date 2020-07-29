@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import AI
+import AI.Model
 import Battle
 import Battle.Model
 import Browser
@@ -294,10 +295,10 @@ initPlayers m count =
         )
 
 
-initAI : Entities.Model.Lord -> Float -> AI.AI
+initAI : Entities.Model.Lord -> Float -> AI.Model.AI
 initAI l i =
-    AI.AI l
-        (AI.ActionMultipliers
+    AI.Model.AI l
+        (AI.Model.ActionMultipliers
             (AI.getAiActionMultiplier 0.7 + i / 5)
             (AI.getAiActionMultiplier 0.3 + i / 7)
             (AI.getAiActionMultiplier 0.5 + i / 3)
@@ -601,7 +602,7 @@ playAiTurn m =
                         (Entities.Lords.getLordsExcept m.lords ai.lord)
             in
             case action of
-                AI.EndRound ->
+                AI.Model.EndRound ->
                     endAnyRound <|
                         { m
                             | lords =
@@ -620,7 +621,7 @@ playAiTurn m =
                     }
 
 
-updateAIsAfterPlayerRound : List AI.AI -> List AI.AI
+updateAIsAfterPlayerRound : List AI.Model.AI -> List AI.Model.AI
 updateAIsAfterPlayerRound ais =
     List.map (\ai -> AI.setLord ai (endRoundForLord (.lord (updateAI ai)))) ais
 
@@ -629,7 +630,7 @@ updateAIsAfterPlayerRound ais =
 --test function
 
 
-updateAI : AI.AI -> AI.AI
+updateAI : AI.Model.AI -> AI.Model.AI
 updateAI ai =
     { ai
         | lord =
@@ -699,7 +700,7 @@ updateMaptileAction model ma =
                             emptyCmd model
 
                         Just l ->
-                            ({ model
+                            ( { model
                                 | gameState =
                                     GameSetup
                                         (BattleView
@@ -713,7 +714,9 @@ updateMaptileAction model ma =
                                             , finished = False
                                             }
                                         )
-                            }, Ports.playSound "KampfschreiLight")
+                              }
+                            , Ports.playSound "KampfschreiLight"
+                            )
 
         MapAction.SubModel.MoveTo p ->
             let
@@ -865,10 +868,10 @@ updateBattle msg model =
             emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
 
         Msg.FleeBattle bS ->
-            (checkBattleAftermath model bS, getBattleAftermathSound bS)
+            ( checkBattleAftermath model bS, getBattleAftermathSound bS )
 
         Msg.EndBattle bS ->
-            (checkBattleAftermath model bS, getBattleAftermathSound bS)
+            ( checkBattleAftermath model bS, getBattleAftermathSound bS )
 
 
 checkBattleAftermath : Model -> Battle.Model.BattleStats -> Model
@@ -902,18 +905,18 @@ checkBattleAftermath model bS =
 getBattleAftermathSound : Battle.Model.BattleStats -> Cmd Msg.Msg
 getBattleAftermathSound bS =
     if Troops.sumTroops bS.attacker.entity.army /= 0 then
-        Ports.transitSoundToMusic ("Kampfsieg", 3500)
+        Ports.transitSoundToMusic ( "Kampfsieg", 3500 )
 
     else
         Ports.startMusic "play"
 
 
-updateLordsAfterBattle : Entities.Model.Lord -> List AI.AI -> Model -> GameState -> Model
+updateLordsAfterBattle : Entities.Model.Lord -> List AI.Model.AI -> Model -> GameState -> Model
 updateLordsAfterBattle player enemyLords model state =
     { model | lords = Entities.Lords.Cons player enemyLords, gameState = state }
 
 
-filterDefeatedLord : Bool -> Entities.Model.Lord -> List AI.AI -> List AI.AI
+filterDefeatedLord : Bool -> Entities.Model.Lord -> List AI.Model.AI -> List AI.Model.AI
 filterDefeatedLord k d ais =
     if k then
         List.filter (\x -> x.lord.entity.name /= d.entity.name) ais

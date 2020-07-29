@@ -1,12 +1,13 @@
 module Entities.Lords exposing (..)
 
 import AI
+import AI.Model
 import Entities.Model exposing (..)
 import List
 
 
 type LordList
-    = Cons Lord (List AI.AI)
+    = Cons Lord (List AI.Model.AI)
 
 
 lordListToList : LordList -> List Lord
@@ -19,12 +20,12 @@ npcs (Cons _ ais) =
     List.map .lord ais
 
 
-getAis : LordList -> List AI.AI
+getAis : LordList -> List AI.Model.AI
 getAis (Cons _ ais) =
     ais
 
 
-replaceAi : LordList -> AI.AI -> LordList
+replaceAi : LordList -> AI.Model.AI -> LordList
 replaceAi lordList newAi =
     Cons (getPlayer lordList)
         (List.map
