@@ -1,5 +1,6 @@
 module AI exposing (..)
 
+import AI.AIActionDistanceHandler
 import AI.Model exposing (..)
 import Balancing
 import Building
@@ -12,38 +13,6 @@ import PathAgent
 import Pathfinder
 import Troops
 import Vector
-
-
-getAiRoundActionDestination : AiRoundActions -> Maybe Vector.Point
-getAiRoundActionDestination a =
-    case a of
-        EndRound ->
-            Nothing
-
-        GoSomeWhere p ->
-            Just p
-
-        DoSomething basicAction ->
-            Just <| getBasicActionDestination basicAction
-
-
-getBasicActionDestination : BasicAction -> Vector.Point
-getBasicActionDestination basicAction =
-    case basicAction of
-        AttackLord l ->
-            l.entity.position
-
-        HireTroops _ s ->
-            s.entity.position
-
-        SwapTroops _ s ->
-            s.entity.position
-
-        SiegeSettlement s ->
-            s.entity.position
-
-        ImproveBuilding s _ ->
-            s.entity.position
 
 
 showAiRoundAction : AiRoundActions -> String
@@ -126,14 +95,14 @@ getAiAction ai distanceTo canMoveInTurn enemies =
         List.head
             (List.sortBy
                 (\action -> -action.actionValue)
-                (AiRoundActionPreference EndRound 0.0 :: getAiActions ai distanceTo enemies)
+                (AiRoundActionPreference EndRound 0.0 :: getAiActions ai enemies)
             )
     of
         Nothing ->
             EndRound
 
         Just action ->
-            case getAiRoundActionDestination action.action of
+            case AI.AIActionDistanceHandler.getAiRoundActionDestination action.action of
                 Nothing ->
                     EndRound
 
@@ -147,16 +116,15 @@ getAiAction ai distanceTo canMoveInTurn enemies =
 
 getAiActions :
     AI
-    -> (Entities.Model.Lord -> Vector.Point -> Int)
     -> List Entities.Model.Lord
     -> List AiRoundActionPreference
-getAiActions ai getTurnsToPoint enemies =
+getAiActions ai enemies =
     let
         ownSettlementDefenseActions =
-            getSettlementDefenseActions ai getTurnsToPoint enemies
+            getSettlementDefenseActions ai enemies
 
         enemySettlementStates =
-            getSettlementAttackActions ai getTurnsToPoint enemies
+            getSettlementAttackActions ai enemies
     in
     if PathAgent.remainingMovement ai.lord.agent == 0 then
         []
@@ -167,10 +135,9 @@ getAiActions ai getTurnsToPoint enemies =
 
 getSettlementDefenseActions :
     AI
-    -> (Entities.Model.Lord -> Vector.Point -> Int)
     -> List Entities.Model.Lord
     -> List AiRoundActionPreference
-getSettlementDefenseActions ai getTurnsToPoint enemies =
+getSettlementDefenseActions ai enemies =
     ListExt.justList <|
         List.foldl
             (\s r -> evaluateSettlementDefense ai s :: r)
@@ -180,19 +147,18 @@ getSettlementDefenseActions ai getTurnsToPoint enemies =
 
 getSettlementAttackActions :
     AI
-    -> (Entities.Model.Lord -> Vector.Point -> Int)
     -> List Entities.Model.Lord
     -> List AiRoundActionPreference
-getSettlementAttackActions ai getTurnsToPoint enemies =
+getSettlementAttackActions ai enemies =
     ListExt.justList <|
         List.foldl
-            (\s r -> evaluateSettlementSiegeAction ai s (getTurnsToPoint ai.lord s.entity.position) enemies :: r)
+            (\s r -> evaluateSettlementSiegeAction ai s enemies :: r)
             []
             (List.concat <| List.map (\l -> l.land) enemies)
 
 
-evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> Int -> List Entities.Model.Lord -> Maybe AiRoundActionPreference
-evaluateSettlementSiegeAction ai s turnsTillReached ls =
+evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities.Model.Lord -> Maybe AiRoundActionPreference
+evaluateSettlementSiegeAction ai s ls =
     let
         siegeStrengthDiff =
             toFloat (Troops.sumTroopStats ai.lord.entity.army)
@@ -214,7 +180,6 @@ evaluateSettlementSiegeAction ai s turnsTillReached ls =
                 (DoSomething (SiegeSettlement s))
                 (siegeStrengthDiff
                     * ai.strategy.siegeMultiplier
-                    - Balancing.distanceFromAggresiveActionPenalty turnsTillReached
                 )
             )
 
