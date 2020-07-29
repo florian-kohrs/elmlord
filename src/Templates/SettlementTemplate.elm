@@ -5,6 +5,7 @@ import Dict
 import DictExt
 import Entities
 import Entities.Model
+import Faction exposing (Faction)
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -13,7 +14,6 @@ import Msg
 import OperatorExt
 import Templates.HelperTemplate as Helper
 import Troops
-import Faction exposing (Faction)
 
 
 {-| Returns the layout for the settlement modal (Enter/View [Settlement-Name])
@@ -160,11 +160,13 @@ settlementStateToAction pF lord settlement uistate =
 
 
 checkBuildingCapabilities : Entities.Model.Settlement -> Html Msg.Msg
-checkBuildingCapabilities s = 
+checkBuildingCapabilities s =
     if s.settlementType == Entities.Model.Castle then
         button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowBuildings s))) ] [ span [] [ Html.text "Upgrade buildings" ] ]
-    else 
+
+    else
         div [] []
+
 
 {-| Returns the listview with the stationed troops, the player can take units out or station new troops to the settlement.
 The function is used for the List.map2 function.
@@ -212,7 +214,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
         , span [] [ Html.text ("[" ++ String.fromInt aAmount ++ "]") ]
         , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "]") ]
         , div []
-            [ span [] [ Html.text (String.fromFloat (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost t)) ]
+            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost t)) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button
@@ -220,7 +222,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
             , Html.Attributes.class (OperatorExt.ternary (validateBuyTroops t s l) "troop-disabled-button" "tooltip")
             , disabled (validateBuyTroops t s l)
             ]
-            [ span [Html.Attributes.class "troop-recruit-button-text"] [ Html.text "+" ]
+            [ span [ Html.Attributes.class "troop-recruit-button-text" ] [ Html.text "+" ]
             , div [ Html.Attributes.class "tooltiptext troop-recruiting-tooltip" ]
                 [ span [] [ Html.text "Monthly wage" ]
                 , span [ Html.Attributes.class "negative-income" ] [ Html.text ("- " ++ String.fromFloat (Troops.troopWage t) ++ " Ducats") ]
@@ -313,10 +315,6 @@ validateSettlement pF l s =
         [ span [] [ Html.text (OperatorExt.ternary (pF == s.entity.faction) "This is our settlement!" "This is an enemy settlement!") ]
         ]
     ]
-
-
-
---TODO: combine it with the other validate functions (troopcost)
 
 
 validateBuildingUpgrade : Building.Building -> Entities.Model.Lord -> Bool
