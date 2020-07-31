@@ -15,6 +15,23 @@ import Troops
 import Vector
 
 
+takeTroopsToLeaveArmyAtStrength : Int -> Troops.Army -> Troops.Army
+takeTroopsToLeaveArmyAtStrength strength =
+    Tuple.second <|
+        Dict.foldl
+            (\k v ( currentStrength, dict ) ->
+                let
+                    troopStats =
+                        Troops.troopStrengthDeffSum <| Troops.intToTroopType k
+
+                    notAvailableAmount =
+                        clamp 0 v (round (strength - currentStrength)) / troopStats
+                in
+                ( currentStrength + troopStats * notAvailableAmount, Dict.insert k (v - notAvailableAmount) )
+            )
+            ( i, Dict.empty )
+
+
 estimatedTroopStrengthForGold : Int -> Int
 estimatedTroopStrengthForGold i =
     Troops.averageTroopStrengthCostRatio int

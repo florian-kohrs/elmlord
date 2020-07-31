@@ -56,8 +56,8 @@ distanceFromAttackLordPenalty turns =
     toFloat turns
 
 
-applyActionDistancePenalty : AiRoundActionPreference -> (Vector.Point -> Int) -> AiRoundActionPreference
-applyActionDistancePenalty action turnsToPoint =
+applyActionDistancePenalty : (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
+applyActionDistancePenalty turnsToPoint action =
     let
         destination =
             getAiRoundActionDestination action.action
