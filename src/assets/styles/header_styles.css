@@ -9,7 +9,7 @@
     background: #deb887;
     display: grid;
     grid-template-rows: 1fr;
-    grid-template-columns: 325px 85px 235px 195px 1fr 150px 15%;
+    grid-template-columns: 325px 85px 235px 200px 1fr 150px 15%;
     grid-column-gap: 50px;
 
     border-bottom-right-radius: 35px;
@@ -87,8 +87,15 @@
     grid-area: 1 / 4 / 2 / 5;
     display: grid;
     text-align: center;
-    grid-template-columns: 35% 1fr;
+    grid-template-columns: 25% 1fr 25%;
     cursor: pointer;
+}
+
+.troop-info-icon > img {
+    width: 40px;
+    height: 40px;
+    display: block;
+    margin: 14px auto;
 }
 
 /* Styling for the settings (logview and audio) */

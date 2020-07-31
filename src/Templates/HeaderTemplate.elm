@@ -82,7 +82,7 @@ headerTroopTemplate lord =
             Entities.sumLordSettlementTroops lord
     in
     [ img [ src "./assets/images/troops/troop_icon.png", Html.Attributes.class "page-header-images" ] []
-    , div [ onClick (Msg.TroopAction Msg.TroopActionMsg), Html.Attributes.class "tooltip" ]
+    , div [ Html.Attributes.class "tooltip" ]
         [ span [ Html.Attributes.class "page-header-span" ] [ Html.text (String.fromInt (Dict.foldl (\k v r -> v + r) 0 lord.entity.army) ++ " Troops") ]
         , div [ Html.Attributes.class "tooltiptext troop-tooltip" ]
             [ span [] [ Html.text "Current Troops" ]
@@ -108,6 +108,8 @@ headerTroopTemplate lord =
                 )
             ]
         ]
+    , div [ Html.Attributes.class "troop-info-icon" ]
+        [ img [ src "./assets/images/general/info.png", onClick (Msg.TroopAction Msg.TroopActionMsg) ] [] ]
     ]
 
 
@@ -135,7 +137,7 @@ headerSettingsTemplate vol =
         , div [ Html.Attributes.class "tooltiptext sound-tooltip" ]
             [ input [ Html.Attributes.type_ "range", Html.Attributes.min "0", Html.Attributes.max "100", Html.Attributes.value (String.fromInt vol), Html.Events.onInput resolveOnChangeMsg ] []
             , div [ Html.Attributes.style "text-align" "center" ]
-                [ span [ ] [ Html.text ("Current volumne: " ++ String.fromInt vol ++ "%") ] ]
+                [ span [] [ Html.text ("Current volumne: " ++ String.fromInt vol ++ "%") ] ]
             ]
         ]
     , div [ Html.Attributes.class "page-settings-grid" ]
@@ -186,6 +188,7 @@ revenueToSpan ( name, value ) =
     else
         span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ Helper.roundDigits value ++ " Ducats") ]
 
+
 resolveOnChangeMsg : String -> Msg.Msg
-resolveOnChangeMsg str = 
+resolveOnChangeMsg str =
     Msg.MenueAction (Msg.ChangeVolumne (Maybe.withDefault 0 (String.toInt str)))
