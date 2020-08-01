@@ -32,8 +32,8 @@ type AiRoundActions
 
 type BasicAction
     = AttackLord Entities.Model.Lord
-    | HireTroops (Dict.Dict Troops.TroopType Int) Entities.Model.Settlement
-    | SwapTroops (Dict.Dict Troops.TroopType Int) Entities.Model.Settlement
+    | HireTroops (Dict.Dict Int Int) Entities.Model.Settlement
+    | SwapTroops (Dict.Dict Int Int) Entities.Model.Settlement
     | SiegeSettlement Entities.Model.Settlement
     | ImproveBuilding Entities.Model.Settlement Building.Building
 

@@ -16,7 +16,7 @@ import Vector
 
 
 takeTroopsToLeaveArmyAtStrength : Int -> Troops.Army -> Troops.Army
-takeTroopsToLeaveArmyAtStrength strength =
+takeTroopsToLeaveArmyAtStrength strength army =
     Tuple.second <|
         Dict.foldl
             (\k v ( currentStrength, dict ) ->
@@ -25,42 +25,44 @@ takeTroopsToLeaveArmyAtStrength strength =
                         Troops.troopStrengthDeffSum <| Troops.intToTroopType k
 
                     notAvailableAmount =
-                        clamp 0 v (round (strength - currentStrength)) / troopStats
+                        clamp 0 v ((strength - currentStrength) // troopStats)
                 in
-                ( currentStrength + troopStats * notAvailableAmount, Dict.insert k (v - notAvailableAmount) )
+                ( currentStrength + troopStats * notAvailableAmount, Dict.insert k (v - notAvailableAmount) dict )
             )
-            ( i, Dict.empty )
+            ( 0, Dict.empty )
+            army
 
 
 estimatedTroopStrengthForGold : Int -> Int
-estimatedTroopStrengthForGold i =
-    Troops.averageTroopStrengthCostRatio int
+estimatedTroopStrengthForGold gold =
+    round Troops.averageTroopStrengthCostRatio * gold
 
 
-troopAmountWithStrength : Int -> Int -> Int -> Int
+troopAmountWithStrength : Int -> Int -> Int
 troopAmountWithStrength strength neededStrength =
-    max 0 <| round (neededStrength / strength)
+    max 0 <| round (toFloat neededStrength / toFloat strength)
 
 
-tryBuyTroopsWithTotalStrenghtFrom : AI -> Int -> Settlement -> Dict.Dict Troops.TroopType Int
+tryBuyTroopsWithTotalStrenghtFrom : AI -> Int -> Entities.Model.Settlement -> Dict.Dict Int Int
 tryBuyTroopsWithTotalStrenghtFrom aI targetStrength settlement =
-    Dict.foldl
-        (\k v ( gold, dict ) ->
-            let
-                troopCost =
-                    Troops.troopCost (Troops.intToTroopType k)
+    Tuple.second <|
+        Dict.foldl
+            (\k v ( gold, dict ) ->
+                let
+                    troopCost =
+                        Troops.troopCost (Troops.intToTroopType k)
 
-                amount =
-                    AI.AIGoldManager.takeAsMuchAsPossible troopCost
-                        gold
-                        (min v
-                            (troopAmountWithStrength
-                                (Troops.troopStrengthDeffSum <| Troops.intToTroopType k)
-                                (targetStrength - Troops.averageTroopStrengthCostRatio)
+                    amount =
+                        AI.AIGoldManager.takeAsMuchAsPossible troopCost
+                            gold
+                            (min v
+                                (troopAmountWithStrength
+                                    (Troops.troopStrengthDeffSum <| Troops.intToTroopType k)
+                                    (targetStrength - round Troops.averageTroopStrengthCostRatio)
+                                )
                             )
-                        )
-            in
-            ( gold - amount * troopCost, Dict.insert k amount dict )
-        )
-        ( aI.lord.gold, Dict.empty )
-        settlement.recruitLimits
+                in
+                ( gold - toFloat (amount * troopCost), Dict.insert k amount dict )
+            )
+            ( aI.lord.gold, Dict.empty )
+            settlement.recruitLimits

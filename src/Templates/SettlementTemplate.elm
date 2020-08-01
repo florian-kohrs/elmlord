@@ -214,7 +214,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
         , span [] [ Html.text ("[" ++ String.fromInt aAmount ++ "]") ]
         , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "]") ]
         , div []
-            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * Troops.troopCost t)) ]
+            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * toFloat (Troops.troopCost t))) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button
@@ -288,7 +288,7 @@ displayBuildingBonus ( b, i ) =
 validateBuyTroops : Troops.TroopType -> Entities.Model.Settlement -> Entities.Model.Lord -> Bool
 validateBuyTroops t s l =
     not
-        ((l.gold - (Troops.troopCost t * (1 - Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100)) >= 0)
+        ((l.gold - (toFloat (Troops.troopCost t) * (1 - Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100)) >= 0)
             && MaybeExt.foldMaybe (\v -> v > 0) False (Dict.get (Troops.troopTypeToInt t) s.recruitLimits)
         )
 

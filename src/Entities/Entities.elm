@@ -58,7 +58,7 @@ buyTroops l t s =
         | gold =
             l.gold
                 - (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100)
-                    * Troops.troopCost t
+                    * toFloat (Troops.troopCost t)
                     * (toFloat amount / 5.0)
                   )
         , entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity
@@ -95,12 +95,7 @@ disbandTroops l t =
 
 upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
 upgradeBuilding l b s =
-    { l | gold = l.gold - upgradeBuildingCost b, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
-
-
-upgradeBuildingCost : Building.Building -> Float
-upgradeBuildingCost b =
-    Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)
+    { l | gold = l.gold - Building.upgradeBuildingCost b, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
 
 
 updateEntitiesArmy : Troops.Army -> WorldEntity -> WorldEntity

@@ -100,7 +100,20 @@ sumTroopStats =
 
 averageTroopStrengthCostRatio : Float
 averageTroopStrengthCostRatio =
-    Tuple.first <| List.foldl (\t ( r, c ) -> ( r + (toFloat (troopStrengthDeffSum t) / troopCost t - r) / c, c + 1 )) ( 0, 1 ) troopTypeList
+    Tuple.first <|
+        List.foldl
+            (\t ( r, c ) ->
+                ( r
+                    + (toFloat (troopStrengthDeffSum t)
+                        / toFloat (troopCost t)
+                        - r
+                      )
+                    / c
+                , c + 1
+                )
+            )
+            ( 0, 1 )
+            troopTypeList
 
 
 troopStrengthDeffSum : TroopType -> Int
@@ -108,7 +121,7 @@ troopStrengthDeffSum t =
     round (troopDamage t + troopDefense t)
 
 
-troopCost : TroopType -> Float
+troopCost : TroopType -> Int
 troopCost t =
     case t of
         Archer ->

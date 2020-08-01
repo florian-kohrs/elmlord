@@ -2,7 +2,10 @@ module Building exposing (..)
 
 import OperatorExt
 
+
+
 -- TODO Maybe set level (int) to float
+
 
 type alias Building =
     { name : String
@@ -24,6 +27,12 @@ startBuildings =
     , { name = "Fortress", level = 0, buildingType = Fortress }
     ]
 
+
+upgradeBuildingCost : Building -> Float
+upgradeBuildingCost b =
+    upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)
+
+
 buildingToBonus : BuildingType -> Float
 buildingToBonus b =
     case b of
@@ -35,6 +44,7 @@ buildingToBonus b =
 
         Fortress ->
             10
+
 
 buildingToBonusInfo : BuildingType -> Int -> String
 buildingToBonusInfo b i =
@@ -48,8 +58,9 @@ buildingToBonusInfo b i =
         Fortress ->
             "-" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% Troopcost"
 
-upgradeCostBase : BuildingType -> Float 
-upgradeCostBase b = 
+
+upgradeCostBase : BuildingType -> Float
+upgradeCostBase b =
     case b of
         Marketplace ->
             550
@@ -60,19 +71,21 @@ upgradeCostBase b =
         Fortress ->
             500
 
-upgradeBuildingType : List Building -> BuildingType -> List Building
-upgradeBuildingType b bt = 
-    List.map (\x -> { x | level = OperatorExt.ternary (x.buildingType == bt) (x.level + 1) x.level}) b
 
-        
+upgradeBuildingType : List Building -> BuildingType -> List Building
+upgradeBuildingType b bt =
+    List.map (\x -> { x | level = OperatorExt.ternary (x.buildingType == bt) (x.level + 1) x.level }) b
+
+
 resolveBonusFromBuildings : List Building -> BuildingType -> Float
-resolveBonusFromBuildings l b = 
+resolveBonusFromBuildings l b =
     let
-        building = List.head (List.filter (\x -> x.buildingType == b) l)
+        building =
+            List.head (List.filter (\x -> x.buildingType == b) l)
     in
-        case building of
-            Nothing ->
-                0
-            
-            Just v ->
-                buildingToBonus b * Basics.toFloat v.level
+    case building of
+        Nothing ->
+            0
+
+        Just v ->
+            buildingToBonus b * Basics.toFloat v.level

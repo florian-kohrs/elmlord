@@ -96,7 +96,7 @@ getAiAction ai distanceTo canMoveInTurn enemies =
         List.head <|
             List.sortBy (\action -> -action.actionValue) <|
                 List.map
-                    (AI.AIActionDistanceHandler.applyActionDistancePenalty (canMoveInTurn ai.lord))
+                    (AI.AIActionDistanceHandler.applyActionDistancePenalty (distanceTo ai.lord))
                     (AiRoundActionPreference EndRound 0.0 :: getAiActions ai enemies)
     of
         Nothing ->
@@ -141,9 +141,9 @@ getSettlementDefenseActions :
 getSettlementDefenseActions ai enemies =
     ListExt.justList <|
         List.foldl
-            (\s r -> evaluateSettlementDefense ai s :: r)
+            (\s r -> AI.AISettlementHandling.evaluateSettlementDefense ai s :: r)
             []
-            (settlementDefenseArmyRating ai.lord)
+            (AI.AISettlementHandling.settlementDefenseArmyRating ai.lord)
 
 
 getSettlementAttackActions :
@@ -163,7 +163,7 @@ evaluateSettlementSiegeAction ai s ls =
     let
         siegeStrengthDiff =
             toFloat (Troops.sumTroopStats ai.lord.entity.army)
-                / (toFloat (settlementDefenseStrength ai s ls)
+                / (toFloat (AI.AISettlementHandling.settlementDefenseStrength ai s ls)
                     * MaybeExt.foldMaybe
                         (\l ->
                             1 + Balancing.settlementDefenseBoni s l

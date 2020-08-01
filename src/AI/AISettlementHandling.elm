@@ -25,7 +25,7 @@ hasTroopsToSatisfySettlementDefense : AI -> Entities.Model.Settlement -> Bool
 hasTroopsToSatisfySettlementDefense ai s =
     (Troops.sumTroopStats <|
         AI.AITroopHandling.takeTroopsToLeaveArmyAtStrength
-            (estimatedSettlementDefenseStrength s.settlementType)
+            (round <| estimatedSettlementDefenseStrength ai.lord s.settlementType)
             s.entity.army
     )
         >= troopStrengthToBotherAddingToSettlement
@@ -42,7 +42,10 @@ checkSettlementsForTroops targetStrength ai =
                 troopStrength =
                     Troops.sumTroopStats recruitableTroopsDict
             in
-            AiRoundActionPreference (BasicAction (HireTroops recruitableTroopsDict s))
+            AiRoundActionPreference
+                (DoSomething (HireTroops recruitableTroopsDict s))
+                (min 1 (toFloat troopStrength / toFloat targetStrength))
+                :: r
         )
         []
         ai.lord.land
@@ -62,22 +65,17 @@ settlementDefenseArmyRating l =
 
 rateSettlementDefense : Entities.Model.Lord -> Int -> Entities.Model.SettlementType -> Float
 rateSettlementDefense lord strength entityType =
-    case entityType of
-        Entities.Model.Village ->
-            toFloat strength / estimatedNormalVillageTroopStrength lord
-
-        Entities.Model.Castle ->
-            toFloat strength / estimatedNormalCastleTroopStrength lord
+    toFloat strength / estimatedSettlementDefenseStrength lord entityType
 
 
 estimatedSettlementDefenseStrength : Entities.Model.Lord -> Entities.Model.SettlementType -> Float
 estimatedSettlementDefenseStrength l t =
     case t of
         Entities.Model.Village ->
-            estimatedNormalVillageTroopStrength lord
+            estimatedNormalVillageTroopStrength l
 
         Entities.Model.Castle ->
-            estimatedNormalCastleTroopStrength lord
+            estimatedNormalCastleTroopStrength l
 
 
 

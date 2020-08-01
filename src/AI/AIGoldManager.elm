@@ -31,6 +31,6 @@ filterActionIfLordIsBroke a ai =
             Just action
 
 
-takeAsMuchAsPossible : Int -> Int -> Int -> Int
+takeAsMuchAsPossible : Int -> Float -> Int -> Int
 takeAsMuchAsPossible cost gold maxValue =
-    min maxValue (gold / cost)
+    min maxValue (floor (gold / toFloat cost))
