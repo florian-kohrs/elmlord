@@ -93,6 +93,8 @@ executeBasicAiAction ai action moveTowards =
 getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> (Entities.Model.Lord -> Vector.Point -> Bool) -> List Entities.Model.Lord -> AiRoundActions
 getAiAction ai distanceTo canMoveInTurn enemies =
     case
+        --improvement: apply distance penalty to head from
+        --action list and stop if it is still first after penalty
         List.head <|
             List.sortBy (\action -> -action.actionValue) <|
                 List.map
@@ -186,15 +188,6 @@ evaluateSettlementSiegeAction ai s ls =
 
     else
         Nothing
-
-
-estimatedNormalPlayerTroopStrength : Entities.Model.Lord -> Float
-estimatedNormalPlayerTroopStrength l =
-    let
-        x =
-            Entities.lordSettlementCount l
-    in
-    toFloat <| 300 + 50 * x
 
 
 lordArmyComparison : Entities.Model.Lord -> Entities.Model.Lord -> Float
