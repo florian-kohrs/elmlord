@@ -9,11 +9,20 @@ import Dict
 import Entities
 import Entities.Model
 import ListExt
+import MapData
 import MaybeExt
 import PathAgent
 import Pathfinder
 import Troops
 import Vector
+
+
+
+--stores for each key (from to Vector) the needed steps to reach
+
+
+type alias PathLookUp =
+    Dict.Dict Int Int
 
 
 showAiRoundAction : AiRoundActions -> String
@@ -145,7 +154,7 @@ getSettlementDefenseActions ai enemies =
         List.foldl
             (\s r -> AI.AISettlementHandling.evaluateSettlementDefense ai s :: r)
             []
-            (AI.AISettlementHandling.settlementDefenseArmyRating ai.lord)
+            ai.lord.land
 
 
 getSettlementAttackActions :
