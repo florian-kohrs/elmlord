@@ -2,6 +2,7 @@ module AI exposing (..)
 
 import AI.AIActionDistanceHandler
 import AI.AISettlementHandling
+import AI.AITroopHandling
 import AI.Model exposing (..)
 import Balancing
 import Building
@@ -48,7 +49,17 @@ showBasicAction basicAction =
             "Hire Troops"
 
         SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
-            "Swap Troops"
+            "Swap Troops "
+                ++ Dict.foldr
+                    (\k v s ->
+                        s
+                            ++ "TroopIndex: "
+                            ++ String.fromInt k
+                            ++ " Amount: "
+                            ++ String.fromInt v
+                    )
+                    ""
+                    intTroopTypeTroopsDictDict
 
         SiegeSettlement settlementModelEntities ->
             "Siege Settlement: " ++ settlementModelEntities.entity.name
@@ -67,7 +78,7 @@ setLord ai l =
     { ai | lord = l }
 
 
-updateAi : AI -> AiRoundActions -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> AI
+updateAi : AI -> AiRoundActions -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Model.LordList
 updateAi ai action moveTowards =
     case action of
         EndRound ->
@@ -82,33 +93,39 @@ updateAi ai action moveTowards =
 
 executeBasicAiAction : AI -> BasicAction -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> AI
 executeBasicAiAction ai action moveTowards =
-    case action of
-        SiegeSettlement s ->
-            let
-                movedAI =
-                    { ai | lord = moveTowards ai.lord s.entity.position }
-            in
-            if movedAI.lord.entity.position == s.entity.position then
-                movedAI
-                --implement / search ui acion form main
+    let
+        destination =
+            AI.AIActionDistanceHandler.getBasicActionDestination action
 
-            else
+        movedAI =
+            { ai | lord = moveTowards ai.lord destination }
+    in
+    if movedAI.lord.entity.position == destination then
+        case action of
+            SiegeSettlement s ->
                 movedAI
 
-        _ ->
-            ai
+            SwapTroops dict s ->
+                { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
+
+            _ ->
+                ai
+
+    else
+        movedAI
 
 
 getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> (Entities.Model.Lord -> Vector.Point -> Bool) -> List Entities.Model.Lord -> AiRoundActions
 getAiAction ai distanceTo canMoveInTurn enemies =
     case
-        --improvement: apply distance penalty to head from
+        --improvement: apply distance penalty (big overhead on pathfinder) to head from
         --action list and stop if it is still first after penalty
         List.head <|
             List.sortBy (\action -> -action.actionValue) <|
                 List.map
                     (AI.AIActionDistanceHandler.applyActionDistancePenalty (distanceTo ai.lord))
                     (AiRoundActionPreference EndRound 0.0 :: getAiActions ai enemies)
+        --maybe replace endround 0.0 with go to capital
     of
         Nothing ->
             EndRound
@@ -137,12 +154,17 @@ getAiActions ai enemies =
 
         enemySettlementStates =
             getSettlementAttackActions ai enemies
-    in
-    if PathAgent.remainingMovement ai.lord.agent == 0 then
-        []
 
-    else
-        enemySettlementStates
+        hireTroops =
+            AI.AITroopHandling.hireTroopsIfNeeded ai
+
+        attackOthers =
+            getAttackLordsActions ai enemies
+    in
+    ownSettlementDefenseActions
+        ++ enemySettlementStates
+        ++ hireTroops
+        ++ attackOthers
 
 
 getSettlementDefenseActions :
@@ -167,6 +189,26 @@ getSettlementAttackActions ai enemies =
             (\s r -> evaluateSettlementSiegeAction ai s enemies :: r)
             []
             (List.concat <| List.map (\l -> l.land) enemies)
+
+
+getAttackLordsActions :
+    AI
+    -> List Entities.Model.Lord
+    -> List AiRoundActionPreference
+getAttackLordsActions ai =
+    List.foldl
+        (\l actions ->
+            let
+                preference =
+                    1 - lordStrengthDiff ai.lord l
+            in
+            if preference >= 0 then
+                AiRoundActionPreference (DoSomething (AttackLord l)) (preference * ai.strategy.battleMultiplier) :: actions
+
+            else
+                actions
+        )
+        []
 
 
 evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities.Model.Lord -> Maybe AiRoundActionPreference

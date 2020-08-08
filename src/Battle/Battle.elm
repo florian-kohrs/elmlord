@@ -1,16 +1,15 @@
 module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
+import Balancing
 import Battle.Model exposing (..)
 import Dict
 import DictExt
 import Entities
-import Entities.Model
+import Entities.Model exposing (Gold)
 import Map
 import Map.Model
 import OperatorExt
 import Troops
-import Balancing
-import Entities.Model exposing (Gold)
 
 
 battleFleeTroopLoss : Float
@@ -173,6 +172,10 @@ fleeBattle bS =
     Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
 
 
+applyBattleAftermath : Entities.Model.LordList -> BattleStats -> Entities.Model.LordList
+applyBattleAftermath ls battle =
+  
+
 skipBattle : BattleStats -> Map.Model.Terrain -> BattleStats
 skipBattle bS ter =
     let
@@ -185,9 +188,11 @@ skipBattle bS ter =
     else
         skipBattle newBattleStats ter
 
-getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord 
-getGoldBonus lord = 
+
+getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord
+getGoldBonus lord =
     { lord | gold = lord.gold + Balancing.addGoldCastle }
+
 
 
 -- helper functions for the construction of the battle result

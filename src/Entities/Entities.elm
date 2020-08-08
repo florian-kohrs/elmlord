@@ -113,6 +113,42 @@ getPossibleTroopAmount army t =
             min 5 amount
 
 
+swapLordTroopsWithSettlement : Lord -> Settlement -> Dict.Dict Int Int -> Lord
+swapLordTroopsWithSettlement l s dict =
+    let
+        ( newLArmy, newSArmy ) =
+            Dict.foldl
+                (\k v ( lArmy, sArmy ) ->
+                    ( Troops.updateTroops lArmy (Troops.intToTroopType k) -v
+                    , Troops.updateTroops sArmy (Troops.intToTroopType k) v
+                    )
+                )
+                ( l.entity.army, s.entity.army )
+                dict
+
+        newS =
+            { s | entity = updateEntitiesArmy newSArmy s.entity }
+    in
+    setSettlement newS <| { l | entity = updateEntitiesArmy newLArmy l.entity }
+
+
+setSettlement : Settlement -> Lord -> Lord
+setSettlement newS l =
+    let
+        updatedSettlements =
+            List.map
+                (\s ->
+                    if s.entity.name == newS.entity.name then
+                        newS
+
+                    else
+                        s
+                )
+                l.land
+    in
+    { l | land = updatedSettlements }
+
+
 
 -- is needed for the direct update of the lord troops inside the battle stats
 

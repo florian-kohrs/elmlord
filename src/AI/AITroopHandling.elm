@@ -25,6 +25,11 @@ troopStrengthToBotherAddingToSettlement =
     100
 
 
+neededTroopsStrengthFactor : Int
+neededTroopsStrengthFactor =
+    1000
+
+
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
     toFloat 250 * ai.strategy.defendMultiplier
@@ -58,8 +63,41 @@ estimatedSettlementDefenseStrength ai t =
             estimatedNormalCastleTroopStrength ai
 
 
-sumNeededTroopStrength : AI -> Int
-sumNeededTroopStrength ai =
+hireTroopsIfNeeded : AI -> List AiRoundActionPreference
+hireTroopsIfNeeded ai =
+    let
+        neededStrength =
+            totalNeededTroopStrength ai
+    in
+    if neededStrength > 0 then
+        checkSettlementsForTroops neededStrength ai
+
+    else
+        []
+
+
+checkSettlementsForTroops : Int -> AI -> List AiRoundActionPreference
+checkSettlementsForTroops targetStrength ai =
+    List.foldl
+        (\s r ->
+            let
+                recruitableTroopsDict =
+                    tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
+
+                troopStrength =
+                    Troops.sumTroopStats recruitableTroopsDict
+            in
+            AiRoundActionPreference
+                (DoSomething (HireTroops recruitableTroopsDict s))
+                (min 1 (toFloat troopStrength / toFloat targetStrength))
+                :: r
+        )
+        []
+        ai.lord.land
+
+
+totalNeededTroopStrength : AI -> Int
+totalNeededTroopStrength ai =
     max 0 <|
         List.foldl
             (\s neededStrength ->
@@ -94,8 +132,8 @@ hasTroopsToSatisfySettlementDefense ai =
 
 takeDispensableTroopsWithMaxStrength : Troops.Army -> Int -> Int -> Troops.Army
 takeDispensableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength =
-    takeTroopsToLeaveArmyAtStrength (Troops.sumTroopStats sourceArmy - maxStrength) <|
-        takeTroopsToLeaveArmyAtStrength sourceNeededStrength sourceArmy
+    --takeTroopsToLeaveArmyAtStrength (Troops.sumTroopStats sourceArmy - maxStrength) <|
+    takeTroopsToLeaveArmyAtStrength sourceNeededStrength sourceArmy
 
 
 takeTroopsToLeaveArmyAtStrength : Int -> Troops.Army -> Troops.Army

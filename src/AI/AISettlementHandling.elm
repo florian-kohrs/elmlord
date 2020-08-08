@@ -16,26 +16,6 @@ import Troops
 import Vector
 
 
-checkSettlementsForTroops : Int -> AI -> List AiRoundActionPreference
-checkSettlementsForTroops targetStrength ai =
-    List.foldl
-        (\s r ->
-            let
-                recruitableTroopsDict =
-                    AI.AITroopHandling.tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
-
-                troopStrength =
-                    Troops.sumTroopStats recruitableTroopsDict
-            in
-            AiRoundActionPreference
-                (DoSomething (HireTroops recruitableTroopsDict s))
-                (min 1 (toFloat troopStrength / toFloat targetStrength))
-                :: r
-        )
-        []
-        ai.lord.land
-
-
 
 --evaluates if any settlements controlled by the current ai have insufficent defense
 

@@ -23,13 +23,13 @@ mergeTroops a1 a2 =
 troopTypeToInt : TroopType -> Int
 troopTypeToInt t =
     case t of
-        Archer ->
+        Sword ->
             0
 
         Spear ->
             1
 
-        Sword ->
+        Archer ->
             2
 
         Knight ->
@@ -40,13 +40,13 @@ intToTroopType : Int -> TroopType
 intToTroopType i =
     case i of
         0 ->
-            Archer
+            Sword
 
         1 ->
             Spear
 
         2 ->
-            Sword
+            Archer
 
         3 ->
             Knight
