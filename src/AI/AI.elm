@@ -8,6 +8,7 @@ import Balancing
 import Building
 import Dict
 import Entities
+import Entities.Lords
 import Entities.Model
 import ListExt
 import MapData
@@ -78,21 +79,21 @@ setLord ai l =
     { ai | lord = l }
 
 
-updateAi : AI -> AiRoundActions -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Model.LordList
-updateAi ai action moveTowards =
+updateAi : AI -> AiRoundActions -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+updateAi ai action moveTowards lordList =
     case action of
         EndRound ->
-            ai
+            lordList
 
         GoSomeWhere p ->
-            { ai | lord = moveTowards ai.lord p }
+            Entities.Lords.replaceAi lordList <| { ai | lord = moveTowards ai.lord p }
 
         DoSomething basicAction ->
-            executeBasicAiAction ai basicAction moveTowards
+            executeBasicAiAction ai basicAction moveTowards lordList
 
 
-executeBasicAiAction : AI -> BasicAction -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> AI
-executeBasicAiAction ai action moveTowards =
+executeBasicAiAction : AI -> BasicAction -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+executeBasicAiAction ai action moveTowards lordList =
     let
         destination =
             AI.AIActionDistanceHandler.getBasicActionDestination action
@@ -103,16 +104,16 @@ executeBasicAiAction ai action moveTowards =
     if movedAI.lord.entity.position == destination then
         case action of
             SiegeSettlement s ->
-                movedAI
+                Entities.Lords.replaceAi lordList <| movedAI
 
             SwapTroops dict s ->
-                { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
+                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
 
             _ ->
-                ai
+                Entities.Lords.replaceAi lordList <| movedAI
 
     else
-        movedAI
+        Entities.Lords.replaceAi lordList <| movedAI
 
 
 getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> (Entities.Model.Lord -> Vector.Point -> Bool) -> List Entities.Model.Lord -> AiRoundActions

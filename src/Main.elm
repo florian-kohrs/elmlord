@@ -613,8 +613,7 @@ playAiTurn m =
                 other ->
                     { m
                         | lords =
-                            Entities.Lords.replaceAi m.lords
-                                {- updateAI -} (AI.updateAi ai other (PathAgent.moveLordOnPath m.map))
+                            AI.updateAi ai other (PathAgent.moveLordOnPath m.map) m.lords
                         , event =
                             Event.setEvents m.event
                                 (Event.appendEvent m.event.events ai.lord.entity.name (AI.showAiRoundAction other) Event.Minor)
@@ -868,38 +867,10 @@ updateBattle msg model =
             emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
 
         Msg.FleeBattle bS ->
-            ( checkBattleAftermath model bS, getBattleAftermathSound bS )
+            ( { model | lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
 
         Msg.EndBattle bS ->
-            ( checkBattleAftermath model bS, getBattleAftermathSound bS )
-
-
-checkBattleAftermath : Model -> Battle.Model.BattleStats -> Model
-checkBattleAftermath model bS =
-    case bS.settlement of
-        Nothing ->
-            updateLordsAfterBattle
-                bS.attacker
-                (List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == bS.defender.entity.name) (AI.setLord ai bS.defender) ai) (Entities.Lords.getAis model.lords))
-                model
-                (GameSetup GameMenue)
-
-        Just settle ->
-            let
-                ( newAttacker, newDefender, lordKilled ) =
-                    Battle.siegeBattleAftermath bS settle
-
-                newEnemyLords =
-                    filterDefeatedLord
-                        lordKilled
-                        newDefender
-                        (Entities.Lords.getAis model.lords)
-            in
-            updateLordsAfterBattle
-                newAttacker
-                newEnemyLords
-                model
-                (OperatorExt.ternary (List.length (Entities.Lords.npcs model.lords) > 0) (GameSetup GameMenue) (GameOver True))
+            ( { model | lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
 
 
 getBattleAftermathSound : Battle.Model.BattleStats -> Cmd Msg.Msg
@@ -909,20 +880,6 @@ getBattleAftermathSound bS =
 
     else
         Ports.startMusic "play"
-
-
-updateLordsAfterBattle : Entities.Model.Lord -> List AI.Model.AI -> Model -> GameState -> Model
-updateLordsAfterBattle player enemyLords model state =
-    { model | lords = Entities.Lords.Cons player enemyLords, gameState = state }
-
-
-filterDefeatedLord : Bool -> Entities.Model.Lord -> List AI.Model.AI -> List AI.Model.AI
-filterDefeatedLord k d ais =
-    if k then
-        List.filter (\x -> x.lord.entity.name /= d.entity.name) ais
-
-    else
-        List.map (\ai -> OperatorExt.ternary (ai.lord.entity.name == d.entity.name) (AI.setLord ai d) ai) ais
 
 
 

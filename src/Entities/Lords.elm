@@ -1,6 +1,5 @@
 module Entities.Lords exposing (..)
 
-import AI
 import AI.Model
 import Entities.Model exposing (..)
 import List
@@ -52,6 +51,41 @@ getLordsExcept ls lord =
         )
         []
         (lordListToList ls)
+
+
+updateLord : Entities.Model.Lord -> LordList -> LordList
+updateLord l (Cons player ais) =
+    if player.entity.name == l.entity.name then
+        Cons l ais
+
+    else
+        Cons player
+            (List.map
+                (\ai ->
+                    if ai.lord.entity.name == l.entity.name then
+                        { ai | lord = l }
+
+                    else
+                        ai
+                )
+                ais
+            )
+
+
+removeLord : LordList -> Lord -> Maybe LordList
+removeLord (Cons player ais) l =
+    if player.entity.name == l.entity.name then
+        Nothing
+
+    else
+        Just <|
+            Cons player
+                (List.filter
+                    (\ai ->
+                        ai.lord.entity.name /= l.entity.name
+                    )
+                    ais
+                )
 
 
 updatePlayer : LordList -> Lord -> LordList

@@ -1,10 +1,11 @@
-module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
+module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
 import Balancing
 import Battle.Model exposing (..)
 import Dict
 import DictExt
 import Entities
+import Entities.Lords
 import Entities.Model exposing (Gold)
 import Map
 import Map.Model
@@ -147,7 +148,7 @@ lordBattleAftermath lord =
         lord
 
 
-siegeBattleAftermath : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
+siegeBattleAftermath : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord )
 siegeBattleAftermath bS s =
     let
         attacker =
@@ -164,7 +165,7 @@ siegeBattleAftermath bS s =
             handleSettlementTransfer attacker defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
 
     else
-        ( attacker, { defender | land = updateSettlementBattleField s defender.land }, False )
+        ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
 
 
 fleeBattle : BattleStats -> Entities.Model.Lord
@@ -172,9 +173,19 @@ fleeBattle bS =
     Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
 
 
-applyBattleAftermath : Entities.Model.LordList -> BattleStats -> Entities.Model.LordList
-applyBattleAftermath ls battle =
-  
+applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
+applyBattleAftermath ls bs =
+    case bs.settlement of
+        Nothing ->
+            Entities.Lords.updateLord bs.defender <| Entities.Lords.updateLord bs.attacker ls
+
+        Just s ->
+            let
+                ( newAttacker, newDefender ) =
+                    siegeBattleAftermath bs s
+            in
+            Entities.Lords.updateLord newDefender <| Entities.Lords.updateLord newAttacker ls
+
 
 skipBattle : BattleStats -> Map.Model.Terrain -> BattleStats
 skipBattle bS ter =
@@ -218,7 +229,7 @@ checkDefenderArmy defender settle =
             Troops.sumTroops s.entity.army == 0
 
 
-handleSettlementTransfer : Entities.Model.Lord -> Entities.Model.Lord -> (Entities.Model.Settlement -> Bool) -> List Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
+handleSettlementTransfer : Entities.Model.Lord -> Entities.Model.Lord -> (Entities.Model.Settlement -> Bool) -> List Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord )
 handleSettlementTransfer attacker defender aFunc ndl =
     ( { attacker
         | land =
@@ -227,7 +238,6 @@ handleSettlementTransfer attacker defender aFunc ndl =
                 ++ attacker.land
       }
     , { defender | land = ndl }
-    , List.length ndl == 0
     )
 
 
