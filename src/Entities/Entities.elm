@@ -149,6 +149,11 @@ setSettlement newS l =
     { l | land = updatedSettlements }
 
 
+hasCapital : Lord -> Bool
+hasCapital l =
+    List.foldr (\s r -> r || s.settlementType == Castle) False l.land
+
+
 
 -- is needed for the direct update of the lord troops inside the battle stats
 

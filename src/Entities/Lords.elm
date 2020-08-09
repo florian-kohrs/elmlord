@@ -14,6 +14,11 @@ lordListToList (Cons l ais) =
     l :: List.map .lord ais
 
 
+updateNpcs : LordList -> List AI.Model.AI -> LordList
+updateNpcs (Cons l _) ais =
+    Cons l ais
+
+
 npcs : LordList -> List Lord
 npcs (Cons _ ais) =
     List.map .lord ais
@@ -22,6 +27,43 @@ npcs (Cons _ ais) =
 getAis : LordList -> List AI.Model.AI
 getAis (Cons _ ais) =
     ais
+
+
+getLordIndex : LordList -> Lord -> Int
+getLordIndex ls toCheck =
+    List.foldl
+        (\l index ->
+            if toCheck.entity.name == l.entity.name then
+                index
+
+            else
+                index + 1
+        )
+        0
+        (lordListToList ls)
+
+
+
+{-
+   isLordsTurnBeforeLord : LordList -> Lord -> Lord -> Bool
+   isLordsTurnBeforeLord ls toCheck beforeThis =
+       Maybe.withDefault True <|
+           List.foldl
+               (\l isBefore ->
+                   case isBefore of
+                       Nothing ->
+                           if toCheck.entity.name == l.entity.name then
+                               Just True
+
+                           else if beforeThis.entity.name == l.entity.name then
+                               Just False
+
+                           else
+                               Nothing
+               )
+               Nothing
+               (npcs ls)
+-}
 
 
 replaceAi : LordList -> AI.Model.AI -> LordList

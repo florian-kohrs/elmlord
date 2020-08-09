@@ -468,7 +468,7 @@ buildMapActionTemplate model allClickActions =
             lordName =
                 MaybeExt.foldMaybe
                     (\l -> l.entity.name)
-                    "Unkown Enemy"
+                    ("Unkown Enemy" ++ String.fromInt model.playersTurn ++ String.fromInt (List.length <| Entities.Lords.lordListToList model.lords))
                     (ListExt.getElementAt
                         model.playersTurn
                         (Entities.Lords.lordListToList model.lords)
@@ -538,48 +538,51 @@ update msg model =
             emptyCmd { model | gameState = GameOver bool }
 
         other ->
-            if isPlayersTurn model then
-                case other of
-                    Msg.EndRound ->
-                        emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
+            let
+                ( newModel, cmd ) =
+                    if isPlayersTurn model then
+                        case other of
+                            Msg.EndRound ->
+                                emptyCmd (endAnyRound <| { model | date = DateExt.addMonths 1 model.date, lords = Entities.Lords.updatePlayer model.lords (endRoundForLord (getPlayer model)) })
 
-                    Msg.CloseModal ->
-                        emptyCmd { model | gameState = GameSetup GameMenue }
+                            Msg.CloseModal ->
+                                emptyCmd { model | gameState = GameSetup GameMenue }
 
-                    Msg.BattleAction bmsg ->
-                        updateBattle bmsg model
+                            Msg.BattleAction bmsg ->
+                                updateBattle bmsg model
 
-                    Msg.MenueAction mmsg ->
-                        updateMenue mmsg model
+                            Msg.MenueAction mmsg ->
+                                updateMenue mmsg model
 
-                    Msg.SettlementAction action ->
-                        emptyCmd (updateSettlement action model)
+                            Msg.SettlementAction action ->
+                                emptyCmd (updateSettlement action model)
 
-                    Msg.MapTileAction action ->
-                        updateMaptileAction model action
+                            Msg.MapTileAction action ->
+                                updateMaptileAction model action
 
-                    Msg.TroopAction tomsg ->
-                        emptyCmd (updateTroopOverView model tomsg)
+                            Msg.TroopAction tomsg ->
+                                emptyCmd (updateTroopOverView model tomsg)
 
-                    Msg.Click p ->
-                        emptyCmd { model | selectedPoint = Just p }
+                            Msg.Click p ->
+                                emptyCmd { model | selectedPoint = Just p }
 
-                    _ ->
-                        emptyCmd model
+                            _ ->
+                                emptyCmd model
 
-            else
-                case msg of
-                    Msg.AiRoundTick ->
-                        emptyCmd <| playAiTurn model
+                    else
+                        case msg of
+                            Msg.AiRoundTick ->
+                                emptyCmd <| playAiTurn model
 
-                    _ ->
-                        emptyCmd <| { model | errorMsg = "Its not your turn" }
+                            _ ->
+                                emptyCmd <| { model | errorMsg = "Its not your turn" }
+            in
+            ( removeLordsWithoutCapitalFromModel newModel, cmd )
 
 
 endAnyRound : Model -> Model
 endAnyRound m =
-    if m.playersTurn + 1 >= 4 then
-        --(List.length <| Entities.Lords.lordListToList m.lords) then
+    if m.playersTurn + 1 >= (List.length <| Entities.Lords.lordListToList m.lords) then
         { m | playersTurn = 0 }
 
     else
@@ -590,7 +593,7 @@ playAiTurn : Model -> Model
 playAiTurn m =
     case ListExt.getElementAt (m.playersTurn - 1) (Entities.Lords.getAis m.lords) of
         Nothing ->
-            m
+            endAnyRound m
 
         Just ai ->
             let
@@ -613,31 +616,11 @@ playAiTurn m =
                 other ->
                     { m
                         | lords =
-                            AI.updateAi ai other (PathAgent.moveLordOnPath m.map) m.lords
+                            AI.updateAi ai other (OperatorExt.flip Map.getTerrainForPoint <| m.map) (PathAgent.moveLordOnPath m.map) m.lords
                         , event =
                             Event.setEvents m.event
                                 (Event.appendEvent m.event.events ai.lord.entity.name (AI.showAiRoundAction other) Event.Minor)
                     }
-
-
-updateAIsAfterPlayerRound : List AI.Model.AI -> List AI.Model.AI
-updateAIsAfterPlayerRound ais =
-    List.map (\ai -> AI.setLord ai (endRoundForLord (.lord (updateAI ai)))) ais
-
-
-
---test function
-
-
-updateAI : AI.Model.AI -> AI.Model.AI
-updateAI ai =
-    { ai
-        | lord =
-            Entities.setLordEntity ai.lord
-                (Entities.setPosition ai.lord.entity
-                    (Vector.addPoints (Vector.Point 1 1) ai.lord.entity.position)
-                )
-    }
 
 
 endRoundForLord : Entities.Model.Lord -> Entities.Model.Lord
@@ -766,6 +749,32 @@ updateLordAction msg lord m =
             )
 
 
+removeLordsWithoutCapitalFromModel : Model -> Model
+removeLordsWithoutCapitalFromModel m =
+    let
+        removedLords =
+            List.filter (\ai -> not <| Entities.hasCapital ai.lord) <| Entities.Lords.getAis m.lords
+
+        newTurnIndex =
+            List.foldl
+                (\l index ->
+                    if Entities.Lords.getLordIndex m.lords l > m.playersTurn then
+                        index - 1
+
+                    else
+                        index
+                )
+                m.playersTurn
+                (List.map .lord removedLords)
+    in
+    { m | lords = removeLordsWithoutCapital m.lords, playersTurn = newTurnIndex }
+
+
+removeLordsWithoutCapital : Entities.Lords.LordList -> Entities.Lords.LordList
+removeLordsWithoutCapital lordList =
+    Entities.Lords.updateNpcs lordList <| List.filter (\ai -> Entities.hasCapital ai.lord) <| Entities.Lords.getAis lordList
+
+
 
 -- update function for the settlement messages
 -- like view a settlement, recruit or station troops, etc.
@@ -864,13 +873,13 @@ updateBattle msg model =
             ( { model | gameState = GameSetup (BattleView newBattleStats) }, Ports.playSound "Kampfgeklirre2Sec" )
 
         Msg.SkipSkirmishes bS ->
-            emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle bS (Map.getTerrainForPoint bS.attacker.entity.position model.map))) }
+            emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle (Map.getTerrainForPoint bS.attacker.entity.position model.map) bS)) }
 
         Msg.FleeBattle bS ->
-            ( { model | lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
+            ( { model | gameState = GameSetup GameMenue, lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
 
         Msg.EndBattle bS ->
-            ( { model | lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
+            ( { model | gameState = GameSetup GameMenue, lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
 
 
 getBattleAftermathSound : Battle.Model.BattleStats -> Cmd Msg.Msg

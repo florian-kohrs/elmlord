@@ -1,4 +1,4 @@
-module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
+module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, getBattleSiegeStats, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
 import Balancing
 import Battle.Model exposing (..)
@@ -9,6 +9,7 @@ import Entities.Lords
 import Entities.Model exposing (Gold)
 import Map
 import Map.Model
+import MaybeExt
 import OperatorExt
 import Troops
 
@@ -177,7 +178,7 @@ applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.
 applyBattleAftermath ls bs =
     case bs.settlement of
         Nothing ->
-            Entities.Lords.updateLord bs.defender <| Entities.Lords.updateLord bs.attacker ls
+            Entities.Lords.updateLord (lordBattleAftermath bs.defender) <| Entities.Lords.updateLord (lordBattleAftermath bs.attacker) ls
 
         Just s ->
             let
@@ -187,8 +188,29 @@ applyBattleAftermath ls bs =
             Entities.Lords.updateLord newDefender <| Entities.Lords.updateLord newAttacker ls
 
 
-skipBattle : BattleStats -> Map.Model.Terrain -> BattleStats
-skipBattle bS ter =
+getBattleSiegeStats : Entities.Model.Lord -> Entities.Lords.LordList -> Entities.Model.Settlement -> Maybe BattleStats
+getBattleSiegeStats l ls s =
+    Maybe.andThen
+        (\defender ->
+            Just
+                { attacker = l
+                , defender = defender
+                , round = 1
+                , attackerCasualties = Troops.emptyTroops
+                , defenderCasualties = Troops.emptyTroops
+                , settlement = Just s
+                , siege = True
+                , finished = False
+                }
+        )
+        (Entities.findLordWithSettlement
+            s
+            (Entities.Lords.lordListToList ls)
+        )
+
+
+skipBattle : Map.Model.Terrain -> BattleStats -> BattleStats
+skipBattle ter bS =
     let
         newBattleStats =
             evaluateBattleResult bS ter
@@ -197,7 +219,7 @@ skipBattle bS ter =
         newBattleStats
 
     else
-        skipBattle newBattleStats ter
+        skipBattle ter newBattleStats
 
 
 getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord
