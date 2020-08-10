@@ -34,3 +34,8 @@ filterActionIfLordIsBroke a ai =
 takeAsMuchAsPossible : Int -> Float -> Int -> Int
 takeAsMuchAsPossible cost gold maxValue =
     min maxValue (floor (gold / toFloat cost))
+
+
+goldIncomePerRound : AI -> Float
+goldIncomePerRound ai =
+    Entities.calculateRoundIncome ai.lord

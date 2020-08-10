@@ -14,10 +14,10 @@ import Vector
 {-| Returns the layout for the map actions, in dependence to the chosen point (in the model)
 
     @param {Maybe Point}: Takes the point that is currently chosen point (at the start no point is chosen, therefore Maybe)
-    @param {MapDrawer.MapClickAction}: Takes a dict with all possible actions
+    @param {MapDrawer.InteractableMapSVG}: Takes a dict with all possible actions
 
 -}
-generateMapActionTemplate : Maybe Vector.Point -> MapAction.Model.MapClickAction -> Html Msg.Msg
+generateMapActionTemplate : Maybe Vector.Point -> MapAction.Model.InteractableMapSVG -> Html Msg.Msg
 generateMapActionTemplate p dict =
     let
         actions =

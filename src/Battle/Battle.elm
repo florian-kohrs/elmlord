@@ -1,4 +1,4 @@
-module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, getBattleSiegeStats, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
+module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, getBattleSiegeStats, getLordBattleStats, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
 import Balancing
 import Battle.Model exposing (..)
@@ -116,8 +116,8 @@ constructBattleResult bS attacker defender settle aCasu dCasu =
         | round = bS.round + 1
         , attackerCasualties = aCasu
         , defenderCasualties = dCasu
-        , attacker = lordBattleAftermath attacker
-        , defender = lordBattleAftermath defender
+        , attacker = lordBattleAftermath attacker bS.settlement
+        , defender = lordBattleAftermath defender bS.settlement
         , settlement = settle
         , finished = Troops.sumTroops attacker.entity.army == 0 || checkDefenderArmy defender settle
     }
@@ -135,18 +135,32 @@ capital position
     @param {Lord}: Takes the attacker-/defender lord
 
 -}
-lordBattleAftermath : Entities.Model.Lord -> Entities.Model.Lord
-lordBattleAftermath lord =
-    if Troops.sumTroops lord.entity.army == 0 then
-        case Entities.getLordCapital lord.land of
+lordBattleAftermath : Entities.Model.Lord -> Maybe Entities.Model.Settlement -> Entities.Model.Lord
+lordBattleAftermath l settlement =
+    if
+        (Troops.sumTroops l.entity.army == 0)
+            && MaybeExt.foldMaybe
+                (\s ->
+                    not
+                        (Entities.isLandlord s l
+                            && (not (Entities.isLordOnSettlement l s)
+                                    || Troops.sumTroops s.entity.army
+                                    > 0
+                               )
+                        )
+                )
+                True
+                settlement
+    then
+        case Entities.getLordCapital l.land of
             Nothing ->
-                lord
+                l
 
             Just settle ->
-                { lord | entity = Entities.setPosition lord.entity settle.entity.position }
+                { l | entity = Entities.setPosition l.entity settle.entity.position }
 
     else
-        lord
+        l
 
 
 siegeBattleAftermath : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord )
@@ -178,7 +192,7 @@ applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.
 applyBattleAftermath ls bs =
     case bs.settlement of
         Nothing ->
-            Entities.Lords.updateLord (lordBattleAftermath bs.defender) <| Entities.Lords.updateLord (lordBattleAftermath bs.attacker) ls
+            Entities.Lords.updateLord (lordBattleAftermath bs.defender Nothing) <| Entities.Lords.updateLord (lordBattleAftermath bs.attacker Nothing) ls
 
         Just s ->
             let
@@ -207,6 +221,19 @@ getBattleSiegeStats l ls s =
             s
             (Entities.Lords.lordListToList ls)
         )
+
+
+getLordBattleStats : Entities.Model.Lord -> Entities.Model.Lord -> BattleStats
+getLordBattleStats attacker defender =
+    { attacker = attacker
+    , defender = defender
+    , round = 1
+    , attackerCasualties = Troops.emptyTroops
+    , defenderCasualties = Troops.emptyTroops
+    , settlement = Nothing
+    , siege = False
+    , finished = False
+    }
 
 
 skipBattle : Map.Model.Terrain -> BattleStats -> BattleStats

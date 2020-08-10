@@ -15,7 +15,7 @@ import Svg.Events
 import Vector
 
 
-drawPath : PathAgent.Model.Agent -> Path -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
+drawPath : PathAgent.Model.Agent -> Path -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
 drawPath agent path dict =
     List.foldl
         (\( t, turns ) newDict ->
@@ -28,7 +28,7 @@ drawPath agent path dict =
         (PathAgent.pathPartsToTime agent path.path)
 
 
-drawPathPart : Int -> Vector.Point -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
+drawPathPart : Int -> Vector.Point -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
 drawPathPart i p =
     MapAction.addToMap
         (MapData.hashMapPoint p)

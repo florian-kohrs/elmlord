@@ -22,7 +22,7 @@ import Troops
 import Vector exposing (..)
 
 
-drawMap : Map -> MapAction.Model.MapClickAction
+drawMap : Map -> MapAction.Model.InteractableMapSVG
 drawMap m =
     Dict.map (\_ tile -> tileToClickAction tile) m
 

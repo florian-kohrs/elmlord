@@ -92,7 +92,7 @@ getPathTo from to map =
         Nothing
 
 
-canMoveToPoint : MapAction.Model.MapClickAction -> Vector.Point -> Bool
+canMoveToPoint : MapAction.Model.InteractableMapSVG -> Vector.Point -> Bool
 canMoveToPoint dict p =
     MapAction.hasActionOnPoint p (MapAction.SubModel.MoveTo p) dict
 

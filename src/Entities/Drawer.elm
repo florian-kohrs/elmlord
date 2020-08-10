@@ -19,7 +19,7 @@ import Svg.Events
 import Vector
 
 
-drawLord : Lord -> Lord -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
+drawLord : Lord -> Lord -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
 drawLord player l =
     let
         drawnLord =
@@ -28,7 +28,7 @@ drawLord player l =
     MapAction.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
 
 
-drawSettlement : Lord -> Settlement -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
+drawSettlement : Lord -> Settlement -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
 drawSettlement player s dict =
     let
         drawnSettlement =

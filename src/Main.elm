@@ -118,12 +118,12 @@ isPlayersTurn model =
 ----------------------------------------------------------
 
 
-canMoveToPoint : MapAction.Model.MapClickAction -> Vector.Point -> Bool
+canMoveToPoint : MapAction.Model.InteractableMapSVG -> Vector.Point -> Bool
 canMoveToPoint dict p =
     MapAction.hasActionOnPoint p (MapAction.SubModel.MoveTo p) dict
 
 
-buildAllMapSvgs : Model -> MapAction.Model.MapClickAction
+buildAllMapSvgs : Model -> MapAction.Model.InteractableMapSVG
 buildAllMapSvgs m =
     filterMapSvgs
         (buildPathSvgs m
@@ -135,7 +135,7 @@ buildAllMapSvgs m =
         )
 
 
-filterMapSvgs : MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
+filterMapSvgs : MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
 filterMapSvgs =
     Dict.map (\_ v -> filterInteractables v)
 
@@ -153,7 +153,7 @@ filterInteractables =
         []
 
 
-buildPathSvgs : Model -> MapAction.Model.MapClickAction -> MapAction.Model.MapClickAction
+buildPathSvgs : Model -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
 buildPathSvgs m mapDict =
     let
         player =
@@ -200,69 +200,9 @@ allSettlements m =
     List.concat (List.map .land (Entities.Lords.lordListToList m.lords))
 
 
-drawnMap : Map.Model.Map -> MapAction.Model.MapClickAction
+drawnMap : Map.Model.Map -> MapAction.Model.InteractableMapSVG
 drawnMap map =
     Map.Drawer.drawMap map
-
-
-
--- testLordData For Battlesimulation
-
-
-testWorldEntity : Entities.Model.WorldEntity
-testWorldEntity =
-    { army = Troops.startTroops
-    , faction = Faction.Faction1
-    , position = { x = 0, y = 0 }
-    , name = "Malaca"
-    }
-
-
-testSetelement : Entities.Model.Settlement
-testSetelement =
-    { entity = testWorldEntity
-    , settlementType = Entities.Model.Castle
-    , recruitLimits = Troops.emptyTroops
-    , income = 3.19
-    , isSieged = False
-    , buildings = Building.startBuildings
-    }
-
-
-testLordWorldEntity : Entities.Model.WorldEntity
-testLordWorldEntity =
-    { army = Troops.startTroops
-    , faction = Faction.Faction1
-    , position = { x = 0, y = 0 }
-    , name = "RÜDIGER"
-    }
-
-
-testLordWorldEntity2 : Entities.Model.WorldEntity
-testLordWorldEntity2 =
-    { army = Troops.startTroops
-    , faction = Faction.Faction1
-    , position = { x = 0, y = 0 }
-    , name = "Peter von Haskell"
-    }
-
-
-testLord2 : Entities.Model.Lord
-testLord2 =
-    { entity = testLordWorldEntity2
-    , gold = 450
-    , land = [ testSetelement ]
-    , agent = PathAgent.getAgent 6
-    }
-
-
-testLord : Entities.Model.Lord
-testLord =
-    { entity = testLordWorldEntity
-    , gold = 10050
-    , land = [ testSetelement ]
-    , agent = PathAgent.getAgent 6
-    }
 
 
 
@@ -312,7 +252,7 @@ initPlayer m i rad =
     let
         entity =
             Entities.Model.WorldEntity
-                Troops.startTroops
+                Dict.empty
                 (Faction.getFaction i)
                 (Pathfinder.getClosestFreeFieldAt (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad)) (Pathfinder.getNav m) Dict.empty)
                 (Maybe.withDefault
@@ -458,7 +398,7 @@ setGameView model =
         ]
 
 
-buildMapActionTemplate : Model -> MapAction.Model.MapClickAction -> Html Msg.Msg
+buildMapActionTemplate : Model -> MapAction.Model.InteractableMapSVG -> Html Msg.Msg
 buildMapActionTemplate model allClickActions =
     if isPlayersTurn model then
         MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions

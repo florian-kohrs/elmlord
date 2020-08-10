@@ -41,7 +41,8 @@ estimatedNormalCastleTroopStrength ai =
         x =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
-    (400 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+    --(400 + (50 * x)) * ai.strategy.defendMultiplier
+    1000 + (500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
 
 
 estimatedNormalPlayerTroopStrength : AI -> Float
@@ -132,8 +133,12 @@ hasTroopsToSatisfySettlementDefense ai =
 
 takeDispensableTroopsWithMaxStrength : Troops.Army -> Int -> Int -> Troops.Army
 takeDispensableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength =
-    --takeTroopsToLeaveArmyAtStrength (Troops.sumTroopStats sourceArmy - maxStrength) <|
-    takeTroopsToLeaveArmyAtStrength sourceNeededStrength sourceArmy
+    takeTroopsToLeaveArmyAtStrength
+        (max
+            sourceNeededStrength
+            (Troops.sumTroopStats sourceArmy - maxStrength)
+        )
+        sourceArmy
 
 
 takeTroopsToLeaveArmyAtStrength : Int -> Troops.Army -> Troops.Army

@@ -24,7 +24,7 @@ evaluateSettlementDefense : AI -> Entities.Model.Settlement -> Maybe AiRoundActi
 evaluateSettlementDefense ai s =
     if
         settlementLackOfTroopStrength ai s
-            + AI.AITroopHandling.acceptedLackOfDefenseStrength
+            - AI.AITroopHandling.acceptedLackOfDefenseStrength
             < 0
     then
         Nothing
@@ -37,7 +37,7 @@ evaluateSettlementDefense ai s =
                         (AI.AITroopHandling.takeDispensableTroopsWithMaxStrength
                             ai.lord.entity.army
                             (round <| AI.AITroopHandling.estimatedNormalPlayerTroopStrength ai)
-                            (max 0 (settlementLackOfTroopStrength ai s))
+                            (settlementLackOfTroopStrength ai s)
                         )
                         s
                     )

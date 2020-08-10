@@ -70,6 +70,11 @@ updateTroops army t i =
     Dict.update (troopTypeToInt t) (\v -> Just (Maybe.withDefault 0 v + i)) army
 
 
+updateTroopsFrom : Army -> Int -> Int -> Army
+updateTroopsFrom army i =
+    updateTroops army <| intToTroopType i
+
+
 emptyTroops : Army
 emptyTroops =
     List.foldl (\t dict -> Dict.insert (troopTypeToInt t) 0 dict) Dict.empty troopTypeList
@@ -125,13 +130,13 @@ troopCost : TroopType -> Int
 troopCost t =
     case t of
         Archer ->
-            50
+            65
 
         Spear ->
-            45
+            30
 
         Sword ->
-            60
+            80
 
         Knight ->
             120
@@ -141,13 +146,13 @@ troopWage : TroopType -> Float
 troopWage t =
     case t of
         Archer ->
-            0.4
+            0.15
 
         Spear ->
-            0.2
+            0.6
 
         Sword ->
-            0.5
+            0.25
 
         Knight ->
             1.0

@@ -50,6 +50,16 @@ showBasicAction basicAction =
 
         HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
             "Hire Troops"
+                ++ Dict.foldr
+                    (\k v s ->
+                        s
+                            ++ "TroopIndex: "
+                            ++ String.fromInt k
+                            ++ " Amount: "
+                            ++ String.fromInt v
+                    )
+                    ""
+                    intTroopTypeTroopsDictDict
 
         SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
             "Swap Troops "
@@ -91,39 +101,63 @@ updateAi ai action tileOnPos moveTowards lordList =
             Entities.Lords.replaceAi lordList <| { ai | lord = moveTowards ai.lord p }
 
         DoSomething basicAction ->
-            executeBasicAiAction ai basicAction tileOnPos moveTowards lordList
+            let
+                destination =
+                    AI.AIActionDistanceHandler.getBasicActionDestination basicAction
+
+                movedAI =
+                    { ai | lord = moveTowards ai.lord destination }
+            in
+            executeBasicAiAction movedAI destination basicAction tileOnPos moveTowards (Entities.Lords.replaceAi lordList <| movedAI)
 
 
-executeBasicAiAction : AI -> BasicAction -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
-executeBasicAiAction ai action tileOnPos moveTowards lordList =
-    let
-        destination =
-            AI.AIActionDistanceHandler.getBasicActionDestination action
-
-        movedAI =
-            { ai | lord = moveTowards ai.lord destination }
-    in
-    if movedAI.lord.entity.position == destination then
+executeBasicAiAction : AI -> Vector.Point -> BasicAction -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+executeBasicAiAction ai destination action tileOnPos moveTowards lordList =
+    if ai.lord.entity.position == destination then
         case action of
             SiegeSettlement s ->
-                siegeSettlement ai
+                siegeSettlement
+                    ai
                     s
                     (tileOnPos destination)
-                    (Entities.Lords.replaceAi lordList movedAI)
+                    lordList
+
+            AttackLord l ->
+                attackLord
+                    ai
+                    l
+                    (tileOnPos destination)
+                    lordList
 
             SwapTroops dict s ->
                 Entities.Lords.replaceAi lordList <| { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
 
+            HireTroops dict s ->
+                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.recruitTroops dict ai.lord s }
+
             _ ->
-                Entities.Lords.replaceAi lordList <| movedAI
+                lordList
 
     else
-        Entities.Lords.replaceAi lordList <| movedAI
+        lordList
 
 
 siegeSettlement : AI -> Entities.Model.Settlement -> Map.Model.Terrain -> Entities.Lords.LordList -> Entities.Lords.LordList
 siegeSettlement ai s t ls =
-    MaybeExt.foldMaybe (\b -> Battle.applyBattleAftermath ls <| Battle.skipBattle t b) ls (Battle.getBattleSiegeStats ai.lord ls s)
+    MaybeExt.foldMaybe
+        (\b ->
+            Battle.applyBattleAftermath ls <|
+                Battle.skipBattle t b
+        )
+        ls
+        (Battle.getBattleSiegeStats ai.lord ls s)
+
+
+attackLord : AI -> Entities.Model.Lord -> Map.Model.Terrain -> Entities.Lords.LordList -> Entities.Lords.LordList
+attackLord ai l t ls =
+    Battle.applyBattleAftermath ls <|
+        Battle.skipBattle t <|
+            Battle.getLordBattleStats ai.lord l
 
 
 getAiAction : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> (Entities.Model.Lord -> Vector.Point -> Bool) -> List Entities.Model.Lord -> AiRoundActions
@@ -227,14 +261,16 @@ evaluateSettlementSiegeAction ai s ls =
     let
         siegeStrengthDiff =
             toFloat (Troops.sumTroopStats ai.lord.entity.army)
-                / (toFloat (AI.AISettlementHandling.settlementDefenseStrength ai s ls)
-                    * MaybeExt.foldMaybe
-                        (\l ->
-                            1 + Balancing.settlementDefenseBoni s l
-                        )
-                        1
-                        (Entities.landlordOnSettlement s ls)
-                  )
+                / max
+                    1
+                    (toFloat (AI.AISettlementHandling.settlementDefenseStrength ai s ls)
+                        * MaybeExt.foldMaybe
+                            (\l ->
+                                1 + Balancing.settlementDefenseBoni s l
+                            )
+                            1
+                            (Entities.landlordOnSettlement s ls)
+                    )
     in
     if
         siegeStrengthDiff
@@ -243,7 +279,7 @@ evaluateSettlementSiegeAction ai s ls =
         Just
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
-                (siegeStrengthDiff
+                (clamp -2 2 siegeStrengthDiff
                     * ai.strategy.siegeMultiplier
                 )
             )

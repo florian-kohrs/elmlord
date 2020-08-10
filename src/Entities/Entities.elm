@@ -2,6 +2,7 @@ module Entities exposing (..)
 
 import Building
 import Dict
+import Entities.Lords exposing (..)
 import Entities.Model exposing (..)
 import Faction
 import List
@@ -101,6 +102,11 @@ upgradeBuilding l b s =
 updateEntitiesArmy : Troops.Army -> WorldEntity -> WorldEntity
 updateEntitiesArmy army e =
     { e | army = army }
+
+
+setSettlementRecruits : Troops.Army -> Settlement -> Settlement
+setSettlementRecruits army s =
+    { s | recruitLimits = army }
 
 
 getPossibleTroopAmount : Troops.Army -> Troops.TroopType -> Int
@@ -243,6 +249,22 @@ getSettlementByName l s =
             Just x
 
 
+recruitTroops : Dict.Dict Int Int -> Lord -> Settlement -> Lord
+recruitTroops recruitDict l s =
+    let
+        ( newLArmy, newSArmy ) =
+            Dict.foldl
+                (\k v ( lordArmy, recruits ) ->
+                    ( Troops.updateTroopsFrom lordArmy k v
+                    , Troops.updateTroopsFrom recruits k -v
+                    )
+                )
+                ( l.entity.army, s.entity.army )
+                recruitDict
+    in
+    setSettlement (setSettlementRecruits newSArmy s) <| { l | entity = updateEntitiesArmy newLArmy l.entity }
+
+
 applySettlementNewRecruits : List Settlement -> List Settlement
 applySettlementNewRecruits =
     List.map (\s -> { s | recruitLimits = Dict.map (\t amount -> amount + Basics.round (5.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)) s.recruitLimits })
@@ -278,7 +300,7 @@ getLordCapital l =
 
 createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
-    { entity = { army = Dict.empty, faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = Troops.emptyTroops, income = 5.0, isSieged = False, buildings = Building.startBuildings }
+    { entity = { army = Troops.startTroops, faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = Troops.emptyTroops, income = 5.0, isSieged = False, buildings = Building.startBuildings }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
@@ -288,7 +310,7 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = Troops.startTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = Troops.emptyTroops, income = 1.5, isSieged = False, buildings = Building.startBuildings }
+    { entity = { army = Dict.empty, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = Troops.emptyTroops, income = 1.5, isSieged = False, buildings = Building.startBuildings }
 
 
 
