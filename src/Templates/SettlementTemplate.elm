@@ -68,7 +68,7 @@ settlementStateToAction pF lord settlement uistate =
             , checkBuildingCapabilities settlement
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (settlement.income + Building.resolveBonusFromBuildings settlement.buildings Building.Marketplace) ++ " Ducats") ]
+                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits settlement.income ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
                     , div []
@@ -212,7 +212,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
     div [ Html.Attributes.class "troop-recruiting-container" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
         , span [] [ Html.text ("[" ++ String.fromInt aAmount ++ "]") ]
-        , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "]") ]
+        , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "/" ++ String.fromInt (Entities.getSettlementTroopsRecruitLimit s l t) ++ "]") ]
         , div []
             [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * toFloat (Troops.troopCost t))) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
@@ -271,7 +271,7 @@ displayBuildingBonus ( b, i ) =
         , span [ Html.Attributes.class (OperatorExt.ternary (b.level >= i) "positive-income" "negative-income") ]
             [ Html.text
                 (OperatorExt.ternary (i >= 1)
-                    ("Cost: " ++ String.fromFloat (Building.upgradeCostBase b.buildingType * Basics.toFloat i))
+                    ("Cost: " ++ String.fromFloat (Building.upgradeBuildingInfoCost b.buildingType (i - 1)))
                     ""
                 )
             ]
@@ -320,4 +320,4 @@ validateSettlement pF l s =
 validateBuildingUpgrade : Building.Building -> Entities.Model.Lord -> Bool
 validateBuildingUpgrade b l =
     not
-        ((l.gold - (Building.upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)) > 0) && b.level <= 2)
+        ((l.gold - Building.upgradeBuildingCost b > 0) && b.level <= 2)

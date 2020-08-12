@@ -11,6 +11,56 @@ import Troops
 import Vector
 
 
+getSettlementTroopsRecruitLimit : Settlement -> Lord -> Troops.TroopType -> Int
+getSettlementTroopsRecruitLimit s l t =
+    case
+        Maybe.andThen
+            (\c -> Building.getBuilding Building.Quarters c.buildings)
+        <|
+            getLordCapital l.land
+    of
+        Nothing ->
+            0
+
+        Just quarters ->
+            settlementTroopsRecruitLimit s quarters.level t
+
+
+settlementTroopsRecruitLimit : Settlement -> Int -> Troops.TroopType -> Int
+settlementTroopsRecruitLimit s quartersLevel troopType =
+    let
+        limit =
+            if s.settlementType == Castle then
+                case troopType of
+                    Troops.Sword ->
+                        40
+
+                    Troops.Spear ->
+                        20
+
+                    Troops.Archer ->
+                        30
+
+                    Troops.Knight ->
+                        10
+
+            else
+                case troopType of
+                    Troops.Sword ->
+                        10
+
+                    Troops.Spear ->
+                        15
+
+                    Troops.Archer ->
+                        10
+
+                    Troops.Knight ->
+                        0
+    in
+    limit + round (Building.resolveBonusFromBuildingInfo Building.Quarters quartersLevel)
+
+
 setLordEntity : Lord -> WorldEntity -> Lord
 setLordEntity l e =
     { l | entity = e }
@@ -265,9 +315,32 @@ recruitTroops recruitDict l s =
     setSettlement (setSettlementRecruits newSArmy s) <| { l | entity = updateEntitiesArmy newLArmy l.entity }
 
 
-applySettlementNewRecruits : List Settlement -> List Settlement
-applySettlementNewRecruits =
-    List.map (\s -> { s | recruitLimits = Dict.map (\t amount -> amount + Basics.round (5.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)) s.recruitLimits })
+applySettlementNewRecruits : Lord -> List Settlement
+applySettlementNewRecruits l =
+    case
+        Maybe.andThen
+            (\c -> Building.getBuilding Building.Quarters c.buildings)
+        <|
+            getLordCapital l.land
+    of
+        Nothing ->
+            l.land
+
+        Just quarters ->
+            List.map
+                (\s ->
+                    { s
+                        | recruitLimits =
+                            Dict.map
+                                (\t amount ->
+                                    min (settlementTroopsRecruitLimit s quarters.level <| Troops.intToTroopType t) <|
+                                        amount
+                                            + Basics.round (2.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)
+                                )
+                                s.recruitLimits
+                    }
+                )
+                l.land
 
 
 getSettlementBonus : Settlement -> List Settlement -> Float
@@ -361,7 +434,7 @@ findLordWithSettlement settlement =
 
 applyLordNewRecruits : Lord -> Lord
 applyLordNewRecruits lord =
-    { lord | land = applySettlementNewRecruits lord.land }
+    { lord | land = applySettlementNewRecruits lord }
 
 
 factionToLord : Faction.Faction -> List Lord -> Maybe Lord
@@ -386,7 +459,7 @@ calculateRoundIncome lord =
 
 sumSettlementsIncome : List Settlement -> Float
 sumSettlementsIncome s =
-    List.foldr (\x v -> x.income + Building.resolveBonusFromBuildings x.buildings Building.Marketplace + v) 0 s
+    List.foldr (\x v -> x.income + v) 0 s
 
 
 sumTroopWages : Troops.Army -> Float

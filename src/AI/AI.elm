@@ -50,30 +50,32 @@ showBasicAction basicAction =
 
         HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
             "Hire Troops"
-                ++ Dict.foldr
-                    (\k v s ->
-                        s
-                            ++ "TroopIndex: "
-                            ++ String.fromInt k
-                            ++ " Amount: "
-                            ++ String.fromInt v
-                    )
-                    ""
-                    intTroopTypeTroopsDictDict
 
+        {- ++ Dict.foldr
+           (\k v s ->
+               s
+                   ++ "TroopIndex: "
+                   ++ String.fromInt k
+                   ++ " Amount: "
+                   ++ String.fromInt v
+           )
+           ""
+           intTroopTypeTroopsDictDict
+        -}
         SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
             "Swap Troops "
-                ++ Dict.foldr
-                    (\k v s ->
-                        s
-                            ++ "TroopIndex: "
-                            ++ String.fromInt k
-                            ++ " Amount: "
-                            ++ String.fromInt v
-                    )
-                    ""
-                    intTroopTypeTroopsDictDict
 
+        {- ++ Dict.foldr
+           (\k v s ->
+               s
+                   ++ "TroopIndex: "
+                   ++ String.fromInt k
+                   ++ " Amount: "
+                   ++ String.fromInt v
+           )
+           ""
+           intTroopTypeTroopsDictDict
+        -}
         SiegeSettlement settlementModelEntities ->
             "Siege Settlement: " ++ settlementModelEntities.entity.name
 
@@ -200,6 +202,9 @@ getAiActions ai enemies =
         enemySettlementStates =
             getSettlementAttackActions ai enemies
 
+        takeTroops =
+            AI.AITroopHandling.takeTroopsFromSettlements ai
+
         hireTroops =
             AI.AITroopHandling.hireTroopsIfNeeded ai
 
@@ -210,6 +215,7 @@ getAiActions ai enemies =
         ++ enemySettlementStates
         ++ hireTroops
         ++ attackOthers
+        ++ takeTroops
 
 
 getSettlementDefenseActions :
@@ -219,7 +225,7 @@ getSettlementDefenseActions :
 getSettlementDefenseActions ai enemies =
     ListExt.justList <|
         List.foldl
-            (\s r -> AI.AISettlementHandling.evaluateSettlementDefense ai s :: r)
+            (\s r -> AI.AITroopHandling.evaluateSettlementDefense ai s :: r)
             []
             ai.lord.land
 
@@ -245,10 +251,10 @@ getAttackLordsActions ai =
         (\l actions ->
             let
                 preference =
-                    1 - lordStrengthDiff ai.lord l
+                    min 2 <| lordStrengthDiff ai.lord l * ai.strategy.battleMultiplier - 1
             in
             if preference >= 0 then
-                AiRoundActionPreference (DoSomething (AttackLord l)) (preference * ai.strategy.battleMultiplier) :: actions
+                AiRoundActionPreference (DoSomething (AttackLord l)) preference :: actions
 
             else
                 actions
@@ -260,7 +266,7 @@ evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities
 evaluateSettlementSiegeAction ai s ls =
     let
         siegeStrengthDiff =
-            toFloat (Troops.sumTroopStats ai.lord.entity.army)
+            toFloat (Troops.sumTroopsStats ai.lord.entity.army)
                 / max
                     1
                     (toFloat (AI.AISettlementHandling.settlementDefenseStrength ai s ls)
@@ -279,6 +285,7 @@ evaluateSettlementSiegeAction ai s ls =
         Just
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
+                --maybe apply sqr instead of clamp (distance penalties would increase)
                 (clamp -2 2 siegeStrengthDiff
                     * ai.strategy.siegeMultiplier
                 )
@@ -288,15 +295,6 @@ evaluateSettlementSiegeAction ai s ls =
         Nothing
 
 
-lordArmyComparison : Entities.Model.Lord -> Entities.Model.Lord -> Float
-lordArmyComparison l1 l2 =
-    let
-        diff =
-            AI.AISettlementHandling.entityStrength l1.entity / AI.AISettlementHandling.entityStrength l2.entity
-    in
-    1 + Balancing.lordStrengthDiffFactor * diff
-
-
 lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordStrengthDiff attacker defender =
-    AI.AISettlementHandling.entityStrength attacker.entity / AI.AISettlementHandling.entityStrength defender.entity
+    toFloat (Troops.sumTroopsStats attacker.entity.army) / (max 1 <| toFloat <| Troops.sumTroopsStats defender.entity.army)

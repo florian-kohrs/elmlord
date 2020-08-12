@@ -92,10 +92,18 @@ getBaseActionDistancePenalty basicAction i =
             distanceFromAttackLordPenalty i
 
         HireTroops _ _ ->
-            distanceHireTroopsActionPenalty i
+            if i == 0 then
+                -9000
+
+            else
+                distanceHireTroopsActionPenalty i
 
         SwapTroops _ _ ->
-            distanceSwapTroopsActionPenalty i
+            if i == 0 then
+                -9000
+
+            else
+                distanceSwapTroopsActionPenalty i
 
         SiegeSettlement _ ->
             distanceFromSiegeActionPenalty i

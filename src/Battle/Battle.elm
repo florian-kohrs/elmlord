@@ -16,7 +16,7 @@ import Troops
 
 battleFleeTroopLoss : Float
 battleFleeTroopLoss =
-    0.4
+    0.2
 
 
 {-| Resolves / Calculate a battle skirmish outcome between (lord vs lord or lord vs siege).

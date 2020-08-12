@@ -1,6 +1,7 @@
 module Troops exposing (..)
 
 import Dict
+import MaybeExt
 import OperatorExt
 
 
@@ -92,9 +93,24 @@ sumTroops a =
     List.foldl (+) 0 (Dict.values a)
 
 
-sumTroopStats : Army -> Int
-sumTroopStats =
-    Dict.foldl (\k v r -> round (troopDamage (intToTroopType k) + troopDefense (intToTroopType k)) * v + r) 0
+getTroopTypeInArmyStats : Army -> TroopType -> Int
+getTroopTypeInArmyStats a t =
+    MaybeExt.foldMaybe (sumTroopStats t) 0 <| Dict.get (troopTypeToInt t) a
+
+
+sumTroopsStats : Army -> Int
+sumTroopsStats =
+    Dict.foldl (\k v r -> sumTroopStats (intToTroopType k) v + r) 0
+
+
+sumTroopStats : TroopType -> Int -> Int
+sumTroopStats t amount =
+    round (troopDamage t + troopDefense t) * amount
+
+
+invertArmy : Army -> Army
+invertArmy =
+    Dict.map (\k v -> -v)
 
 
 

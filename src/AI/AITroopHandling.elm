@@ -1,6 +1,7 @@
 module AI.AITroopHandling exposing (..)
 
 import AI.AIGoldManager exposing (..)
+import AI.AISettlementHandling
 import AI.Model exposing (..)
 import Balancing
 import Building
@@ -15,24 +16,29 @@ import Troops
 import Vector
 
 
+maximalAcceptedSettlementStrength : AI -> Entities.Model.Settlement -> Int
+maximalAcceptedSettlementStrength ai s =
+    round <| estimatedSettlementDefenseStrength ai s.settlementType * 1.5
+
+
+maximalAcceptedPlayerStrength : AI -> Int
+maximalAcceptedPlayerStrength ai =
+    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 1.5
+
+
 acceptedLackOfDefenseStrength : Int
 acceptedLackOfDefenseStrength =
-    100
+    300
 
 
 troopStrengthToBotherAddingToSettlement : Int
 troopStrengthToBotherAddingToSettlement =
-    100
-
-
-neededTroopsStrengthFactor : Int
-neededTroopsStrengthFactor =
-    1000
+    400
 
 
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
-    toFloat 250 * ai.strategy.defendMultiplier
+    toFloat 1500 * ai.strategy.defendMultiplier
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
@@ -42,16 +48,16 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    1000 + (500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+    2000 + (600 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
 
 
-estimatedNormalPlayerTroopStrength : AI -> Float
+estimatedNormalPlayerTroopStrength : AI -> Int
 estimatedNormalPlayerTroopStrength ai =
     let
         x =
             Entities.lordSettlementCount ai.lord
     in
-    toFloat (300 + 50 * x) * max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier
+    (1500 + 400 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
 
 
 estimatedSettlementDefenseStrength : AI -> Entities.Model.SettlementType -> Float
@@ -68,17 +74,50 @@ hireTroopsIfNeeded : AI -> List AiRoundActionPreference
 hireTroopsIfNeeded ai =
     let
         neededStrength =
-            totalNeededTroopStrength ai
+            totalNeededTroopStrength ai identity
     in
     if neededStrength > 0 then
-        checkSettlementsForTroops neededStrength ai
+        checkSettlementsForRecruits neededStrength ai
 
     else
         []
 
 
-checkSettlementsForTroops : Int -> AI -> List AiRoundActionPreference
-checkSettlementsForTroops targetStrength ai =
+settlementDisposableTroops : AI -> Entities.Model.Settlement -> Troops.Army
+settlementDisposableTroops ai s =
+    takeTroopsToLeaveArmyAtStrength (maximalAcceptedSettlementStrength ai s) s.entity.army
+
+
+takeTroopsFromSettlements : AI -> List AiRoundActionPreference
+takeTroopsFromSettlements ai =
+    let
+        neededStrength =
+            totalNeededTroopStrength ai <| max 0
+    in
+    ListExt.justList <| List.foldl (\s actions -> checkSettlementForAvaiableTroops neededStrength ai s :: actions) [] ai.lord.land
+
+
+checkSettlementForAvaiableTroops : Int -> AI -> Entities.Model.Settlement -> Maybe AiRoundActionPreference
+checkSettlementForAvaiableTroops targetStrength ai s =
+    let
+        availableTroops =
+            settlementDisposableTroops ai s
+
+        troopStrength =
+            Troops.sumTroopsStats availableTroops
+    in
+    if troopStrength > 0 then
+        Just <|
+            AiRoundActionPreference
+                (DoSomething <| SwapTroops (Troops.invertArmy availableTroops) s)
+                (min 2 (toFloat troopStrength / toFloat targetStrength))
+
+    else
+        Nothing
+
+
+checkSettlementsForRecruits : Int -> AI -> List AiRoundActionPreference
+checkSettlementsForRecruits targetStrength ai =
     List.foldl
         (\s r ->
             let
@@ -86,36 +125,85 @@ checkSettlementsForTroops targetStrength ai =
                     tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
 
                 troopStrength =
-                    Troops.sumTroopStats recruitableTroopsDict
+                    Troops.sumTroopsStats recruitableTroopsDict
             in
             AiRoundActionPreference
                 (DoSomething (HireTroops recruitableTroopsDict s))
-                (min 1 (toFloat troopStrength / toFloat targetStrength))
+                (min 2.5
+                    (max 0.5 (toFloat troopStrength / toFloat targetStrength)
+                        * (AI.AISettlementHandling.settlementRecruitUsage ai.lord s * 2)
+                    )
+                )
                 :: r
         )
         []
         ai.lord.land
 
 
-totalNeededTroopStrength : AI -> Int
-totalNeededTroopStrength ai =
+
+--evaluates if any settlements controlled by the current ai have insufficent defense
+
+
+evaluateSettlementDefense : AI -> Entities.Model.Settlement -> Maybe AiRoundActionPreference
+evaluateSettlementDefense ai s =
+    if
+        settlementLackOfTroopStrength ai s
+            - acceptedLackOfDefenseStrength
+            < 0
+    then
+        Nothing
+
+    else if hasTroopsToSatisfySettlementDefense ai then
+        Just
+            (AiRoundActionPreference
+                (DoSomething
+                    (SwapTroops
+                        (takeDispensableTroopsWithMaxStrength
+                            ai.lord.entity.army
+                            (estimatedNormalPlayerTroopStrength ai)
+                            (settlementLackOfTroopStrength ai s)
+                        )
+                        s
+                    )
+                )
+                (clamp
+                    0
+                    2
+                    (estimatedSettlementDefenseStrength ai s.settlementType
+                        / max 1 (toFloat (Troops.sumTroopsStats s.entity.army))
+                    )
+                )
+            )
+
+    else
+        Nothing
+
+
+settlementLackOfTroopStrength : AI -> Entities.Model.Settlement -> Int
+settlementLackOfTroopStrength ai s =
+    round (estimatedSettlementDefenseStrength ai s.settlementType)
+        - Troops.sumTroopsStats s.entity.army
+
+
+totalNeededTroopStrength : AI -> (Int -> Int) -> Int
+totalNeededTroopStrength ai op =
     max 0 <|
         List.foldl
             (\s neededStrength ->
                 neededStrength
-                    + --max 0
-                      (round
-                        (estimatedSettlementDefenseStrength
-                            ai
-                            s.settlementType
+                    + op
+                        (round
+                            (estimatedSettlementDefenseStrength
+                                ai
+                                s.settlementType
+                            )
+                            - Troops.sumTroopsStats ai.lord.entity.army
                         )
-                        - Troops.sumTroopStats ai.lord.entity.army
-                      )
             )
             (max
                 0
-                (round (estimatedNormalPlayerTroopStrength ai)
-                    - Troops.sumTroopStats ai.lord.entity.army
+                (estimatedNormalPlayerTroopStrength ai
+                    - Troops.sumTroopsStats ai.lord.entity.army
                 )
             )
             ai.lord.land
@@ -123,9 +211,9 @@ totalNeededTroopStrength ai =
 
 hasTroopsToSatisfySettlementDefense : AI -> Bool
 hasTroopsToSatisfySettlementDefense ai =
-    (Troops.sumTroopStats <|
+    (Troops.sumTroopsStats <|
         takeTroopsToLeaveArmyAtStrength
-            (round <| estimatedNormalPlayerTroopStrength ai)
+            (estimatedNormalPlayerTroopStrength ai)
             ai.lord.entity.army
     )
         >= troopStrengthToBotherAddingToSettlement
@@ -136,7 +224,7 @@ takeDispensableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength
     takeTroopsToLeaveArmyAtStrength
         (max
             sourceNeededStrength
-            (Troops.sumTroopStats sourceArmy - maxStrength)
+            (Troops.sumTroopsStats sourceArmy - maxStrength)
         )
         sourceArmy
 
@@ -220,7 +308,7 @@ getSettlementRatingForTroopRecruition ai neededStrength =
                 recruitArmy =
                     tryBuyTroopsWithTotalStrenghtFrom ai neededStrength s
             in
-            ( s, max 1 <| toFloat (Troops.sumTroopStats recruitArmy) / toFloat neededStrength ) :: r
+            ( s, max 1 <| toFloat (Troops.sumTroopsStats recruitArmy) / toFloat neededStrength ) :: r
         )
         []
         ai.lord.land

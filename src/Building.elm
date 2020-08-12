@@ -15,14 +15,14 @@ type alias Building =
 
 
 type BuildingType
-    = Marketplace
+    = Quarters
     | Barracks
     | Fortress
 
 
 startBuildings : List Building
 startBuildings =
-    [ { name = "Marketplace", level = 0, buildingType = Marketplace }
+    [ { name = "Quarters", level = 0, buildingType = Quarters }
     , { name = "Barracks", level = 0, buildingType = Barracks }
     , { name = "Fortress", level = 0, buildingType = Fortress }
     ]
@@ -30,17 +30,22 @@ startBuildings =
 
 upgradeBuildingCost : Building -> Float
 upgradeBuildingCost b =
-    upgradeCostBase b.buildingType * Basics.toFloat (b.level + 1)
+    upgradeBuildingInfoCost b.buildingType (b.level + 1)
+
+
+upgradeBuildingInfoCost : BuildingType -> Int -> Float
+upgradeBuildingInfoCost t l =
+    upgradeCostBase t + (upgradeCostBase t / 2) * Basics.toFloat l
 
 
 buildingToBonus : BuildingType -> Float
 buildingToBonus b =
     case b of
-        Marketplace ->
-            1.5
+        Quarters ->
+            2
 
         Barracks ->
-            1
+            4
 
         Fortress ->
             10
@@ -49,11 +54,11 @@ buildingToBonus b =
 buildingToBonusInfo : BuildingType -> Int -> String
 buildingToBonusInfo b i =
     case b of
-        Marketplace ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " Ducats per turn"
+        Quarters ->
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " recruit space in all Settlements"
 
         Barracks ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " Recruits per turn"
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " Recruits per turn in Captial"
 
         Fortress ->
             "-" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% Troopcost"
@@ -62,7 +67,7 @@ buildingToBonusInfo b i =
 upgradeCostBase : BuildingType -> Float
 upgradeCostBase b =
     case b of
-        Marketplace ->
+        Quarters ->
             550
 
         Barracks ->
@@ -77,15 +82,26 @@ upgradeBuildingType b bt =
     List.map (\x -> { x | level = OperatorExt.ternary (x.buildingType == bt) (x.level + 1) x.level }) b
 
 
+getBuilding : BuildingType -> List Building -> Maybe Building
+getBuilding t bs =
+    List.head <| List.filter (\b -> b.buildingType == t) bs
+
+
+resolveBonusFromBuildingInfo : BuildingType -> Int -> Float
+resolveBonusFromBuildingInfo t l =
+    buildingToBonus t * toFloat l
+
+
+resolveBonusFromBuilding : Building -> Float
+resolveBonusFromBuilding b =
+    resolveBonusFromBuildingInfo b.buildingType b.level
+
+
 resolveBonusFromBuildings : List Building -> BuildingType -> Float
-resolveBonusFromBuildings l b =
-    let
-        building =
-            List.head (List.filter (\x -> x.buildingType == b) l)
-    in
-    case building of
+resolveBonusFromBuildings bs t =
+    case getBuilding t bs of
         Nothing ->
             0
 
-        Just v ->
-            buildingToBonus b * Basics.toFloat v.level
+        Just b ->
+            resolveBonusFromBuilding b
