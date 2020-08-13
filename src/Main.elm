@@ -100,7 +100,7 @@ villagesPerLord =
 
 villageCaptialDistance : Float
 villageCaptialDistance =
-    7
+    8
 
 
 getPlayer : Model -> Entities.Model.Lord
@@ -262,7 +262,7 @@ initPlayer m i rad =
     in
     Entities.Model.Lord
         entity
-        25000
+        5000
         (initSettlementsFor m Dict.empty entity i)
         (PathAgent.getAgent 5)
 
@@ -561,9 +561,10 @@ playAiTurn m =
                             Event.setEvents m.event
                                 (Event.appendEvent m.event.events
                                     ai.lord.entity.name
-                                    (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                        ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "With Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                    )
+                                    --  (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                    --      ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                    --)
+                                    (AI.showAiRoundAction other)
                                     Event.Minor
                                 )
                     }

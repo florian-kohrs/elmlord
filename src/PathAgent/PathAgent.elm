@@ -97,12 +97,16 @@ moveSimulatorFromAgent a =
 
 lordsTurnToReachDestination : Map.Model.Map -> Entities.Model.Lord -> Vector.Point -> Int
 lordsTurnToReachDestination m l p =
-    case Pathfinder.getPathTo l.entity.position p m of
-        Nothing ->
-            9000
+    if l.entity.position == p then
+        -1
 
-        Just path ->
-            roundsToFinishPath l.agent path.path - 1
+    else
+        case Pathfinder.getPathTo l.entity.position p m of
+            Nothing ->
+                9000
+
+            Just path ->
+                roundsToFinishPath l.agent path.path - 1
 
 
 pathPartsToTime : Agent -> List Pathfinder.Model.PathTile -> List ( Pathfinder.Model.PathTile, Int )

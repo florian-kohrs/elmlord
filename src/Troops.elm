@@ -112,8 +112,8 @@ getTroopTypeInArmyStats a t =
     MaybeExt.foldMaybe (sumTroopStats t) 0 <| Dict.get (troopTypeToInt t) a
 
 
-sumTroopsStats : Army -> Int
-sumTroopsStats =
+sumArmyStats : Army -> Int
+sumArmyStats =
     Dict.foldl (\k v r -> sumTroopStats (intToTroopType k) v + r) 0
 
 

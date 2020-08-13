@@ -54,32 +54,34 @@ showBasicAction basicAction =
             "Attack Lord " ++ l.entity.name
 
         HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
-            "Hire Troops from " ++ settlementModelEntities.entity.name
+            "Hire Troops from "
 
-        {- ++ Dict.foldr
-           (\k v s ->
-               s
-                   ++ "TroopIndex: "
-                   ++ String.fromInt k
-                   ++ " Amount: "
-                   ++ String.fromInt v
-           )
-           ""
-           intTroopTypeTroopsDictDict
+        {- ++ settlementModelEntities.entity.name
+           ++ Dict.foldr
+               (\k v s ->
+                   s
+                       ++ "TroopIndex: "
+                       ++ String.fromInt k
+                       ++ " Amount: "
+                       ++ String.fromInt v
+               )
+               ""
+               intTroopTypeTroopsDictDict
         -}
         SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
-            "Swap Troops with " ++ settlementModelEntities.entity.name
+            "Swap Troops with "
 
-        {- ++ Dict.foldr
-           (\k v s ->
-               s
-                   ++ "TroopIndex: "
-                   ++ String.fromInt k
-                   ++ " Amount: "
-                   ++ String.fromInt v
-           )
-           ""
-           intTroopTypeTroopsDictDict
+        {- ++ settlementModelEntities.entity.name
+           ++ Dict.foldr
+               (\k v s ->
+                   s
+                       ++ "TroopIndex: "
+                       ++ String.fromInt k
+                       ++ " Amount: "
+                       ++ String.fromInt v
+               )
+               ""
+               intTroopTypeTroopsDictDict
         -}
         SiegeSettlement settlementModelEntities ->
             "Siege Settlement: " ++ settlementModelEntities.entity.name
@@ -262,8 +264,11 @@ getAttackLordsActions ai =
     List.foldl
         (\l actions ->
             let
+                strengthFactor =
+                    lordStrengthDiff ai.lord l
+
                 preference =
-                    min 2 <| lordStrengthDiff ai.lord l * ai.strategy.battleMultiplier - 1
+                    min (2 + ai.strategy.battleMultiplier) <| logBase 10 (strengthFactor * strengthFactor)
             in
             if preference >= 0 && not (Entities.isLordInOwnSettlement l) then
                 AiRoundActionPreference (DoSomething (AttackLord l)) preference :: actions
@@ -278,10 +283,10 @@ evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities
 evaluateSettlementSiegeAction ai s ls =
     let
         siegeStrengthDiff =
-            toFloat (Troops.sumTroopsStats ai.lord.entity.army)
+            toFloat (Troops.sumArmyStats ai.lord.entity.army)
                 / max
                     1
-                    (toFloat (AI.AISettlementHandling.settlementDefenseStrength ai s ls)
+                    (toFloat (AI.AISettlementHandling.settlementDefenseStrength s (Entities.landlordOnSettlement s ls))
                         * MaybeExt.foldMaybe
                             (\l ->
                                 1 + Balancing.settlementDefenseBoni s l
@@ -297,10 +302,7 @@ evaluateSettlementSiegeAction ai s ls =
         Just
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
-                --maybe apply sqr instead of clamp (distance penalties would increase)
-                (clamp -2 2 siegeStrengthDiff
-                    * ai.strategy.siegeMultiplier
-                )
+                (min (2 + ai.strategy.siegeMultiplier) (logBase 10 (siegeStrengthDiff * siegeStrengthDiff)))
             )
 
     else
@@ -309,4 +311,4 @@ evaluateSettlementSiegeAction ai s ls =
 
 lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float
 lordStrengthDiff attacker defender =
-    toFloat (Troops.sumTroopsStats attacker.entity.army) / (max 1 <| toFloat <| Troops.sumTroopsStats defender.entity.army)
+    toFloat (Troops.sumArmyStats attacker.entity.army) / (max 1 <| toFloat <| Troops.sumArmyStats defender.entity.army)

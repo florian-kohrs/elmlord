@@ -11,6 +11,16 @@ import Troops
 import Vector
 
 
+settlementIncome : SettlementType -> Float
+settlementIncome t =
+    case t of
+        Castle ->
+            20
+
+        Village ->
+            50
+
+
 getSettlementTroopsRecruitLimit : Settlement -> Lord -> Troops.TroopType -> Int
 getSettlementTroopsRecruitLimit s l t =
     case
@@ -105,16 +115,7 @@ buyTroops l t s =
         amount =
             getPossibleTroopAmount s.recruitLimits t
     in
-    { l
-        | gold =
-            l.gold
-                - (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100)
-                    * toFloat (Troops.troopCost t)
-                    * (toFloat amount / 5.0)
-                  )
-        , entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity
-        , land = updateSettlementRecruits s t -amount l.land
-    }
+    recruitTroops (Dict.singleton (Troops.troopTypeToInt t) amount) l s
 
 
 stationTroops : Lord -> Troops.TroopType -> Settlement -> Lord
@@ -146,7 +147,7 @@ disbandTroops l t =
 
 upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
 upgradeBuilding l b s =
-    { l | gold = l.gold - Building.upgradeBuildingCost b, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
+    { l | gold = l.gold - Building.upgradeBuildingInfoCost b.buildingType b.level, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
 
 
 updateEntitiesArmy : Troops.Army -> WorldEntity -> WorldEntity
@@ -299,6 +300,15 @@ getSettlementByName l s =
             Just x
 
 
+sumArmyBuyCost : Settlement -> Troops.Army -> Float
+sumArmyBuyCost s a =
+    let
+        priceFactor =
+            (100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100
+    in
+    toFloat (Dict.foldl (\k v cost -> Troops.troopCost (Troops.intToTroopType k) * v + cost) 0 a) * priceFactor
+
+
 recruitTroops : Dict.Dict Int Int -> Lord -> Settlement -> Lord
 recruitTroops recruitDict l s =
     let
@@ -309,10 +319,10 @@ recruitTroops recruitDict l s =
                     , Troops.updateTroopsFrom recruits k -v
                     )
                 )
-                ( l.entity.army, s.entity.army )
+                ( l.entity.army, s.recruitLimits )
                 recruitDict
     in
-    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity }
+    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity, gold = l.gold - sumArmyBuyCost s recruitDict }
 
 
 applySettlementsNewRecruits : Lord -> List Settlement
@@ -386,7 +396,6 @@ createCapitalFor e name =
             }
         , settlementType = Castle
         , recruitLimits = Troops.emptyTroops
-        , income = 5.0
         , isSieged = False
         , buildings = Building.startBuildings
         }
@@ -399,7 +408,18 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    applySettlementNewRecruits 0 { entity = { army = Troops.villageStartTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = Troops.emptyTroops, income = 1.5, isSieged = False, buildings = Building.startBuildings }
+    applySettlementNewRecruits 0
+        { entity =
+            { army = Troops.villageStartTroops
+            , faction = info.faction
+            , position = info.position
+            , name = info.name
+            }
+        , settlementType = info.sType
+        , recruitLimits = Troops.emptyTroops
+        , isSieged = False
+        , buildings = Building.startBuildings
+        }
 
 
 
@@ -474,8 +494,8 @@ calculateRoundIncome lord =
 
 
 sumSettlementsIncome : List Settlement -> Float
-sumSettlementsIncome s =
-    List.foldr (\x v -> x.income + v) 0 s
+sumSettlementsIncome settlements =
+    List.foldl (\s v -> settlementIncome s.settlementType + v) 0 settlements
 
 
 sumTroopWages : Troops.Army -> Float

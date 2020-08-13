@@ -68,7 +68,7 @@ settlementStateToAction pF lord settlement uistate =
             , checkBuildingCapabilities settlement
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits settlement.income ++ " Ducats") ]
+                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (Entities.settlementIncome settlement.settlementType) ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
                     , div []
@@ -135,7 +135,7 @@ settlementStateToAction pF lord settlement uistate =
             validateSettlement pF lord settlement
                 ++ [ div [ Html.Attributes.class "settlement-info box-shadow" ]
                         [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                        , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat settlement.income ++ " Ducats") ]
+                        , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ String.fromFloat (Entities.settlementIncome settlement.settlementType) ++ " Ducats") ]
                         , div [ Html.Attributes.class "stationed-troops-overview" ]
                             [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
                             , div []

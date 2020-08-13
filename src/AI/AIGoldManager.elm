@@ -17,8 +17,12 @@ import Vector
 filterActionIfLordIsBroke : BasicAction -> AI -> Maybe BasicAction
 filterActionIfLordIsBroke a ai =
     case a of
-        HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
-            Just <| HireTroops intTroopTypeTroopsDictDict settlementModelEntities
+        HireTroops army s ->
+            if ai.lord.gold > Entities.sumArmyBuyCost s army then
+                Just <| HireTroops army s
+
+            else
+                Nothing
 
         ImproveBuilding s b ->
             if ai.lord.gold >= Building.upgradeBuildingCost b then

@@ -23,26 +23,16 @@ import Vector
 
 
 settlementDefenseStrength :
-    AI
-    -> Entities.Model.Settlement
-    -> List Entities.Model.Lord
+    Entities.Model.Settlement
+    -> Maybe Entities.Model.Lord
     -> Int
-settlementDefenseStrength ai s enemies =
-    let
-        settlementDefense =
-            round <| entityStrength s.entity
-    in
-    case Entities.landlordOnSettlement s enemies of
+settlementDefenseStrength s extraDefender =
+    case extraDefender of
         Nothing ->
-            settlementDefense
+            Troops.sumArmyStats s.entity.army
 
         Just l ->
-            round (entityStrength l.entity) + settlementDefense
-
-
-entityStrength : Entities.Model.WorldEntity -> Float
-entityStrength e =
-    toFloat (Troops.sumTroopsStats e.army)
+            Troops.sumArmyStats l.entity.army + Troops.sumArmyStats s.entity.army
 
 
 settlementRecruitUsage : Entities.Model.Lord -> Entities.Model.Settlement -> Float

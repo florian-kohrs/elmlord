@@ -33,7 +33,6 @@ type alias Settlement =
     { entity : WorldEntity
     , settlementType : SettlementType
     , recruitLimits : Troops.Army
-    , income : Float
     , isSieged : Bool
     , buildings : List Building.Building
     }
