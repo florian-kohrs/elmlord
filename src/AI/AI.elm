@@ -29,6 +29,11 @@ type alias PathLookUp =
     Dict.Dict Int Int
 
 
+showAiRoundActionPreference : AiRoundActionPreference -> String
+showAiRoundActionPreference a =
+    "Action: " ++ showAiRoundAction a.action ++ ", preference: " ++ String.fromFloat a.actionValue
+
+
 showAiRoundAction : AiRoundActions -> String
 showAiRoundAction aiRoundActions =
     case aiRoundActions of
@@ -45,11 +50,11 @@ showAiRoundAction aiRoundActions =
 showBasicAction : BasicAction -> String
 showBasicAction basicAction =
     case basicAction of
-        AttackLord _ ->
-            "Attack Lord"
+        AttackLord l ->
+            "Attack Lord " ++ l.entity.name
 
         HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
-            "Hire Troops"
+            "Hire Troops from " ++ settlementModelEntities.entity.name
 
         {- ++ Dict.foldr
            (\k v s ->
@@ -63,7 +68,7 @@ showBasicAction basicAction =
            intTroopTypeTroopsDictDict
         -}
         SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
-            "Swap Troops "
+            "Swap Troops with " ++ settlementModelEntities.entity.name
 
         {- ++ Dict.foldr
            (\k v s ->
@@ -169,9 +174,7 @@ getAiAction ai distanceTo canMoveInTurn enemies =
         --action list and stop if it is still first after penalty
         List.head <|
             List.sortBy (\action -> -action.actionValue) <|
-                List.map
-                    (AI.AIActionDistanceHandler.applyActionDistancePenalty (distanceTo ai.lord))
-                    (AiRoundActionPreference EndRound 0.0 :: getAiActions ai enemies)
+                getAiActionsWithDistancePenalty ai distanceTo enemies
         --maybe replace endround 0.0 with go to capital
     of
         Nothing ->
@@ -188,6 +191,13 @@ getAiAction ai distanceTo canMoveInTurn enemies =
 
                     else
                         EndRound
+
+
+getAiActionsWithDistancePenalty : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> List Entities.Model.Lord -> List AiRoundActionPreference
+getAiActionsWithDistancePenalty ai distanceTo enemies =
+    List.map
+        (AI.AIActionDistanceHandler.applyActionDistancePenalty (distanceTo ai.lord))
+        (getAiActions ai enemies)
 
 
 getAiActions :
@@ -211,11 +221,13 @@ getAiActions ai enemies =
         attackOthers =
             getAttackLordsActions ai enemies
     in
-    ownSettlementDefenseActions
-        ++ enemySettlementStates
-        ++ hireTroops
-        ++ attackOthers
-        ++ takeTroops
+    AiRoundActionPreference EndRound 0.0
+        :: (ownSettlementDefenseActions
+                ++ enemySettlementStates
+                ++ hireTroops
+                ++ attackOthers
+                ++ takeTroops
+           )
 
 
 getSettlementDefenseActions :
@@ -253,7 +265,7 @@ getAttackLordsActions ai =
                 preference =
                     min 2 <| lordStrengthDiff ai.lord l * ai.strategy.battleMultiplier - 1
             in
-            if preference >= 0 then
+            if preference >= 0 && not (Entities.isLordInOwnSettlement l) then
                 AiRoundActionPreference (DoSomething (AttackLord l)) preference :: actions
 
             else

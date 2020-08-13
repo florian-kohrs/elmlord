@@ -62,7 +62,7 @@ settlementRecruitUsage l s =
                     List.foldl
                         (\t ( maxStrength, currentStrength ) ->
                             ( maxStrength + Troops.sumTroopStats t (Entities.settlementTroopsRecruitLimit s quarters.level t)
-                            , currentStrength + Troops.getTroopTypeInArmyStats s.entity.army t
+                            , currentStrength + Troops.getTroopTypeInArmyStats s.recruitLimits t
                             )
                         )
                         ( 0, 0 )

@@ -102,7 +102,7 @@ lordsTurnToReachDestination m l p =
             9000
 
         Just path ->
-            roundsToFinishPath l.agent path.path
+            roundsToFinishPath l.agent path.path - 1
 
 
 pathPartsToTime : Agent -> List Pathfinder.Model.PathTile -> List ( Pathfinder.Model.PathTile, Int )

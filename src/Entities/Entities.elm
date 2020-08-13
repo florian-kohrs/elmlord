@@ -302,7 +302,7 @@ getSettlementByName l s =
 recruitTroops : Dict.Dict Int Int -> Lord -> Settlement -> Lord
 recruitTroops recruitDict l s =
     let
-        ( newLArmy, newSArmy ) =
+        ( newLArmy, newSRecruits ) =
             Dict.foldl
                 (\k v ( lordArmy, recruits ) ->
                     ( Troops.updateTroopsFrom lordArmy k v
@@ -312,11 +312,11 @@ recruitTroops recruitDict l s =
                 ( l.entity.army, s.entity.army )
                 recruitDict
     in
-    setSettlement (setSettlementRecruits newSArmy s) <| { l | entity = updateEntitiesArmy newLArmy l.entity }
+    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity }
 
 
-applySettlementNewRecruits : Lord -> List Settlement
-applySettlementNewRecruits l =
+applySettlementsNewRecruits : Lord -> List Settlement
+applySettlementsNewRecruits l =
     case
         Maybe.andThen
             (\c -> Building.getBuilding Building.Quarters c.buildings)
@@ -328,19 +328,22 @@ applySettlementNewRecruits l =
 
         Just quarters ->
             List.map
-                (\s ->
-                    { s
-                        | recruitLimits =
-                            Dict.map
-                                (\t amount ->
-                                    min (settlementTroopsRecruitLimit s quarters.level <| Troops.intToTroopType t) <|
-                                        amount
-                                            + Basics.round (2.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)
-                                )
-                                s.recruitLimits
-                    }
-                )
+                (applySettlementNewRecruits quarters.level)
                 l.land
+
+
+applySettlementNewRecruits : Int -> Settlement -> Settlement
+applySettlementNewRecruits quarterLevel s =
+    { s
+        | recruitLimits =
+            Dict.map
+                (\t amount ->
+                    min (settlementTroopsRecruitLimit s quarterLevel <| Troops.intToTroopType t) <|
+                        amount
+                            + Basics.round (2.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)
+                )
+                s.recruitLimits
+    }
 
 
 getSettlementBonus : Settlement -> List Settlement -> Float
@@ -373,7 +376,20 @@ getLordCapital l =
 
 createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
-    { entity = { army = Troops.startTroops, faction = e.faction, position = e.position, name = name }, settlementType = Castle, recruitLimits = Troops.emptyTroops, income = 5.0, isSieged = False, buildings = Building.startBuildings }
+    applySettlementNewRecruits 0
+        { entity =
+            { army =
+                Troops.capitalStartTroops
+            , faction = e.faction
+            , position = e.position
+            , name = name
+            }
+        , settlementType = Castle
+        , recruitLimits = Troops.emptyTroops
+        , income = 5.0
+        , isSieged = False
+        , buildings = Building.startBuildings
+        }
 
 
 editSettlmentInfoPosition : Vector.Point -> SettlementInfo -> SettlementInfo
@@ -383,7 +399,7 @@ editSettlmentInfoPosition p i =
 
 getSettlementFor : SettlementInfo -> Settlement
 getSettlementFor info =
-    { entity = { army = Dict.empty, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = Troops.emptyTroops, income = 1.5, isSieged = False, buildings = Building.startBuildings }
+    applySettlementNewRecruits 0 { entity = { army = Troops.villageStartTroops, faction = info.faction, position = info.position, name = info.name }, settlementType = info.sType, recruitLimits = Troops.emptyTroops, income = 1.5, isSieged = False, buildings = Building.startBuildings }
 
 
 
@@ -434,7 +450,7 @@ findLordWithSettlement settlement =
 
 applyLordNewRecruits : Lord -> Lord
 applyLordNewRecruits lord =
-    { lord | land = applySettlementNewRecruits lord }
+    { lord | land = applySettlementsNewRecruits lord }
 
 
 factionToLord : Faction.Faction -> List Lord -> Maybe Lord

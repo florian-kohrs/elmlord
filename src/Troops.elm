@@ -81,11 +81,25 @@ emptyTroops =
     List.foldl (\t dict -> Dict.insert (troopTypeToInt t) 0 dict) Dict.empty troopTypeList
 
 
-startTroops : Army
-startTroops =
+lordStartTroops : Army
+lordStartTroops =
     List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
         Dict.empty
-        [ ( Archer, 10 ), ( Spear, 45 ), ( Sword, 20 ), ( Knight, 5 ) ]
+        [ ( Archer, 10 ), ( Spear, 25 ), ( Sword, 20 ), ( Knight, 5 ) ]
+
+
+capitalStartTroops : Army
+capitalStartTroops =
+    List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
+        Dict.empty
+        [ ( Archer, 50 ), ( Spear, 10 ), ( Sword, 20 ), ( Knight, 5 ) ]
+
+
+villageStartTroops : Army
+villageStartTroops =
+    List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
+        Dict.empty
+        [ ( Archer, 10 ), ( Spear, 10 ), ( Sword, 0 ), ( Knight, 0 ) ]
 
 
 sumTroops : Army -> Int
