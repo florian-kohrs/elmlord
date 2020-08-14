@@ -59,8 +59,11 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    --2000 + (600 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1))))
-    4500 * ai.strategy.defendMultiplier
+    (4500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+
+
+
+--4500 * ai.strategy.defendMultiplier
 
 
 estimatedNormalPlayerTroopStrength : AI -> Int
@@ -158,10 +161,21 @@ checkSettlementForRecruits targetStrength ai s =
                 toFloat (Troops.sumArmyStats recruitableTroopsDict)
                     / toFloat targetStrength
 
+        recruitOverflowFactor =
+            AI.AISettlementHandling.settlementRecruitUsage ai.lord s s.recruitLimits
+
         actionValue =
             min (2 + ai.strategy.defendMultiplier) <|
                 recruitNeedFactor
-                    * AI.AISettlementHandling.settlementRecruitUsage ai.lord s
+                    * (recruitOverflowFactor
+                        - AI.AISettlementHandling.settlementRecruitUsage
+                            ai.lord
+                            s
+                            (Troops.substractArmy
+                                s.recruitLimits
+                                recruitableTroopsDict
+                            )
+                      )
                     * 2
                     + recruitStrengthFactor
                     / 2

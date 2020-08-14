@@ -43,3 +43,42 @@ takeAsMuchAsPossible cost gold maxValue =
 goldIncomePerRound : AI -> Float
 goldIncomePerRound ai =
     Entities.calculateRoundIncome ai.lord
+
+
+getBuildingBuildFactor : Building.BuildingType -> Float
+getBuildingBuildFactor t =
+    case t of
+        Building.Quarters ->
+            1.2
+
+        Building.Barracks ->
+            1
+
+        Building.Fortress ->
+            0
+
+
+getBuildingBuildFactors : AI -> Entities.Model.Settlement -> Building.Building -> Maybe AiRoundActionPreference
+getBuildingBuildFactors ai capital b =
+    if b.level < 3 && ai.lord.gold > Building.upgradeBuildingCost b then
+        Just <|
+            AiRoundActionPreference
+                (DoSomething <|
+                    ImproveBuilding capital b
+                )
+                (min (2 + ai.strategy.improveSettlementsMultiplier) <|
+                    (getBuildingBuildFactor b.buildingType
+                        * (goldIncomePerRound
+                            ai
+                            * 2
+                            / Building.upgradeBuildingCost b
+                            + logBase 10
+                                (ai.lord.gold
+                                    / Building.upgradeBuildingCost b
+                                )
+                          )
+                    )
+                )
+
+    else
+        Nothing

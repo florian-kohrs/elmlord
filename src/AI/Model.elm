@@ -16,7 +16,7 @@ type alias ActionMultipliers =
     , defendMultiplier : Float
     , battleMultiplier : Float
     , growArmyMultiplier : Float
-    , improveSettlements : Float
+    , improveSettlementsMultiplier : Float
     }
 
 

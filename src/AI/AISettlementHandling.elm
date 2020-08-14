@@ -35,8 +35,8 @@ settlementDefenseStrength s extraDefender =
             Troops.sumArmyStats l.entity.army + Troops.sumArmyStats s.entity.army
 
 
-settlementRecruitUsage : Entities.Model.Lord -> Entities.Model.Settlement -> Float
-settlementRecruitUsage l s =
+settlementRecruitUsage : Entities.Model.Lord -> Entities.Model.Settlement -> Troops.Army -> Float
+settlementRecruitUsage l s a =
     case
         Maybe.andThen
             (\c -> Building.getBuilding Building.Quarters c.buildings)
@@ -52,7 +52,7 @@ settlementRecruitUsage l s =
                     List.foldl
                         (\t ( maxStrength, currentStrength ) ->
                             ( maxStrength + Troops.sumTroopStats t (Entities.settlementTroopsRecruitLimit s quarters.level t)
-                            , currentStrength + Troops.getTroopTypeInArmyStats s.recruitLimits t
+                            , currentStrength + Troops.getTroopTypeInArmyStats a t
                             )
                         )
                         ( 0, 0 )

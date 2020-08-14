@@ -1,6 +1,7 @@
 module AI exposing (..)
 
 import AI.AIActionDistanceHandler
+import AI.AIGoldManager
 import AI.AISettlementHandling
 import AI.AITroopHandling
 import AI.Model exposing (..)
@@ -55,34 +56,32 @@ showBasicAction basicAction =
 
         HireTroops intTroopTypeTroopsDictDict settlementModelEntities ->
             "Hire Troops from "
+                ++ settlementModelEntities.entity.name
+                ++ Dict.foldr
+                    (\k v s ->
+                        s
+                            ++ "TroopIndex: "
+                            ++ String.fromInt k
+                            ++ " Amount: "
+                            ++ String.fromInt v
+                    )
+                    ""
+                    intTroopTypeTroopsDictDict
 
-        {- ++ settlementModelEntities.entity.name
-           ++ Dict.foldr
-               (\k v s ->
-                   s
-                       ++ "TroopIndex: "
-                       ++ String.fromInt k
-                       ++ " Amount: "
-                       ++ String.fromInt v
-               )
-               ""
-               intTroopTypeTroopsDictDict
-        -}
         SwapTroops intTroopTypeTroopsDictDict settlementModelEntities ->
             "Swap Troops with "
+                ++ settlementModelEntities.entity.name
+                ++ Dict.foldr
+                    (\k v s ->
+                        s
+                            ++ "TroopIndex: "
+                            ++ String.fromInt k
+                            ++ " Amount: "
+                            ++ String.fromInt v
+                    )
+                    ""
+                    intTroopTypeTroopsDictDict
 
-        {- ++ settlementModelEntities.entity.name
-           ++ Dict.foldr
-               (\k v s ->
-                   s
-                       ++ "TroopIndex: "
-                       ++ String.fromInt k
-                       ++ " Amount: "
-                       ++ String.fromInt v
-               )
-               ""
-               intTroopTypeTroopsDictDict
-        -}
         SiegeSettlement settlementModelEntities ->
             "Siege Settlement: " ++ settlementModelEntities.entity.name
 
@@ -144,8 +143,8 @@ executeBasicAiAction ai destination action tileOnPos moveTowards lordList =
             HireTroops dict s ->
                 Entities.Lords.replaceAi lordList <| { ai | lord = Entities.recruitTroops dict ai.lord s }
 
-            _ ->
-                lordList
+            ImproveBuilding s b ->
+                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.upgradeBuilding ai.lord b s }
 
     else
         lordList
@@ -220,6 +219,9 @@ getAiActions ai enemies =
         hireTroops =
             AI.AITroopHandling.hireTroopsIfNeeded ai
 
+        improveBuildingFactor =
+            getImproveBuildingActions ai
+
         attackOthers =
             getAttackLordsActions ai enemies
     in
@@ -227,8 +229,9 @@ getAiActions ai enemies =
         :: (ownSettlementDefenseActions
                 ++ enemySettlementStates
                 ++ hireTroops
-                ++ attackOthers
                 ++ takeTroops
+                ++ attackOthers
+                ++ improveBuildingFactor
            )
 
 
@@ -242,6 +245,16 @@ getSettlementDefenseActions ai enemies =
             (\s r -> AI.AITroopHandling.evaluateSettlementDefense ai s :: r)
             []
             ai.lord.land
+
+
+getImproveBuildingActions : AI -> List AiRoundActionPreference
+getImproveBuildingActions ai =
+    case Entities.getLordCapital ai.lord.land of
+        Nothing ->
+            []
+
+        Just capital ->
+            ListExt.justList <| List.map (AI.AIGoldManager.getBuildingBuildFactors ai capital) capital.buildings
 
 
 getSettlementAttackActions :
@@ -268,7 +281,7 @@ getAttackLordsActions ai =
                     lordStrengthDiff ai.lord l
 
                 preference =
-                    min (2 + ai.strategy.battleMultiplier) <| logBase 10 (strengthFactor * strengthFactor)
+                    min (2 + ai.strategy.battleMultiplier) <| strengthFactor
             in
             if preference >= 0 && not (Entities.isLordInOwnSettlement l) then
                 AiRoundActionPreference (DoSomething (AttackLord l)) preference :: actions

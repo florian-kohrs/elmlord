@@ -92,14 +92,19 @@ capitalStartTroops : Army
 capitalStartTroops =
     List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
         Dict.empty
-        [ ( Archer, 50 ), ( Spear, 10 ), ( Sword, 20 ), ( Knight, 5 ) ]
+        [ ( Archer, 30 ), ( Spear, 5 ), ( Sword, 20 ), ( Knight, 5 ) ]
 
 
 villageStartTroops : Army
 villageStartTroops =
     List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
         Dict.empty
-        [ ( Archer, 10 ), ( Spear, 10 ), ( Sword, 0 ), ( Knight, 0 ) ]
+        [ ( Archer, 10 ), ( Spear, 0 ), ( Sword, 10 ), ( Knight, 0 ) ]
+
+
+substractArmy : Army -> Army -> Army
+substractArmy a1 a2 =
+    Dict.foldl (\k v army -> updateTroopsFrom army k -v) a1 a2
 
 
 sumTroops : Army -> Int
@@ -160,32 +165,32 @@ troopCost : TroopType -> Int
 troopCost t =
     case t of
         Archer ->
-            65
+            35
 
         Spear ->
-            30
+            10
 
         Sword ->
-            80
+            25
 
         Knight ->
-            120
+            50
 
 
 troopWage : TroopType -> Float
 troopWage t =
     case t of
         Archer ->
-            0.15
+            0.1
 
         Spear ->
-            0.6
+            0.3
 
         Sword ->
-            0.25
+            0.15
 
         Knight ->
-            1.0
+            0.5
 
 
 troopDamage : TroopType -> Float

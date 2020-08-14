@@ -34,6 +34,10 @@ mapSize =
     15
 
 
+
+--seed was replaced by players name int representation
+
+
 seed : Int
 seed =
     3

@@ -48,4 +48,4 @@ settlementDefenseBoni s landlord =
 
 addGoldCastle : Float
 addGoldCastle =
-    500.0
+    1500.0

@@ -16,27 +16,22 @@ import Vector
 
 distanceFromSiegeActionPenalty : Int -> Float
 distanceFromSiegeActionPenalty turns =
-    toFloat turns * 0.08
+    toFloat turns * 0.1
 
 
 distanceSwapTroopsActionPenalty : Int -> Float
 distanceSwapTroopsActionPenalty turns =
-    toFloat turns * 0.06
+    toFloat turns * 0.05
 
 
 distanceHireTroopsActionPenalty : Int -> Float
 distanceHireTroopsActionPenalty turns =
-    toFloat turns * 0.04
+    toFloat turns * 0.03
 
 
 distanceImproveBuildingActionPenalty : Int -> Float
 distanceImproveBuildingActionPenalty turns =
     toFloat turns * 0.09
-
-
-distanceFromDefensiveActionPenalty : Int -> Float
-distanceFromDefensiveActionPenalty turns =
-    toFloat turns * 0.05
 
 
 distanceFromMoveToPenalty : Int -> Float
@@ -89,11 +84,11 @@ getBaseActionDistancePenalty : BasicAction -> Int -> Float
 getBaseActionDistancePenalty basicAction i =
     case basicAction of
         AttackLord l ->
-            distanceFromAttackLordPenalty i
+            max 0 <| distanceFromAttackLordPenalty i
 
         HireTroops _ _ ->
             if i < 0 then
-                -1
+                -2
 
             else
                 distanceHireTroopsActionPenalty i

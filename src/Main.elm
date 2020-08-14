@@ -93,6 +93,21 @@ type MainMenueState
     | Campaign
 
 
+hashString : String -> Int
+hashString s =
+    Tuple.first <|
+        List.foldl
+            (\c ( r, count ) ->
+                ( r + Char.toCode c * count
+                , count + 1
+                )
+            )
+            ( 1, 1 )
+        <|
+            String.toList
+                s
+
+
 villagesPerLord : Int
 villagesPerLord =
     3
@@ -100,7 +115,7 @@ villagesPerLord =
 
 villageCaptialDistance : Float
 villageCaptialDistance =
-    8
+    6
 
 
 getPlayer : Model -> Entities.Model.Lord
@@ -211,26 +226,38 @@ drawnMap map =
 ----------------------------------------------------------
 
 
-startGame : Int -> ( Model, Cmd Msg.Msg )
-startGame playerCount =
-    ( initialModel playerCount, Cmd.none )
+startGame : String -> Cmd Msg.Msg -> ( Model, Cmd Msg.Msg )
+startGame playerName cmd =
+    ( initialModel playerName, cmd )
 
 
-initialModel : Int -> Model
-initialModel playerCount =
+initialModel : String -> Model
+initialModel playerName =
     let
         map =
-            MapGenerator.createMap
+            MapGenerator.createMap (hashString playerName)
     in
-    Model (initPlayers map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 "Player" 10
+    Model (initPlayers playerName map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 playerName 10
 
 
-initPlayers : Map.Model.Map -> Int -> Entities.Lords.LordList
-initPlayers m count =
+initPlayers : String -> Map.Model.Map -> Int -> Entities.Lords.LordList
+initPlayers playerName m count =
     Entities.Lords.Cons
-        (initPlayer m 0 (2 * 0.125))
+        (initPlayer (Just playerName) m 0 (2 * 0.125))
         (List.map
-            (\i -> initAI (initPlayer m i (2 * (toFloat i / toFloat count + 0.125))) (toFloat i))
+            (\i ->
+                initAI
+                    (initPlayer
+                        (ListExt.getElementAt
+                            i
+                            Entities.Model.aiNames
+                        )
+                        m
+                        i
+                        (2 * (toFloat i / toFloat count + 0.125))
+                    )
+                    (toFloat i)
+            )
             (List.range 1 (count - 1))
         )
 
@@ -247,8 +274,8 @@ initAI l i =
         )
 
 
-initPlayer : Map.Model.Map -> Int -> Float -> Entities.Model.Lord
-initPlayer m i rad =
+initPlayer : Maybe String -> Map.Model.Map -> Int -> Float -> Entities.Model.Lord
+initPlayer name m i rad =
     let
         entity =
             Entities.Model.WorldEntity
@@ -257,7 +284,7 @@ initPlayer m i rad =
                 (Pathfinder.getClosestFreeFieldAt (Vector.toPoint (Vector.pointOnCircle (toFloat MapData.mapSize * 1) rad)) (Pathfinder.getNav m) Dict.empty)
                 (Maybe.withDefault
                     ("Lord " ++ String.fromInt i)
-                    (ListExt.getElementAt i Entities.Model.aiNames)
+                    name
                 )
     in
     Entities.Model.Lord
@@ -300,9 +327,10 @@ getVillagesPosition max q {- quadrant -} i p =
     let
         distanceFromCapital =
             villageCaptialDistance
+                + toFloat (round (4 * sin (pi * toFloat (i - 1) / toFloat (max - 1))))
 
         rad =
-            0.5 * pi * (toFloat i / toFloat max + toFloat (-q + 2))
+            0.5 * pi * (toFloat i / toFloat max + (toFloat -q + 1.9))
 
         x =
             sin rad * distanceFromCapital
@@ -561,10 +589,10 @@ playAiTurn m =
                             Event.setEvents m.event
                                 (Event.appendEvent m.event.events
                                     ai.lord.entity.name
-                                    --  (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                    --      ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                    --)
-                                    (AI.showAiRoundAction other)
+                                    (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                        ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                    )
+                                    --(AI.showAiRoundAction other)
                                     Event.Minor
                                 )
                     }
@@ -823,7 +851,7 @@ updateBattle msg model =
             emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle (Map.getTerrainForPoint bS.attacker.entity.position model.map) bS)) }
 
         Msg.FleeBattle bS ->
-            ( { model | gameState = GameSetup GameMenue, lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
+            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Battle.fleeBattle bS) }, getBattleAftermathSound bS )
 
         Msg.EndBattle bS ->
             ( { model | gameState = GameSetup GameMenue, lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
@@ -847,7 +875,11 @@ updateMenue : Msg.MenueMsg -> Model -> ( Model, Cmd Msg.Msg )
 updateMenue msg model =
     case msg of
         Msg.StartGame name ->
-            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Entities.changeLordName name (getPlayer model)) }, Ports.startMusic "play" )
+            let
+                ( startModel, cmd ) =
+                    startGame name <| Ports.startMusic "play"
+            in
+            ( { startModel | gameState = GameSetup GameMenue }, cmd )
 
         Msg.ChangeName str ->
             emptyCmd { model | playerInput = str }
@@ -900,10 +932,15 @@ emptyCmd m =
     ( m, Cmd.none )
 
 
+playerCount : Int
+playerCount =
+    4
+
+
 main : Program () Model Msg.Msg
 main =
     Browser.element
-        { init = \_ -> startGame 4
+        { init = \_ -> startGame "Jan von Haskell" Cmd.none
         , subscriptions = \m -> tickSub m
         , view = view
         , update = update
