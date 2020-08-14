@@ -545,7 +545,38 @@ update msg model =
                             _ ->
                                 emptyCmd <| { model | errorMsg = "Its not your turn" }
             in
-            ( removeLordsWithoutCapitalFromModel newModel, cmd )
+            ( checkIfGameEnded <| removeLordsWithoutCapitalFromModel newModel, cmd )
+
+
+hasGameStarted : Model -> Bool
+hasGameStarted m =
+    case m.gameState of
+        GameSetup state ->
+            case state of
+                MainMenue _ ->
+                    False
+
+                _ ->
+                    True
+
+        _ ->
+            True
+
+
+checkIfGameEnded : Model -> Model
+checkIfGameEnded m =
+    if hasGameStarted m then
+        if hasPlayerLost m then
+            { m | gameState = GameOver False }
+
+        else if (List.length <| Entities.Lords.npcs m.lords) == 0 then
+            { m | gameState = GameOver True }
+
+        else
+            m
+
+    else
+        m
 
 
 endAnyRound : Model -> Model
@@ -748,6 +779,11 @@ removeLordsWithoutCapitalFromModel m =
 removeLordsWithoutCapital : Entities.Lords.LordList -> Entities.Lords.LordList
 removeLordsWithoutCapital lordList =
     Entities.Lords.updateNpcs lordList <| List.filter (\ai -> Entities.hasCapital ai.lord) <| Entities.Lords.getAis lordList
+
+
+hasPlayerLost : Model -> Bool
+hasPlayerLost m =
+    not <| MaybeExt.hasValue <| Entities.getLordCapital <| .land <| getPlayer m
 
 
 
