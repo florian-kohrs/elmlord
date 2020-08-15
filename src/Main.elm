@@ -291,7 +291,7 @@ initPlayer name m i rad =
         entity
         5000
         (initSettlementsFor m Dict.empty entity i)
-        (PathAgent.getAgent 5)
+        (PathAgent.getAgent 6)
 
 
 initSettlementsFor : Map.Model.Map -> Dict.Dict Int () -> Entities.Model.WorldEntity -> Int -> List Entities.Model.Settlement
