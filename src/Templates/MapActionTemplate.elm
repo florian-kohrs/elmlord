@@ -3,6 +3,7 @@ module Templates.MapActionTemplate exposing (..)
 import Dict
 import DictExt
 import Entities.Model
+import Faction exposing (Faction)
 import Html exposing (Html, button, div, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -11,12 +12,11 @@ import MapAction.Model
 import MapAction.SubModel
 import MapAction.Viewer
 import Msg
+import OperatorExt
 import Templates.HelperTemplate as Helper
 import Troops
 import Vector
-import OperatorExt
-import Faction exposing (Faction)
-import Entities.Model
+
 
 {-| Returns the layout for the map actions, in dependence to the chosen point (in the model)
 
@@ -37,7 +37,10 @@ generateMapActionTemplate p player dict =
     in
     div []
         [ div [ Html.Attributes.class "map-action-menu" ]
-            (span [] [ Html.text "Map Actions" ] :: List.map generateMapActionButtons actions)
+            [ span [] [ Html.text "Map Actions" ]
+            , div [ Html.Attributes.class "map-action-menu-body" ]
+                (List.map generateMapActionButtons actions)
+            ]
         , generateTroopOverview player.entity.faction actions
         ]
 
@@ -54,23 +57,31 @@ generateMapActionButtons svga =
 
 generateTroopOverview : Faction -> List MapAction.SubModel.MapTileMsg -> Html Msg.Msg
 generateTroopOverview pf actions =
-    div [ Html.Attributes.class "map-troop-overview" ]
-        ((span [] [ Html.text "Enemy troops on map tile" ]
-            :: DictExt.foldlOverKeys
-                (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "mini-lord-troop-container" :: r)
-                (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "mini-lord-troop-container" :: r)
-                []
-                (combineTroopDicts Troops.emptyTroops actions (\f -> f /= pf))
-                Troops.troopKeyList
-        )
-        ++ (span [] [ Html.text "Your troops on map tile" ]
-                :: DictExt.foldlOverKeys
-                    (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "mini-lord-troop-container" :: r)
-                    (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "mini-lord-troop-container" :: r)
-                    []
-                    (combineTroopDicts Troops.emptyTroops actions (\f -> f == pf)) 
-                    Troops.troopKeyList
-           ))
+    let
+        playerTroops = combineTroopDicts Troops.emptyTroops actions (\f -> f == pf)
+        enemyTroops = combineTroopDicts Troops.emptyTroops actions (\f -> f /= pf)
+    in
+    if Troops.sumTroops playerTroops /= 0 || Troops.sumTroops enemyTroops /= 0 then
+        div [ Html.Attributes.class "map-troop-overview" ]
+            ((span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Enemy troops on map tile" ]
+                :: getTroopOverviewData enemyTroops
+            )
+                ++ (span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Your troops on map tile" ]
+                        :: getTroopOverviewData playerTroops
+                )
+            )
+    else 
+        div [] []
+
+
+getTroopOverviewData : Troops.Army -> List (Html Msg.Msg)
+getTroopOverviewData t =
+    DictExt.foldlOverKeys
+        (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "mini-lord-troop-container" :: r)
+        (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "mini-lord-troop-container" :: r)
+        []
+        t
+        Troops.troopKeyList
 
 
 combineTroopDicts : Troops.Army -> List MapAction.SubModel.MapTileMsg -> (Faction -> Bool) -> Troops.Army

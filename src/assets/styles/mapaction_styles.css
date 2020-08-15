@@ -3,13 +3,13 @@
 
 .map-action-menu {
     width: 95%;
-    height: 450px;
+    height: 375px;
     border-radius: 10px;
     background: #deb887;
     margin-top: 5px;
     text-align: center;
     display: grid;
-    grid-template-rows: 50px 1fr 1fr 1fr 1fr 1fr 1fr 10px;
+    grid-template-rows: 50px 1fr 10px;
 
     -webkit-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
     -moz-box-shadow: 7px 7px 7px 0px rgba(0, 0, 0, 0.2);
@@ -22,8 +22,14 @@
     padding-top: 10px;
 }
 
-.map-action-menu > button {
-    margin: 0 auto;
+.map-action-menu-body {
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+}
+
+.map-action-menu > div > button {
+    margin: 5px auto;
     display: block;
     background: #7b0606;
     color: white;
@@ -67,4 +73,11 @@
     font-size: 13px;
     color: #49505c;
     padding-top: 0;
+}
+
+.map-troop-overview-header {
+    font-size: 15px;
+    color: #49505c;
+    padding-top: 10px;
+    display: block;
 }
