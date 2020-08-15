@@ -143,7 +143,7 @@ lordBattleAftermath l settlement =
                 (\s ->
                     not
                         (Entities.isLandlord s l
-                            && (not (Entities.isLordOnSettlement l s)
+                            && (Entities.isLordOnSettlement l s
                                     || Troops.sumTroops s.entity.army
                                     > 0
                                )
