@@ -57,10 +57,10 @@ evaluateSiegeBattle bS settle ter =
             bS.attacker
 
         newAttacker =
-            { tempAttacker | entity = evaluateBattle tempAttacker.entity transferedSettle.entity.army ter (Entities.getSettlementBonus settle bS.defender.land) }
+            { tempAttacker | entity = evaluateBattle tempAttacker.entity transferedSettle.entity.army ter 1 }
 
         newSettle =
-            { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army ter 1 }
+            { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army ter (Entities.getSettlementBonus settle bS.defender.land) }
 
         attackerCasualties =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
