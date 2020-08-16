@@ -58,19 +58,23 @@ generateMapActionButtons svga =
 generateTroopOverview : Faction -> List MapAction.SubModel.MapTileMsg -> Html Msg.Msg
 generateTroopOverview pf actions =
     let
-        playerTroops = combineTroopDicts Troops.emptyTroops actions (\f -> f == pf)
-        enemyTroops = combineTroopDicts Troops.emptyTroops actions (\f -> f /= pf)
+        playerTroops =
+            combineTroopDicts Troops.emptyTroops actions (\f -> f == pf)
+
+        enemyTroops =
+            combineTroopDicts Troops.emptyTroops actions (\f -> f /= pf)
     in
     if Troops.sumTroops playerTroops /= 0 || Troops.sumTroops enemyTroops /= 0 then
         div [ Html.Attributes.class "map-troop-overview" ]
             ((span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Enemy troops on map tile" ]
                 :: getTroopOverviewData enemyTroops
-            )
+             )
                 ++ (span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Your troops on map tile" ]
                         :: getTroopOverviewData playerTroops
-                )
+                   )
             )
-    else 
+
+    else
         div [] []
 
 
@@ -97,11 +101,21 @@ combineTroopDicts a l ff =
 getEntityTroopsByMapTile : MapAction.SubModel.MapTileMsg -> (Faction -> Bool) -> Troops.Army
 getEntityTroopsByMapTile svga ff =
     case svga of
-        MapAction.SubModel.LordMsg _ lord ->
-            OperatorExt.ternary (ff lord.entity.faction) lord.entity.army Troops.emptyTroops
+        MapAction.SubModel.LordMsg lmsg lord ->
+            case lmsg of
+                MapAction.SubModel.ViewLord ->
+                    OperatorExt.ternary (ff lord.entity.faction) lord.entity.army Troops.emptyTroops
 
-        MapAction.SubModel.SettlementMsg _ settlement ->
-            OperatorExt.ternary (ff settlement.entity.faction) settlement.entity.army Troops.emptyTroops
+                _ ->
+                    Troops.emptyTroops
+
+        MapAction.SubModel.SettlementMsg smsg settlement ->
+            case smsg of
+                MapAction.SubModel.ViewSettlement ->
+                    OperatorExt.ternary (ff settlement.entity.faction) settlement.entity.army Troops.emptyTroops
+
+                _ ->
+                    Troops.emptyTroops
 
         _ ->
             Troops.emptyTroops
