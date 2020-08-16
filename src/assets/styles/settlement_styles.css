@@ -2,7 +2,7 @@
 /* ---------------------------------------------------------------------------- */
 
 .settlement-modal {
-    width: 700px;
+    width: 725px;
     height: 800px;
     background: #b8bbc0;
     border-radius: 20px;
@@ -10,7 +10,7 @@
     margin-top: 100px;
     margin-left: calc(50% - 350px);
     display: grid;
-    grid-template-columns: 15px 1fr 1fr 15px;
+    grid-template-columns: 15px 42.5% 1fr 15px;
     grid-template-rows: 20px 50px 110px 1fr 50px;
     grid-row-gap: 20px;
     grid-column-gap: 10px;
@@ -210,7 +210,7 @@
 
 .troop-recruiting-container {
     display: grid;
-    grid-template-columns: 60px 50px 50px 100px 1fr;
+    grid-template-columns: 60px 50px 75px 100px 1fr;
     border: 1px solid #49505c;
     text-align: center;
     border-radius: 10px;

@@ -429,7 +429,7 @@ setGameView model =
 buildMapActionTemplate : Model -> MapAction.Model.InteractableMapSVG -> Html Msg.Msg
 buildMapActionTemplate model allClickActions =
     if isPlayersTurn model then
-        MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
+        MapActionTemplate.generateMapActionTemplate model.selectedPoint (getPlayer model) allClickActions
 
     else
         let

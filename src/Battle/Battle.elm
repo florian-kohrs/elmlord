@@ -66,7 +66,7 @@ evaluateSiegeBattle bS settle ter =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
 
         defenderCasualties =
-            calculateEntityCasualties bS.defender.entity.army newSettle.entity.army
+            calculateEntityCasualties transferedSettle.entity.army newSettle.entity.army
     in
     constructBattleResult bS newAttacker transferedDefender (Just newSettle) attackerCasualties defenderCasualties
 
@@ -143,7 +143,7 @@ lordBattleAftermath l settlement =
                 (\s ->
                     not
                         (Entities.isLandlord s l
-                            && (not (Entities.isLordOnSettlement l s)
+                            && (Entities.isLordOnSettlement l s
                                     || Troops.sumTroops s.entity.army
                                     > 0
                                )
