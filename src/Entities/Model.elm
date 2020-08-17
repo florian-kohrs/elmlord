@@ -33,7 +33,6 @@ type alias Settlement =
     { entity : WorldEntity
     , settlementType : SettlementType
     , recruitLimits : Troops.Army
-    , income : Float
     , isSieged : Bool
     , buildings : List Building.Building
     }
@@ -50,6 +49,15 @@ type alias SettlementInfo =
 type SettlementType
     = Village
     | Castle
+
+
+aiNames : List String
+aiNames =
+    [ ""
+    , "Baron Bodo"
+    , "Herzog K. Willi"
+    , "Sir Quicknuss"
+    ]
 
 
 

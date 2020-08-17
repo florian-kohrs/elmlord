@@ -1,0 +1,171 @@
+/* Styling for the battle modal */
+/* ---------------------------------------------------------------------------- */
+
+.battle-modal {
+    width: 900px;
+    height: 700px;
+    background: #b8bbc0;
+    border-radius: 20px;
+    position: absolute;
+    margin-top: 100px;
+    margin-left: calc(50% - 450px);
+    display: grid;
+    grid-template-rows: 20px 1fr;
+    grid-row-gap: 7.5px;
+    grid-column-gap: 10px;
+    border: 1px solid #49505c;
+}
+
+.battle-modal-main {
+    grid-area: 2 / 1 / 3 / 2;
+    display: grid;
+    grid-template-columns: 1fr 30% 1fr;
+}
+
+/* Styling for troops and casualties overview */
+/* ---------------------------------------------------------------------------- */
+
+.battle-army-overview {
+    display: grid;
+    grid-template-rows: 30% 60px 1fr;
+    text-align: center;
+    color: #49505c;
+}
+
+.battle-army-overview > img {
+    display: block;
+    margin: 0 auto;
+    width: 150px;
+    height: 150px;
+    border: 2px solid #49505c;
+    border-radius: 15px;
+}
+
+.battle-army-overview > span {
+    font-size: 25px;
+    display: block;
+    padding-top: 10px;
+}
+
+.battle-troop-container {
+    width: 60%;
+    height: 70px;
+    display: grid;
+    margin: 10px auto;
+    grid-template-columns: 25% 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+.battle-troop-container > img {
+    height: 50px;
+    width: 50px;
+    display: block;
+    margin: 0 auto;
+    grid-area: 1 / 1 / 3 / 2;
+}
+
+.battle-troop-container > span {
+    display: block;
+    font-size: 20px;
+    padding-top: 15px;
+}
+
+.battle-troop-container > .battle-troop-casualties {
+    color: #7b0606;
+    font-size: 16px !important;
+    padding-top: 5px !important;
+}
+
+/* Styling for modal actions (start skirmish etc.) */
+/* ---------------------------------------------------------------------------- */
+
+.battle-action-container {
+    display: grid;
+    grid-template-rows: 250px 80px 80px 1fr;
+    text-align: center;
+    color: #49505c;
+}
+
+.battle-action-container > .battle-versus-text {
+    color: #7b0606;
+    font-size: 45px;
+}
+
+.battle-action-container > .battle-skirmish-text {
+    font-size: 25px;
+}
+
+.battle-action-container > div > button {
+    margin: 20px auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 80%;
+    height: 60px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.battle-terrain-info {
+    display: grid;
+    grid-template-rows: 25% 30% 1fr;
+    height: 70%;
+}
+
+.battle-terrain-info > span {
+    font-size: 25px;
+}
+
+.battle-terrain-info > div {
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    width: 80%;
+    margin: 0 auto;
+}
+
+.battle-terrain-info > div > img {
+    width: 40px;
+    height: 40px;
+    display: block;
+    margin: 0 auto;
+}
+
+.battle-terrain-info > div > span {
+    font-size: 20px;
+    display: block;
+    padding-top: 10px;
+}
+
+.battle-terrain-bonus {
+    display: grid;
+    grid-template-columns: 1fr 1fr !important;
+    width: 50%;
+    margin: 5px auto !important;
+    text-align: left !important;
+}
+
+.battle-terrain-bonus > img {
+    float: right !important;
+    width: 35px !important;
+    height: 35px !important;
+}
+
+.battle-terrain-bonus > span {
+    font-size: 18px !important;
+    padding: 5px !important;
+}
+
+
+@media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
+    .battle-modal {
+        margin-top: 50px;
+    }
+}
+
+@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 800px) {
+    .battle-modal {
+        margin-top: 100px;
+    }
+}

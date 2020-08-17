@@ -34,9 +34,8 @@ mapSize =
     15
 
 
-mapScale : Float
-mapScale =
-    1
+
+--seed was replaced by players name int representation
 
 
 seed : Int
@@ -71,7 +70,7 @@ settlementBorderZIndex =
 
 pathZIndex : Int
 pathZIndex =
-    5
+    11
 
 
 settlementStrokeWidth : Int

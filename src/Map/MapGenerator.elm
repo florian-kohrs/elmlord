@@ -17,11 +17,11 @@ import Svg.Attributes exposing (..)
 import Vector exposing (..)
 
 
-createMap : Map.Model.Map
-createMap =
+createMap : Int -> Map.Model.Map
+createMap seed =
     let
         perm =
-            Tuple.first (Noise.permutationTable (Random.initialSeed MapData.seed))
+            Tuple.first (Noise.permutationTable (Random.initialSeed seed))
     in
     createMap_ (mapHeight * 2) perm
 

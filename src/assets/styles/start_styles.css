@@ -1,0 +1,209 @@
+body {
+    margin: 0
+}
+
+
+.main-container {
+    height: 100vh;
+    width: 100vw;
+    background-image: url("../images/general/background_image.jpg");
+}
+
+.start-logo-container {
+    height: 200px;
+    width: 100%;
+}
+
+.start-logo-container > img {
+    width: 450px;
+    margin: 0px auto;
+    display: block;
+}
+
+.start-container {
+    width: 600px;
+    height: 400px;
+    position: absolute;
+    margin-left: 35%;
+    margin-top: 5%;
+
+    display: grid;
+    grid-template-rows: 25% 1fr 10%;
+    grid-template-columns: 1fr;
+    border-radius: 10px;
+}
+
+.start-header {
+    text-align: center;
+}
+
+.start-header-text {
+    padding-top: 30px;
+    display: block;
+    font-size: 30px;
+    font-weight: bold;
+    color: #323232;
+}
+
+.start-actions {
+    display: grid;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-columns: 1fr;
+}
+
+.start-buttons {
+    margin: 0 auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 275px;
+    height: 60px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.start-buttons > span {
+    font-size: 18px;
+}
+
+.start-buttons:hover {
+    background: #953737;
+    -webkit-box-shadow: 10px 10px 5px -2px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 10px 10px 5px -2px rgba(0, 0, 0, 0.2);
+    box-shadow: 10px 10px 5px -2px rgba(0, 0, 0, 0.2);
+}
+
+.back-btn {
+    margin: 25px 25px;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 120px;
+    height: 60px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* -------------------------------------------------- Campaign Style -------------------------------------------------- */
+
+.campaign-container {
+    width: 30%;
+    height: 450px;
+    margin: 75px auto;
+}
+
+
+.campaign-actions {
+    height: 220px;
+    margin-top: 40px;
+    border-radius: 10px;
+    border: 4px solid #c7994c;
+    background: #DDC193;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 20% 1fr;
+}
+
+.campaign-name-container {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    text-align: center;
+}
+
+.campaign-name {
+    display: block;
+    padding-top: 30px;
+    font-size: 22px;
+    color: #323232;
+}
+
+.error-msg {
+    color: #ed2939;
+    font-size: 17px;
+}
+
+.campaign-input {
+    width: 90%;
+    height: 30px;
+    margin: 20px auto;
+}
+
+.campaign-select-container {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    text-align: center;
+}
+
+.campaign-select {
+    width: 60%;
+    height: 30px;
+    margin: 25px auto;
+}
+
+.campaign-buttons-container {}
+
+.start-campaign-button {
+    width: 150px !important;
+    margin: 15px auto;
+}
+
+
+
+
+
+
+
+
+
+/* -------------------------------------------------- Mediavel Style -------------------------------------------------- */
+
+h1 {
+    font-family: MedievalSharp;
+    font-size: 24px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 700;
+    line-height: 26.4px;
+}
+h3 {
+    font-family: MedievalSharp;
+    font-size: 14px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 700;
+    line-height: 15.4px;
+}
+p,
+span {
+    font-family: MedievalSharp;
+    font-size: 14px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    line-height: 20px;
+}
+blockquote {
+    font-family: MedievalSharp;
+    font-size: 21px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    line-height: 30px;
+}
+pre {
+    font-family: MedievalSharp;
+    font-size: 13px;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 400;
+    line-height: 18.5714px;
+}

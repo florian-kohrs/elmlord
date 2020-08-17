@@ -11,6 +11,11 @@ import Svg
 import Vector
 
 
+hasActionOnPoint : Vector.Point -> MapTileMsg -> InteractableMapSVG -> Bool
+hasActionOnPoint p msg dict =
+    List.member msg (actionsOnPoint p dict)
+
+
 isZAllowedOn : Int -> Int -> Bool
 isZAllowedOn z main =
     ((main /= MapData.lordZIndex && main /= MapData.settlementZIndex) || z /= MapData.imageTileZIndex)
@@ -27,12 +32,12 @@ isSvgAllowedIn svg svgs =
     isZAllowedIn (getZIndex svg.svg) (List.map (\s -> getZIndex s.svg) svgs)
 
 
-actionsOnPoint : Vector.Point -> MapClickAction -> List MapTileMsg
+actionsOnPoint : Vector.Point -> InteractableMapSVG -> List MapTileMsg
 actionsOnPoint p dict =
     MaybeExt.foldMaybe (\l -> List.concat (List.map .action l)) [] (Dict.get (MapData.hashMapPoint p) dict)
 
 
-addToMap : Int -> InteractableSvg -> MapClickAction -> MapClickAction
+addToMap : Int -> InteractableSvg -> InteractableMapSVG -> InteractableMapSVG
 addToMap k v =
     Dict.update
         k
@@ -46,12 +51,12 @@ addToMap k v =
         )
 
 
-sortDict : MapClickAction -> MapClickAction
+sortDict : InteractableMapSVG -> InteractableMapSVG
 sortDict =
     Dict.map (\_ -> List.sortBy (\svg -> getZIndex svg.svg))
 
 
-allSvgs : MapClickAction -> List (Svg.Svg Msg.Msg)
+allSvgs : InteractableMapSVG -> List (Svg.Svg Msg.Msg)
 allSvgs a =
     List.concat (List.map (List.map (\svg -> getSvg svg.svg)) (Dict.values a))
 

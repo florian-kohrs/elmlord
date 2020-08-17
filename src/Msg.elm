@@ -18,12 +18,29 @@ type Msg
     = EndRound
     | EndGame Bool
     | CloseModal
+    | MenueAction MenueMsg
     | BattleAction BattleMsg
     | SettlementAction SettlementMsg
     | MapTileAction MapAction.SubModel.MapTileMsg
+    | TroopAction TroopOverviewMsg
     | EventAction EventMsg
     | Click Vector.Point
+    | AiRoundTick
 
+
+type MenueMsg
+    = StartGame String
+    | ChangeName String
+    | ChangeVolume Int
+    | ShowMenue
+    | SetCampaingn
+    | ShowDocumentation
+    | ShowCredits
+
+
+type TroopOverviewMsg
+    = TroopActionMsg
+    | TroopArmyMsg Troops.TroopType
 
 type SettlementMsg
     = UIMsg SettlementUIMsg

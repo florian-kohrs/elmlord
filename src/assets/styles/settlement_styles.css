@@ -2,7 +2,7 @@
 /* ---------------------------------------------------------------------------- */
 
 .settlement-modal {
-    width: 700px;
+    width: 725px;
     height: 800px;
     background: #b8bbc0;
     border-radius: 20px;
@@ -10,7 +10,7 @@
     margin-top: 100px;
     margin-left: calc(50% - 350px);
     display: grid;
-    grid-template-columns: 15px 1fr 1fr 15px;
+    grid-template-columns: 15px 42.5% 1fr 15px;
     grid-template-rows: 20px 50px 110px 1fr 50px;
     grid-row-gap: 20px;
     grid-column-gap: 10px;
@@ -40,10 +40,14 @@
     margin-left: 90% !important;
 }
 
+.troop-modal-close-btn {
+    margin-left: 61% !important;
+}
+
 .settlement-modal-close-btn > span {
     font-size: 25px;
     display: block;
-    padding-top: 12px;
+    padding-top: 15px;
     color: #49505c;
 }
 
@@ -178,6 +182,7 @@
 .settlement-illustration-container > img {
     width: 100%;
     height: 100%;
+    border-radius: 25px;
 }
 
 /* Styling for troop recruiting */
@@ -191,6 +196,11 @@
     text-align: center;
 }
 
+.troop-recruit-button-text {
+    padding-top: 0px;
+    display: block;
+}
+
 .settlement-troop-recruiting > span {
     color: #49505c;
     font-size: 22px;
@@ -200,7 +210,7 @@
 
 .troop-recruiting-container {
     display: grid;
-    grid-template-columns: 60px 50px 50px 100px 1fr;
+    grid-template-columns: 60px 50px 75px 100px 1fr;
     border: 1px solid #49505c;
     text-align: center;
     border-radius: 10px;

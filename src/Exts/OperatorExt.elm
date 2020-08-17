@@ -1,6 +1,11 @@
 module OperatorExt exposing (..)
 
 
+flip : (a -> b -> c) -> b -> a -> c
+flip f b a =
+    f a b
+
+
 ternary : Bool -> a -> a -> a
 ternary bool op1 op2 =
     if bool then
@@ -8,6 +13,7 @@ ternary bool op1 op2 =
 
     else
         op2
+
 
 
 -- TODO: check if this is needed

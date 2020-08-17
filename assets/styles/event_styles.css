@@ -1,0 +1,103 @@
+/* Styling for the event logs */
+/* ---------------------------------------------------------------------------- */
+
+.event-logs {
+    background: #deb887;
+    border-radius: 20px;
+    height: 90%;
+    max-height: 700px;
+    margin: 5px 0;
+
+    display: grid;
+    grid-template-rows: 50px 70px 1fr;
+}
+
+.event-logs > div > button {
+    margin: 15px auto;
+    display: block;
+    background: #7b0606;
+    color: white;
+    width: 90%;
+    height: 40px;
+    border-radius: 5px;
+    border: 4px solid #c7994c;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.event-logs-header {
+    color: #49505c;
+    font-size: 25px;
+    text-align: center;
+}
+
+.event-logs-header > span {
+    padding-top: 20px;
+    display: block;
+}
+
+.event-logs-body {
+    overflow-y: scroll;
+}
+
+.event-logs-component {
+    display: grid;
+    grid-template-columns: 1fr 20px;
+    grid-template-rows: 35% 1fr;
+    height: 80px;
+    width: 95%;
+    border: 15px;
+    margin: 10px auto;
+    border-radius: 5px;
+    background: white;
+    text-align: center;
+    cursor: pointer;
+}
+
+.important-log {
+    background: #7b3737 !important;
+}
+
+.minor-log {
+    background: #858585;
+}
+
+.event-logs-component:hover {
+    border: 3px solid #187bcd;
+}
+
+.event-logs-component > div > span {
+    display: block;
+    padding-top: 9px;
+    font-size: 15px;
+    color: white;
+}
+
+.event-logs-close {
+    font-size: 20px;
+    color: white;
+}
+
+
+@media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
+    .event-logs {
+        height: 70%;
+        max-height: 650px;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 13px !important;
+    }
+}
+
+@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 800px) {
+    .event-logs {
+        height: 75%;
+        max-height: 650px;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 14px !important;
+    }
+
+}

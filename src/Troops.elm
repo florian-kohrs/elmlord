@@ -1,6 +1,7 @@
 module Troops exposing (..)
 
 import Dict
+import MaybeExt
 import OperatorExt
 
 
@@ -23,13 +24,13 @@ mergeTroops a1 a2 =
 troopTypeToInt : TroopType -> Int
 troopTypeToInt t =
     case t of
-        Archer ->
+        Sword ->
             0
 
         Spear ->
             1
 
-        Sword ->
+        Archer ->
             2
 
         Knight ->
@@ -40,13 +41,13 @@ intToTroopType : Int -> TroopType
 intToTroopType i =
     case i of
         0 ->
-            Archer
+            Sword
 
         1 ->
             Spear
 
         2 ->
-            Sword
+            Archer
 
         3 ->
             Knight
@@ -57,7 +58,12 @@ intToTroopType i =
 
 troopTypeList : List TroopType
 troopTypeList =
-    [ Sword, Spear, Archer, Knight ]
+    [ Knight, Archer, Spear, Sword ]
+
+
+troopKeyList : List Int
+troopKeyList =
+    List.map troopTypeToInt troopTypeList
 
 
 updateTroops : Army -> TroopType -> Int -> Army
@@ -65,21 +71,65 @@ updateTroops army t i =
     Dict.update (troopTypeToInt t) (\v -> Just (Maybe.withDefault 0 v + i)) army
 
 
+updateTroopsFrom : Army -> Int -> Int -> Army
+updateTroopsFrom army i =
+    updateTroops army <| intToTroopType i
+
+
 emptyTroops : Army
 emptyTroops =
     List.foldl (\t dict -> Dict.insert (troopTypeToInt t) 0 dict) Dict.empty troopTypeList
 
 
-startTroops : Army
-startTroops =
+lordStartTroops : Army
+lordStartTroops =
     List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
         Dict.empty
-        [ ( Archer, 10 ), ( Spear, 45 ), ( Sword, 20 ), ( Knight, 5 ) ]
+        [ ( Archer, 10 ), ( Spear, 25 ), ( Sword, 20 ), ( Knight, 5 ) ]
+
+
+capitalStartTroops : Army
+capitalStartTroops =
+    List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
+        Dict.empty
+        [ ( Archer, 30 ), ( Spear, 5 ), ( Sword, 20 ), ( Knight, 5 ) ]
+
+
+villageStartTroops : Army
+villageStartTroops =
+    List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
+        Dict.empty
+        [ ( Archer, 10 ), ( Spear, 0 ), ( Sword, 10 ), ( Knight, 0 ) ]
+
+
+substractArmy : Army -> Army -> Army
+substractArmy a1 a2 =
+    Dict.foldl (\k v army -> updateTroopsFrom army k -v) a1 a2
 
 
 sumTroops : Army -> Int
 sumTroops a =
     List.foldl (+) 0 (Dict.values a)
+
+
+getTroopTypeInArmyStats : Army -> TroopType -> Int
+getTroopTypeInArmyStats a t =
+    MaybeExt.foldMaybe (sumTroopStats t) 0 <| Dict.get (troopTypeToInt t) a
+
+
+sumArmyStats : Army -> Int
+sumArmyStats =
+    Dict.foldl (\k v r -> sumTroopStats (intToTroopType k) v + r) 0
+
+
+sumTroopStats : TroopType -> Int -> Int
+sumTroopStats t amount =
+    round (troopDamage t + troopDefense t) * amount
+
+
+invertArmy : Army -> Army
+invertArmy =
+    Dict.map (\k v -> -v)
 
 
 
@@ -88,36 +138,59 @@ sumTroops a =
 ----------------------------------------------------------
 
 
-troopCost : TroopType -> Float
+averageTroopStrengthCostRatio : Float
+averageTroopStrengthCostRatio =
+    Tuple.first <|
+        List.foldl
+            (\t ( r, c ) ->
+                ( r
+                    + (toFloat (troopStrengthDeffSum t)
+                        / toFloat (troopCost t)
+                        - r
+                      )
+                    / c
+                , c + 1
+                )
+            )
+            ( 0, 1 )
+            troopTypeList
+
+
+troopStrengthDeffSum : TroopType -> Int
+troopStrengthDeffSum t =
+    round (troopDamage t + troopDefense t)
+
+
+troopCost : TroopType -> Int
 troopCost t =
     case t of
         Archer ->
-            50
+            35
 
         Spear ->
-            45
+            10
 
         Sword ->
-            60
+            25
 
         Knight ->
-            120
+            50
 
 
 troopWage : TroopType -> Float
 troopWage t =
     case t of
         Archer ->
-            0.4
+            0.1
 
         Spear ->
-            0.2
+            0.3
 
         Sword ->
-            0.5
+            0.15
 
         Knight ->
-            1.0
+            0.5
 
 
 troopDamage : TroopType -> Float
@@ -150,22 +223,6 @@ troopDefense t =
 
         Knight ->
             100
-
-
-troopPriority : TroopType -> Float
-troopPriority t =
-    case t of
-        Archer ->
-            0.15
-
-        Spear ->
-            0.3
-
-        Sword ->
-            0.25
-
-        Knight ->
-            0.3
 
 
 troopName : TroopType -> String

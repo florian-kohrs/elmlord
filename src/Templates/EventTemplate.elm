@@ -11,7 +11,7 @@ import OperatorExt
 {-| Returns the layout for the map actions, in dependence to the chosen point (in the model)
 
     @param {Maybe Point}: Takes the point that is currently chosen point (at the start no point is chosen, therefore Maybe)
-    @param {MapDrawer.MapClickAction}: Takes a dict with all possible actions
+    @param {MapDrawer.InteractableMapSVG}: Takes a dict with all possible actions
 
 -}
 generateEventOverview : Event.EventState -> Html Msg.Msg

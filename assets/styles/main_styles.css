@@ -1,0 +1,113 @@
+@import url("https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap");
+
+/* General styles */
+/* ---------------------------------------------------------------------------- */
+
+span {
+    font-family: "MedievalSharp", cursive;
+}
+
+audio {
+    visibility: hidden;
+}
+
+button:focus { outline: none !important; }
+
+.page-container {
+    height: 100vh;
+    width: 100vw;
+    overflow-y: hidden;
+    background-image: url("../images/general/background_image.jpg");
+}
+
+.modal-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+}
+
+/* Map Styling */
+/* ---------------------------------------------------------------------------- */
+
+.svg {
+    width: 1000px;
+    height: 600px;
+}
+
+.page-map {
+    margin: 0 10%;
+    width: 75%;
+    display: grid;
+    grid-template-columns: 22.5% 1fr 22.5%;
+}
+
+.box-shadow {
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 4px 4px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+/* ---------------------------------------------------------------------------- */
+
+@media only screen and (min-height: 800px) and (min-width: 1280px) and (max-width: 1400px) {
+    .page-map {
+        width: 80%;
+    }
+
+    .event-logs {
+        height: 70%;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 13px !important;
+    }
+
+    .settlement-modal,
+    .lord-modal {
+        height: 750px;
+        margin-top: 25px;
+    }
+
+    .lord-modal {
+        margin-top: 12.5px;
+    }
+
+    .battle-modal {
+        margin-top: 50px;
+    }
+}
+
+@media only screen and (min-width: 1400px) and (max-width: 1550px) and (min-height: 800px) {
+    .page-map {
+        width: 85%;
+    }
+
+    .event-logs {
+        height: 75%;
+    }
+
+    .event-logs-component > div > span {
+        font-size: 14px !important;
+    }
+
+    .settlement-modal,
+    .lord-modal {
+        height: 800px;
+        margin-top: 50px;
+    }
+
+    .battle-modal {
+        margin-top: 100px;
+    }
+}
+
+@media only screen and (min-height: 950px) and (min-width: 1551px) {
+    .page-map {
+        width: 70%;
+    }
+}

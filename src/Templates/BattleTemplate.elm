@@ -3,6 +3,7 @@ module Templates.BattleTemplate exposing (generateBattleTemplate)
 import Battle
 import Battle.Model
 import Dict
+import DictExt
 import Entities
 import Entities.Model
 import Html exposing (Html, button, div, img, span, text)
@@ -47,7 +48,7 @@ determineBattleMap bS t =
             Just settle ->
                 [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
                 , generateActionOverview bS t
-                , generateArmyOverview settle.entity (Entities.getSettlementImage settle) bS.defenderCasualties
+                , generateArmyOverview (Tuple.second (Battle.siegeBattleSetDefender bS settle)).entity (Entities.getSettlementImage settle) bS.defenderCasualties
                 ]
 
     else
@@ -70,12 +71,14 @@ generateArmyOverview we image casu =
         [ img [ src image ] []
         , span [] [ Html.text we.name ]
         , div []
-            (Dict.merge
+            (DictExt.mergeKeys
                 (\k v1 r -> generateTroopOverview (Troops.intToTroopType k) v1 0 :: r)
                 (\k v1 v2 r -> generateTroopOverview (Troops.intToTroopType k) v1 v2 :: r)
                 (\k v2 r -> generateTroopOverview (Troops.intToTroopType k) 0 v2 :: r)
+                (\k r -> generateTroopOverview (Troops.intToTroopType k) 0 0 :: r)
                 we.army
                 casu
+                Troops.troopKeyList
                 []
             )
         ]
@@ -167,7 +170,7 @@ generateStatusText : Battle.Model.BattleStats -> Html Msg.Msg
 generateStatusText bS =
     if bS.finished then
         span [ Html.Attributes.class (OperatorExt.ternary (Troops.sumTroops bS.attacker.entity.army == 0) "negative-income battle-skirmish-text" "positive-income battle-skirmish-text") ]
-            [ Html.text (OperatorExt.ternary (Troops.sumTroops bS.attacker.entity.army == 0) "My lord, we have lost, we will return to our castle!" "My lord, we were victorious, we repeled them!")
+            [ Html.text (OperatorExt.ternary (Troops.sumTroops bS.attacker.entity.army == 0) "My lord, we have lost, we will return to our castle!" "My lord, we were victorious, we destroyed them!")
             ]
 
     else

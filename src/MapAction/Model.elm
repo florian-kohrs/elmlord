@@ -14,5 +14,5 @@ type SvgItem
     = SvgItem Int (Svg.Svg Msg.Msg)
 
 
-type alias MapClickAction =
+type alias InteractableMapSVG =
     Dict.Dict Int (List InteractableSvg)

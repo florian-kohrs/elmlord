@@ -1,18 +1,22 @@
-module Battle exposing (evaluateBattleResult, fleeBattle, siegeBattleAftermath, skipBattle)
+module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, getBattleSiegeStats, getLordBattleStats, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
+import Balancing
 import Battle.Model exposing (..)
 import Dict
+import DictExt
 import Entities
-import Entities.Model
+import Entities.Lords
+import Entities.Model exposing (Gold)
 import Map
 import Map.Model
+import MaybeExt
 import OperatorExt
 import Troops
 
 
 battleFleeTroopLoss : Float
 battleFleeTroopLoss =
-    0.4
+    0.3
 
 
 {-| Resolves / Calculate a battle skirmish outcome between (lord vs lord or lord vs siege).
@@ -62,7 +66,7 @@ evaluateSiegeBattle bS settle ter =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
 
         defenderCasualties =
-            calculateEntityCasualties bS.defender.entity.army newSettle.entity.army
+            calculateEntityCasualties transferedSettle.entity.army newSettle.entity.army
     in
     constructBattleResult bS newAttacker transferedDefender (Just newSettle) attackerCasualties defenderCasualties
 
@@ -112,8 +116,8 @@ constructBattleResult bS attacker defender settle aCasu dCasu =
         | round = bS.round + 1
         , attackerCasualties = aCasu
         , defenderCasualties = dCasu
-        , attacker = lordBattleAftermath attacker
-        , defender = lordBattleAftermath defender
+        , attacker = lordBattleAftermath attacker bS.settlement
+        , defender = lordBattleAftermath defender bS.settlement
         , settlement = settle
         , finished = Troops.sumTroops attacker.entity.army == 0 || checkDefenderArmy defender settle
     }
@@ -131,21 +135,35 @@ capital position
     @param {Lord}: Takes the attacker-/defender lord
 
 -}
-lordBattleAftermath : Entities.Model.Lord -> Entities.Model.Lord
-lordBattleAftermath lord =
-    if Troops.sumTroops lord.entity.army == 0 then
-        case Entities.getLordCapital lord.land of
+lordBattleAftermath : Entities.Model.Lord -> Maybe Entities.Model.Settlement -> Entities.Model.Lord
+lordBattleAftermath l settlement =
+    if
+        (Troops.sumTroops l.entity.army == 0)
+            && MaybeExt.foldMaybe
+                (\s ->
+                    not
+                        (Entities.isLandlord s l
+                            && (Entities.isLordOnSettlement l s
+                                    || Troops.sumTroops s.entity.army
+                                    > 0
+                               )
+                        )
+                )
+                True
+                settlement
+    then
+        case Entities.getLordCapital l.land of
             Nothing ->
-                lord
+                l
 
             Just settle ->
-                { lord | entity = Entities.setPosition lord.entity settle.entity.position }
+                { l | entity = Entities.setPosition l.entity settle.entity.position }
 
     else
-        lord
+        l
 
 
-siegeBattleAftermath : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
+siegeBattleAftermath : BattleStats -> Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord )
 siegeBattleAftermath bS s =
     let
         attacker =
@@ -156,13 +174,13 @@ siegeBattleAftermath bS s =
     in
     if Troops.sumTroops s.entity.army <= 0 then
         if s.settlementType == Entities.Model.Castle then
-            handleSettlementTransfer attacker defender (\y -> y.settlementType /= Entities.Model.Castle) []
+            handleSettlementTransfer (getGoldBonus attacker) defender (\y -> y.settlementType /= Entities.Model.Castle) []
 
         else
             handleSettlementTransfer attacker defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
 
     else
-        ( attacker, defender, False )
+        ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
 
 
 fleeBattle : BattleStats -> Entities.Model.Lord
@@ -170,8 +188,56 @@ fleeBattle bS =
     Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
 
 
-skipBattle : BattleStats -> Map.Model.Terrain -> BattleStats
-skipBattle bS ter =
+applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
+applyBattleAftermath ls bs =
+    case bs.settlement of
+        Nothing ->
+            Entities.Lords.updateLord (lordBattleAftermath bs.defender Nothing) <| Entities.Lords.updateLord (lordBattleAftermath bs.attacker Nothing) ls
+
+        Just s ->
+            let
+                ( newAttacker, newDefender ) =
+                    siegeBattleAftermath bs s
+            in
+            Entities.Lords.updateLord newDefender <| Entities.Lords.updateLord newAttacker ls
+
+
+getBattleSiegeStats : Entities.Model.Lord -> Entities.Lords.LordList -> Entities.Model.Settlement -> Maybe BattleStats
+getBattleSiegeStats l ls s =
+    Maybe.andThen
+        (\defender ->
+            Just
+                { attacker = l
+                , defender = defender
+                , round = 1
+                , attackerCasualties = Troops.emptyTroops
+                , defenderCasualties = Troops.emptyTroops
+                , settlement = Just s
+                , siege = True
+                , finished = False
+                }
+        )
+        (Entities.findLordWithSettlement
+            s
+            (Entities.Lords.lordListToList ls)
+        )
+
+
+getLordBattleStats : Entities.Model.Lord -> Entities.Model.Lord -> BattleStats
+getLordBattleStats attacker defender =
+    { attacker = attacker
+    , defender = defender
+    , round = 1
+    , attackerCasualties = Troops.emptyTroops
+    , defenderCasualties = Troops.emptyTroops
+    , settlement = Nothing
+    , siege = False
+    , finished = False
+    }
+
+
+skipBattle : Map.Model.Terrain -> BattleStats -> BattleStats
+skipBattle ter bS =
     let
         newBattleStats =
             evaluateBattleResult bS ter
@@ -180,7 +246,12 @@ skipBattle bS ter =
         newBattleStats
 
     else
-        skipBattle newBattleStats ter
+        skipBattle ter newBattleStats
+
+
+getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord
+getGoldBonus lord =
+    { lord | gold = lord.gold + Balancing.addGoldCastle }
 
 
 
@@ -207,12 +278,7 @@ checkDefenderArmy defender settle =
             Troops.sumTroops s.entity.army == 0
 
 
-handleSettlementTransfer :
-    Entities.Model.Lord
-    -> Entities.Model.Lord
-    -> (Entities.Model.Settlement -> Bool)
-    -> List Entities.Model.Settlement
-    -> ( Entities.Model.Lord, Entities.Model.Lord, Bool )
+handleSettlementTransfer : Entities.Model.Lord -> Entities.Model.Lord -> (Entities.Model.Settlement -> Bool) -> List Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord )
 handleSettlementTransfer attacker defender aFunc ndl =
     ( { attacker
         | land =
@@ -221,8 +287,21 @@ handleSettlementTransfer attacker defender aFunc ndl =
                 ++ attacker.land
       }
     , { defender | land = ndl }
-    , List.length ndl == 0
     )
+
+
+updateSettlementBattleField : Entities.Model.Settlement -> List Entities.Model.Settlement -> List Entities.Model.Settlement
+updateSettlementBattleField s l =
+    case l of
+        [] ->
+            []
+
+        x :: xs ->
+            if x.entity.name == s.entity.name then
+                s :: updateSettlementBattleField s xs
+
+            else
+                x :: updateSettlementBattleField s xs
 
 
 {-| Transfers the troops of a lord to the besieged settlement (only if the player stands on this settlement)
@@ -260,7 +339,7 @@ evaluateBattle w army ter siegeBonus =
 calculateEntityCasualties : Troops.Army -> Troops.Army -> Troops.Army
 calculateEntityCasualties armyBefore armyAfter =
     Dict.merge
-        (\k v r -> Dict.insert k 0 r)
+        (\k v r -> Dict.insert k -v r)
         (\k v1 v2 r -> Dict.insert k (v2 - v1) r)
         (\k v2 r -> Dict.insert k 0 r)
         armyBefore

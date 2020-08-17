@@ -3,7 +3,11 @@ module Pathfinder exposing (..)
 import Dict exposing (Dict)
 import ListExt
 import Map
+import Map.Drawer
 import Map.Model
+import MapAction
+import MapAction.Model
+import MapAction.SubModel
 import MapData
 import MaybeExt
 import Pathfinder.Model exposing (..)
@@ -75,6 +79,22 @@ getNav map =
             in
             xDiff + yDiff
     }
+
+
+getPathTo : Vector.Point -> Vector.Point -> Map.Model.Map -> Maybe Path
+getPathTo from to map =
+    if canMoveToPoint (Map.Drawer.drawMap map) to then
+        getPath
+            from
+            (PathInfo (getNav map) to)
+
+    else
+        Nothing
+
+
+canMoveToPoint : MapAction.Model.InteractableMapSVG -> Vector.Point -> Bool
+canMoveToPoint dict p =
+    MapAction.hasActionOnPoint p (MapAction.SubModel.MoveTo p) dict
 
 
 
