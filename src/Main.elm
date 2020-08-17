@@ -65,7 +65,7 @@ type alias Model =
     , event : Event.EventState
     , playersTurn : Int
     , playerInput : String
-    , volumne : Int
+    , volume : Int
     }
 
 
@@ -408,7 +408,7 @@ setGameView model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , HeaderTemplate.generateHeaderTemplate model.volumne (Entities.Lords.getPlayer model.lords) model.date
+        , HeaderTemplate.generateHeaderTemplate model.volume (Entities.Lords.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             (List.map addStylesheet stylessheets
                 ++ [ buildMapActionTemplate model allClickActions
@@ -920,8 +920,8 @@ updateMenue msg model =
         Msg.ChangeName str ->
             emptyCmd { model | playerInput = str }
 
-        Msg.ChangeVolumne vol ->
-            ( { model | volumne = vol }, Ports.updateVolumne vol )
+        Msg.ChangeVolume vol ->
+            ( { model | volume = vol }, Ports.updateVolume vol )
 
         Msg.ShowMenue ->
             emptyCmd { model | gameState = GameSetup (MainMenue Menue) }

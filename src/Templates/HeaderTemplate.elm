@@ -137,7 +137,7 @@ headerSettingsTemplate vol =
         , div [ Html.Attributes.class "tooltiptext sound-tooltip" ]
             [ input [ Html.Attributes.type_ "range", Html.Attributes.min "0", Html.Attributes.max "100", Html.Attributes.value (String.fromInt vol), Html.Events.onInput resolveOnChangeMsg ] []
             , div [ Html.Attributes.style "text-align" "center" ]
-                [ span [] [ Html.text ("Current volumne: " ++ String.fromInt vol ++ "%") ] ]
+                [ span [] [ Html.text ("Current volume: " ++ String.fromInt vol ++ "%") ] ]
             ]
         ]
     , div [ Html.Attributes.class "page-settings-grid" ]
@@ -191,4 +191,4 @@ revenueToSpan ( name, value ) =
 
 resolveOnChangeMsg : String -> Msg.Msg
 resolveOnChangeMsg str =
-    Msg.MenueAction (Msg.ChangeVolumne (Maybe.withDefault 0 (String.toInt str)))
+    Msg.MenueAction (Msg.ChangeVolume (Maybe.withDefault 0 (String.toInt str)))

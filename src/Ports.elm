@@ -1,6 +1,6 @@
-port module Ports exposing (startMusic, playSound, openLink, updateVolumne, transitSoundToMusic)
+port module Ports exposing (startMusic, playSound, openLink, updateVolume, transitSoundToMusic)
 
-port updateVolumne : Int -> Cmd msg
+port updateVolume : Int -> Cmd msg
 
 port startMusic : String -> Cmd msg
 
