@@ -35,7 +35,7 @@ generateLordTemplate l =
             , div [ Html.Attributes.class "lord-stats" ]
                 [ div [ Html.Attributes.class "lord-data box-shadow" ]
                     [ img [ src "./assets/images/general/ducats_icon.png" ] []
-                    , span [] [ Html.text ("Gold: " ++ String.fromFloat l.gold) ]
+                    , span [] [ Html.text ("Gold: " ++ Helper.roundDigits l.gold) ]
                     ]
                 , div [ Html.Attributes.class "lord-data box-shadow" ]
                     [ img [ src "./assets/images/map/Castle.png" ] []

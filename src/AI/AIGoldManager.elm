@@ -18,7 +18,7 @@ filterActionIfLordIsBroke : BasicAction -> AI -> Maybe BasicAction
 filterActionIfLordIsBroke a ai =
     case a of
         HireTroops army s ->
-            if ai.lord.gold > Entities.sumArmyBuyCost s army then
+            if ai.lord.gold > Entities.sumArmyBuyCost army then
                 Just <| HireTroops army s
 
             else
