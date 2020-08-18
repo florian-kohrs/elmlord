@@ -887,7 +887,7 @@ updateBattle msg model =
             emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle (Map.getTerrainForPoint bS.attacker.entity.position model.map) bS)) }
 
         Msg.FleeBattle bS ->
-            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Battle.fleeBattle bS) }, getBattleAftermathSound bS )
+            ( { model | gameState = GameSetup GameMenue, lords = Battle.fleeBattle model.lords bS }, getBattleAftermathSound bS )
 
         Msg.EndBattle bS ->
             ( { model | gameState = GameSetup GameMenue, lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )

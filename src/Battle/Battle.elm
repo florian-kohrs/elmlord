@@ -183,16 +183,40 @@ siegeBattleAftermath bS s =
         ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
 
 
-fleeBattle : BattleStats -> Entities.Model.Lord
+{- fleeBattle : BattleStats -> Entities.Model.Lord
 fleeBattle bS =
-    Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
+    Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army) -}
+
+
+fleeBattle : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
+fleeBattle ls bS =
+    let
+        tempPlayer =
+            bS.attacker
+
+        tempEnemy =
+            bS.defender
+
+        newPlayer =
+            Entities.updatePlayerArmy
+                { tempPlayer | gold = tempPlayer.gold / 2 }
+                (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
+
+        newEnemy =
+            { tempEnemy | gold = tempEnemy.gold + tempPlayer.gold / 2 }
+    in
+    Entities.Lords.updateLord newEnemy <| Entities.Lords.updateLord newPlayer ls
 
 
 applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
 applyBattleAftermath ls bs =
+    let
+        ( tAL, tDL ) =
+            updatedBattleLordFunds bs.attacker bs.defender
+    in
     case bs.settlement of
         Nothing ->
-            Entities.Lords.updateLord (lordBattleAftermath bs.defender Nothing) <| Entities.Lords.updateLord (lordBattleAftermath bs.attacker Nothing) ls
+            Entities.Lords.updateLord (lordBattleAftermath tDL Nothing) <| Entities.Lords.updateLord (lordBattleAftermath tAL Nothing) ls
 
         Just s ->
             let
@@ -252,6 +276,23 @@ skipBattle ter bS =
 getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord
 getGoldBonus lord =
     { lord | gold = lord.gold + Balancing.addGoldCastle }
+
+
+updatedBattleLordFunds : Entities.Model.Lord -> Entities.Model.Lord -> ( Entities.Model.Lord, Entities.Model.Lord )
+updatedBattleLordFunds fl sl =
+    let
+        flDiff =
+            transferLordFunds fl sl
+
+        slDiff =
+            transferLordFunds sl fl
+    in
+    ( { fl | gold = fl.gold + flDiff }, { sl | gold = sl.gold + slDiff } )
+
+
+transferLordFunds : Entities.Model.Lord -> Entities.Model.Lord -> Float
+transferLordFunds fl sl =
+    OperatorExt.ternary (Troops.sumTroops sl.entity.army == 0) (sl.gold / 2) 0 - OperatorExt.ternary (Troops.sumTroops fl.entity.army == 0) (fl.gold / 2) 0
 
 
 

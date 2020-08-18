@@ -139,7 +139,7 @@ generateTerrainBonuses : Troops.TroopType -> Html Msg.Msg
 generateTerrainBonuses t =
     div [ Html.Attributes.class "battle-terrain-bonus" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
-        , span [] [ Html.text ("+" ++ Helper.roundDigits (Troops.battlefieldBonus t * 100 - 100) ++ "%") ]
+        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Troops.battlefieldBonus t * 100 - 100))) ++ "%") ]
         ]
 
 
