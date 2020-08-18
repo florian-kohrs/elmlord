@@ -427,7 +427,7 @@
 
 .settlement-building-component {
     display: grid;
-    grid-template-columns: 60px 1fr 30px 50px;
+    grid-template-columns: 80px 1fr 30px 50px;
     grid-column-gap: 10px;
     border: 1px solid #49505c;
     text-align: center;
@@ -455,6 +455,13 @@
     border: 4px solid #c7994c;
     cursor: pointer;
     font-size: 25px;
+}
+
+.building-icon-container > img {
+    height: 60px;
+    width: 60px;
+    margin: 5px auto;
+    display: block;
 }
 
 .info-icon {

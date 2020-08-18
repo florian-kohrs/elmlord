@@ -234,7 +234,9 @@ generateRecruitTroopContainer t aAmount sAmount s l =
 displayBuildingComponents : ( Building.Building, Entities.Model.Lord, Entities.Model.Settlement ) -> Html Msg.Msg
 displayBuildingComponents ( b, l, s ) =
     div [ Html.Attributes.class "settlement-building-component" ]
-        [ div [] []
+        [ div [Html.Attributes.class "building-icon-container"] [
+            img [ src ("./assets/images/buildings/" ++  b.name ++ ".png") ] []
+        ]
         , div [] [ span [] [ Html.text b.name ] ]
         , div [ Html.Attributes.class "tooltip" ]
             [ img [ Html.Attributes.class "info-icon", src "./assets/images/general/info.png" ] []
