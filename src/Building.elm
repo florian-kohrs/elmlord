@@ -45,7 +45,7 @@ buildingToBonus b =
             2
 
         Barracks ->
-            4
+            5
 
         Fortress ->
             10
@@ -55,13 +55,13 @@ buildingToBonusInfo : BuildingType -> Int -> String
 buildingToBonusInfo b i =
     case b of
         Quarters ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " recruit space in all Settlements"
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " recruit space in all settlements"
 
         Barracks ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " Recruits per turn in Captial"
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% attacker-bonus in offensive campaigns"
 
         Fortress ->
-            "-" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% Troopcost"
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% defender-bonus in the capital "
 
 
 upgradeCostBase : BuildingType -> Float
