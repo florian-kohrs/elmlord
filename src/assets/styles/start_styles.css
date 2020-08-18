@@ -24,9 +24,7 @@ body {
 .start-container {
     width: 600px;
     height: 400px;
-    position: absolute;
-    margin-left: 35%;
-    margin-top: 5%;
+    margin: 5% auto;
 
     display: grid;
     grid-template-rows: 25% 1fr 10%;

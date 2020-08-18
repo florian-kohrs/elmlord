@@ -927,7 +927,7 @@ updateMenue msg model =
             emptyCmd { model | gameState = GameSetup (MainMenue Menue) }
 
         Msg.ShowDocumentation ->
-            ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord" )
+            ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord/wiki" )
 
         Msg.SetCampaingn ->
             emptyCmd { model | gameState = GameSetup (MainMenue Campaign) }
