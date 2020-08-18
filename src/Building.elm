@@ -58,7 +58,7 @@ buildingToBonusInfo b i =
             "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " recruit space in all settlements"
 
         Barracks ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% attacker-bonus in offensive campaigns"
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% attacker-bonus in offensive battles"
 
         Fortress ->
             "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% defender-bonus in the capital "

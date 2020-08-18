@@ -57,10 +57,10 @@ evaluateSiegeBattle bS settle ter =
             bS.attacker
 
         newAttacker =
-            { tempAttacker | entity = evaluateBattle tempAttacker.entity transferedSettle.entity.army ter (Entities.getSettlementBonus settle bS.defender.land) }
+            { tempAttacker | entity = evaluateBattle tempAttacker.entity transferedSettle.entity.army ter 1 1 }
 
         newSettle =
-            { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army ter (Entities.getAttackerBonus (Entities.getLordCapital bS.defender.land)) }
+            { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army ter (Entities.getSettlementBonus settle bS.defender.land) (Entities.getAttackerBonus (Entities.getLordCapital bS.defender.land)) }
 
         attackerCasualties =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
@@ -87,10 +87,10 @@ evaluateLordBattle bS ter =
             bS.defender
 
         newAttacker =
-            { tempAttacker | entity = evaluateBattle tempAttacker.entity bS.defender.entity.army ter 1 }
+            { tempAttacker | entity = evaluateBattle tempAttacker.entity bS.defender.entity.army ter 1 1 }
 
         newDefender =
-            { tempDefender | entity = evaluateBattle tempDefender.entity bS.attacker.entity.army ter 1 }
+            { tempDefender | entity = evaluateBattle tempDefender.entity bS.attacker.entity.army ter 1 1 }
 
         attackerCasualties =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
@@ -331,9 +331,9 @@ transferTroops l s =
 -------------------------------------------------------------------------------------
 
 
-evaluateBattle : Entities.Model.WorldEntity -> Troops.Army -> Map.Model.Terrain -> Float -> Entities.Model.WorldEntity
-evaluateBattle w army ter siegeBonus =
-    evaluateLordCasualities w (sumTroopsDamage army ter siegeBonus)
+evaluateBattle : Entities.Model.WorldEntity -> Troops.Army -> Map.Model.Terrain -> Float -> Float -> Entities.Model.WorldEntity
+evaluateBattle w army ter dF aF =
+    evaluateLordCasualities w (sumTroopsDamage army ter aF) dF
 
 
 calculateEntityCasualties : Troops.Army -> Troops.Army -> Troops.Army
@@ -347,23 +347,23 @@ calculateEntityCasualties armyBefore armyAfter =
         Dict.empty
 
 
-evaluateLordCasualities : Entities.Model.WorldEntity -> Float -> Entities.Model.WorldEntity
-evaluateLordCasualities w d =
-    { w | army = calcTroopCasualties w.army d (Troops.sumTroops w.army) }
+evaluateLordCasualities : Entities.Model.WorldEntity -> Float -> Float -> Entities.Model.WorldEntity
+evaluateLordCasualities w d dF =
+    { w | army = calcTroopCasualties w.army d dF (Troops.sumTroops w.army) }
 
 
-calcTroopCasualties : Troops.Army -> Float -> Int -> Troops.Army
-calcTroopCasualties army d a =
-    Dict.map (\k v -> calcCasualties (Troops.intToTroopType k) v ((d + 100.0) * (toFloat v / toFloat a))) army
+calcTroopCasualties : Troops.Army -> Float -> Float -> Int -> Troops.Army
+calcTroopCasualties army d dF a =
+    Dict.map (\k v -> calcCasualties (Troops.intToTroopType k) v ((d + 100.0) * (toFloat v / toFloat a)) dF) army
 
 
-calcCasualties : Troops.TroopType -> Int -> Float -> Int
-calcCasualties t amount d =
-    max 0 (amount - round (d / Troops.troopDefense t))
+calcCasualties : Troops.TroopType -> Int -> Float -> Float -> Int
+calcCasualties t amount d dF =
+    max 0 (amount - round (d / (Troops.troopDefense t * dF)))
 
 
 sumTroopsDamage : Troops.Army -> Map.Model.Terrain -> Float -> Float
-sumTroopsDamage army ter siegeBonus =
+sumTroopsDamage army ter aF =
     let
         bonusTroopTypes =
             Map.terrainToBonus ter
@@ -371,7 +371,7 @@ sumTroopsDamage army ter siegeBonus =
     Dict.foldl
         (\k v dmg ->
             dmg
-                + siegeBonus
+                + aF
                 * OperatorExt.ternary
                     (List.member (Troops.intToTroopType k) bonusTroopTypes)
                     (Troops.battlefieldBonus (Troops.intToTroopType k))
