@@ -1,6 +1,5 @@
 module Templates.MapActionTemplate exposing (..)
 
-import Dict
 import DictExt
 import Entities.Model
 import Faction exposing (Faction)

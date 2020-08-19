@@ -5,7 +5,7 @@ import Dict
 import DictExt
 import Entities
 import Entities.Model
-import Html exposing (Html, audio, div, img, input, span, text)
+import Html exposing (Html, div, img, input, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Msg

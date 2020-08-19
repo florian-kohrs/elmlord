@@ -5,7 +5,6 @@ import AI.Model
 import Battle
 import Battle.Model
 import Browser
-import Building
 import DateExt
 import Dict
 import Entities
@@ -33,7 +32,6 @@ import Pathfinder
 import Pathfinder.Drawer
 import Pathfinder.Model
 import Ports
-import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Templates.BattleTemplate as BattleTemplate
@@ -106,16 +104,6 @@ hashString s =
         <|
             String.toList
                 s
-
-
-villagesPerLord : Int
-villagesPerLord =
-    3
-
-
-villageCaptialDistance : Float
-villageCaptialDistance =
-    6
 
 
 getPlayer : Model -> Entities.Model.Lord
@@ -237,7 +225,7 @@ initialModel playerName =
         map =
             MapGenerator.createMap (hashString playerName)
     in
-    Model (initPlayers playerName map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 playerName 10
+    Model (initPlayers playerName map Entities.Model.playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 playerName 10
 
 
 initPlayers : String -> Map.Model.Map -> Int -> Entities.Lords.LordList
@@ -303,11 +291,11 @@ initSettlementsFor m usedFields e i =
         )
         :: List.map
             Entities.getSettlementFor
-            (getVillagesInQuadrant m e i villagesPerLord |> getSafeSettlementInfos m usedFields)
+            (getVillagesInQuadrant e i Entities.Model.villagesPerLord |> getSafeSettlementInfos m usedFields)
 
 
-getVillagesInQuadrant : Map.Model.Map -> Entities.Model.WorldEntity -> Int -> Int -> List Entities.Model.SettlementInfo
-getVillagesInQuadrant m e q i =
+getVillagesInQuadrant : Entities.Model.WorldEntity -> Int -> Int -> List Entities.Model.SettlementInfo
+getVillagesInQuadrant e q i =
     List.map
         (\index ->
             Entities.Model.SettlementInfo
@@ -323,10 +311,10 @@ getVillagesInQuadrant m e q i =
 
 
 getVillagesPosition : Int -> Int -> Int -> Vector.Point -> Vector.Point
-getVillagesPosition max q {- quadrant -} i p =
+getVillagesPosition max q i p =
     let
         distanceFromCapital =
-            villageCaptialDistance
+            Entities.Model.villageCaptialDistance
                 + toFloat (round (4 * sin (pi * toFloat (i - 1) / toFloat (max - 1))))
 
         rad =
@@ -420,7 +408,7 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] [] --[ Html.text (Debug.toString (model.lords)) ]
+                   , span [] []
                    ]
             )
         ]
@@ -967,10 +955,6 @@ emptyCmd : Model -> ( Model, Cmd Msg.Msg )
 emptyCmd m =
     ( m, Cmd.none )
 
-
-playerCount : Int
-playerCount =
-    4
 
 
 main : Program () Model Msg.Msg

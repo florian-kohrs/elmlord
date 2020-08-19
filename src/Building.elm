@@ -3,10 +3,6 @@ module Building exposing (..)
 import OperatorExt
 
 
-
--- TODO Maybe set level (int) to float
-
-
 type alias Building =
     { name : String
     , level : Int

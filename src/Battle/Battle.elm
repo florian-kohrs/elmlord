@@ -183,11 +183,6 @@ siegeBattleAftermath bS s =
         ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
 
 
-{- fleeBattle : BattleStats -> Entities.Model.Lord
-fleeBattle bS =
-    Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army) -}
-
-
 fleeBattle : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
 fleeBattle ls bS =
     let
