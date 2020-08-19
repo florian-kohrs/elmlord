@@ -183,13 +183,43 @@ siegeBattleAftermath bS s =
         ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
 
 
-fleeBattle : BattleStats -> Entities.Model.Lord
-fleeBattle bS =
-    Entities.updatePlayerArmy bS.attacker (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
+fleeBattle : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
+fleeBattle ls bS =
+    let
+        tempPlayer =
+            bS.attacker
+
+        tempEnemy =
+            bS.defender
+
+        playerAfterGoldLoss =
+            if bS.siege then
+                tempPlayer
+
+            else
+                { tempPlayer | gold = tempPlayer.gold / 2 }
+
+        newPlayer =
+            Entities.updatePlayerArmy
+                playerAfterGoldLoss
+                (Dict.map (\k v -> round (toFloat v * (1 - battleFleeTroopLoss))) bS.attacker.entity.army)
+
+        newEnemy =
+            { tempEnemy | gold = tempEnemy.gold + tempPlayer.gold / 2 }
+    in
+    Entities.Lords.updateLord newEnemy <| Entities.Lords.updateLord newPlayer ls
 
 
 applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.LordList
 applyBattleAftermath ls bs =
+    let
+        ( tAL, tDL ) =
+            if bs.siege then
+                ( bs.attacker, bs.defender )
+
+            else
+                updatedBattleLordFunds bs.attacker bs.defender
+    in
     case bs.settlement of
         Nothing ->
             Entities.Lords.updateLord (lordBattleAftermath bs.defender Nothing) <| Entities.Lords.updateLord (lordBattleAftermath bs.attacker Nothing) ls

@@ -49,13 +49,13 @@ getBuildingBuildFactor : Building.BuildingType -> Float
 getBuildingBuildFactor t =
     case t of
         Building.Quarters ->
-            1.2
+            1
 
         Building.Barracks ->
             1
 
         Building.Fortress ->
-            0
+            1
 
 
 getBuildingBuildFactors : AI -> Entities.Model.Settlement -> Building.Building -> Maybe AiRoundActionPreference

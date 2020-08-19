@@ -302,7 +302,7 @@ evaluateSettlementSiegeAction ai s ls =
                     (toFloat (AI.AISettlementHandling.settlementDefenseStrength s (Entities.landlordOnSettlement s ls))
                         * MaybeExt.foldMaybe
                             (\l ->
-                                1 + Balancing.settlementDefenseBoni s l
+                                Entities.getSettlementBonus s l
                             )
                             1
                             (Entities.landlordOnSettlement s ls)
@@ -315,11 +315,25 @@ evaluateSettlementSiegeAction ai s ls =
         Just
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
-                (min (2 + ai.strategy.siegeMultiplier) (logBase 10 (siegeStrengthDiff * siegeStrengthDiff)))
+                (min (2 + ai.strategy.siegeMultiplier)
+                    (settlementSiegeBoni s
+                        + logBase 10 (siegeStrengthDiff * siegeStrengthDiff)
+                    )
+                )
             )
 
     else
         Nothing
+
+
+settlementSiegeBoni : Entities.Model.Settlement -> Float
+settlementSiegeBoni s =
+    case s.settlementType of
+        Entities.Model.Castle ->
+            0.5
+
+        Entities.Model.Village ->
+            0
 
 
 lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float
