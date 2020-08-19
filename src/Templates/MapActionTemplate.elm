@@ -63,18 +63,20 @@ generateTroopOverview pf actions =
         enemyTroops =
             combineTroopDicts Troops.emptyTroops actions (\f -> f /= pf)
     in
-    if Troops.sumTroops playerTroops /= 0 || Troops.sumTroops enemyTroops /= 0 then
-        div [ Html.Attributes.class "map-troop-overview" ]
-            ((span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Enemy troops on map tile" ]
-                :: getTroopOverviewData enemyTroops
-             )
-                ++ (span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Your troops on map tile" ]
-                        :: getTroopOverviewData playerTroops
-                   )
-            )
+    --if Troops.sumTroops playerTroops /= 0 || Troops.sumTroops enemyTroops /= 0 then
+    div [ Html.Attributes.class "map-troop-overview" ]
+        ((span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Enemy troops on map tile" ]
+            :: getTroopOverviewData enemyTroops
+         )
+            ++ (span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Your troops on map tile" ]
+                    :: getTroopOverviewData playerTroops
+               )
+        )
 
-    else
-        div [] []
+
+
+--else
+--    div [] []
 
 
 getTroopOverviewData : Troops.Army -> List (Html Msg.Msg)

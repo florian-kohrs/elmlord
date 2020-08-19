@@ -302,7 +302,7 @@ evaluateSettlementSiegeAction ai s ls =
                     (toFloat (AI.AISettlementHandling.settlementDefenseStrength s (Entities.landlordOnSettlement s ls))
                         * MaybeExt.foldMaybe
                             (\l ->
-                                Entities.getSettlementBonus s l
+                                Entities.getSettlementBonus s ai.lord.land
                             )
                             1
                             (Entities.landlordOnSettlement s ls)

@@ -34,7 +34,7 @@ maximalAcceptedSettlementStrength ai s =
 
 maximalAcceptedPlayerStrength : AI -> Int
 maximalAcceptedPlayerStrength ai =
-    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 1.5
+    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 2
 
 
 acceptedLackOfDefenseStrength : Int
@@ -126,9 +126,10 @@ checkSettlementForAvaiableTroops targetStrength ai s =
             AiRoundActionPreference
                 (DoSomething <| SwapTroops (Troops.invertArmy availableTroops) s)
                 (min (2 + ai.strategy.defendMultiplier)
-                    (toFloat targetStrength
+                    ((toFloat targetStrength
                         / toFloat (acceptedMissingTroopsStrength ai)
-                        + min 1
+                     )
+                        * min 1
                             (toFloat troopStrength
                                 / toFloat targetStrength
                             )
@@ -177,8 +178,7 @@ checkSettlementForRecruits targetStrength ai s =
                             )
                       )
                     * 2
-                    + recruitStrengthFactor
-                    / 2
+                    + logBase 10 (recruitStrengthFactor / toFloat acceptedLackOfDefenseStrength)
     in
     if recruitStrengthFactor > 0 then
         Just <|
@@ -206,7 +206,7 @@ evaluateSettlementDefense ai s =
     else if hasTroopsToSatisfySettlementDefense ai then
         let
             swapTroops =
-                takeDispensableTroopsWithMaxStrength
+                takeDisposableTroopsWithMaxStrength
                     ai.lord.entity.army
                     (estimatedNormalPlayerTroopStrength ai)
                     (settlementLackOfTroopStrength ai s)
@@ -273,8 +273,8 @@ hasTroopsToSatisfySettlementDefense ai =
         >= troopStrengthToBotherAddingToSettlement
 
 
-takeDispensableTroopsWithMaxStrength : Troops.Army -> Int -> Int -> Troops.Army
-takeDispensableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength =
+takeDisposableTroopsWithMaxStrength : Troops.Army -> Int -> Int -> Troops.Army
+takeDisposableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength =
     takeTroopsToLeaveArmyAtStrength
         (max
             sourceNeededStrength

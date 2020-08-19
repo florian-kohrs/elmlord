@@ -9,7 +9,6 @@ import List
 import OperatorExt
 import Troops
 import Vector
-import Building
 
 
 settlementIncome : SettlementType -> Float
@@ -361,13 +360,14 @@ getSettlementBonus s l =
     else
         List.foldr (\_ y -> 0.1 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100
 
+
 getAttackerBonus : Maybe Settlement -> Float
-getAttackerBonus s = 
+getAttackerBonus s =
     case s of
-        Nothing -> 
+        Nothing ->
             1
 
-        Just x -> 
+        Just x ->
             1 + Building.resolveBonusFromBuildings x.buildings Building.Barracks / 100
 
 

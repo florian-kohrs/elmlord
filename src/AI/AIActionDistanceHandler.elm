@@ -103,10 +103,10 @@ getBaseActionDistancePenalty basicAction i =
 
         SiegeSettlement s ->
             if s.settlementType == Entities.Model.Castle then
-                distanceFromVillageSiegeActionPenalty i
+                distanceFromCapitalSiegeActionPenalty i
 
             else
-                distanceFromCapitalSiegeActionPenalty
+                distanceFromVillageSiegeActionPenalty i
 
         ImproveBuilding _ _ ->
             distanceImproveBuildingActionPenalty i

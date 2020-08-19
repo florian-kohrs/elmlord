@@ -27,25 +27,6 @@ lordStrengthDiffFactor =
     2
 
 
-improveBuildingFactor : Float
-improveBuildingFactor =
-    0.5
-
-
-
--- should also consider speed difference
-
-
-settlementDefenseBoni : Entities.Model.Settlement -> Entities.Model.Lord -> Float
-settlementDefenseBoni s landlord =
-    case s.settlementType of
-        Entities.Model.Village ->
-            0.1
-
-        Entities.Model.Castle ->
-            toFloat (List.length landlord.land - 1) * 0.15
-
-
 addGoldCastle : Float
 addGoldCastle =
     1500.0
