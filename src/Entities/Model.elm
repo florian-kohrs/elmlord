@@ -118,3 +118,17 @@ villageNames =
     , "Arbington"
     , "Torrine"
     ]
+
+
+villagesPerLord : Int
+villagesPerLord =
+    3
+
+
+villageCaptialDistance : Float
+villageCaptialDistance =
+    6
+
+playerCount : Int
+playerCount =
+    4

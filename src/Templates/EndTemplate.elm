@@ -54,7 +54,7 @@ generateEndData res =
         ]
     , div []
         [ button []
-            [ span [] [ Html.text "Go to the main menue" ]
+            [ span [onClick (Msg.MenueAction Msg.ShowMenue)] [ Html.text "Go to the main menue" ]
             ]
         ]
     ]

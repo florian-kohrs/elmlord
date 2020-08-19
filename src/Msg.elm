@@ -2,7 +2,6 @@ module Msg exposing (..)
 
 import Battle.Model
 import Building
-import Entities
 import Entities.Model
 import MapAction.SubModel
 import Troops
@@ -31,7 +30,7 @@ type Msg
 type MenueMsg
     = StartGame String
     | ChangeName String
-    | ChangeVolumne Int
+    | ChangeVolume Int
     | ShowMenue
     | SetCampaingn
     | ShowDocumentation
@@ -41,6 +40,7 @@ type MenueMsg
 type TroopOverviewMsg
     = TroopActionMsg
     | TroopArmyMsg Troops.TroopType
+
 
 type SettlementMsg
     = UIMsg SettlementUIMsg

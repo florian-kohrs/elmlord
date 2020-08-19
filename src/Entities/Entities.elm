@@ -9,6 +9,7 @@ import List
 import OperatorExt
 import Troops
 import Vector
+import Building
 
 
 settlementIncome : SettlementType -> Float
@@ -300,13 +301,9 @@ getSettlementByName l s =
             Just x
 
 
-sumArmyBuyCost : Settlement -> Troops.Army -> Float
-sumArmyBuyCost s a =
-    let
-        priceFactor =
-            (100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100
-    in
-    toFloat (Dict.foldl (\k v cost -> Troops.troopCost (Troops.intToTroopType k) * v + cost) 0 a) * priceFactor
+sumArmyBuyCost : Troops.Army -> Float
+sumArmyBuyCost a =
+    toFloat (Dict.foldl (\k v cost -> Troops.troopCost (Troops.intToTroopType k) * v + cost) 0 a)
 
 
 recruitTroops : Dict.Dict Int Int -> Lord -> Settlement -> Lord
@@ -322,7 +319,7 @@ recruitTroops recruitDict l s =
                 ( l.entity.army, s.recruitLimits )
                 recruitDict
     in
-    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity, gold = l.gold - sumArmyBuyCost s recruitDict }
+    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity, gold = l.gold - sumArmyBuyCost recruitDict }
 
 
 applySettlementsNewRecruits : Lord -> List Settlement
@@ -362,7 +359,16 @@ getSettlementBonus s l =
         1.1
 
     else
-        List.foldr (\_ y -> 0.1 + y) 1 l
+        List.foldr (\_ y -> 0.1 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100
+
+getAttackerBonus : Maybe Settlement -> Float
+getAttackerBonus s = 
+    case s of
+        Nothing -> 
+            1
+
+        Just x -> 
+            1 + Building.resolveBonusFromBuildings x.buildings Building.Barracks / 100
 
 
 combineSettlementName : Settlement -> String
