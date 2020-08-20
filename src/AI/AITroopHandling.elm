@@ -29,12 +29,12 @@ acceptedMissingTroopsStrength ai =
 
 maximalAcceptedSettlementStrength : AI -> Entities.Model.Settlement -> Int
 maximalAcceptedSettlementStrength ai s =
-    round <| estimatedSettlementDefenseStrength ai s.settlementType * 1.5
+    round <| estimatedSettlementDefenseStrength ai s.settlementType * 1.75
 
 
 maximalAcceptedPlayerStrength : AI -> Int
 maximalAcceptedPlayerStrength ai =
-    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 2
+    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 10 + (ai.lord.gold / 4)
 
 
 acceptedLackOfDefenseStrength : Int
@@ -49,7 +49,7 @@ troopStrengthToBotherAddingToSettlement =
 
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
-    toFloat 3500 * ai.strategy.defendMultiplier
+    toFloat 3000 * ai.strategy.defendMultiplier
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
@@ -72,7 +72,7 @@ estimatedNormalPlayerTroopStrength ai =
         x =
             Entities.lordSettlementCount ai.lord
     in
-    (1500 + 400 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
+    (2000 + 500 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
 
 
 estimatedSettlementDefenseStrength : AI -> Entities.Model.SettlementType -> Float
@@ -152,7 +152,8 @@ checkSettlementForRecruits : Int -> AI -> Entities.Model.Settlement -> Maybe AiR
 checkSettlementForRecruits targetStrength ai s =
     let
         recruitNeedFactor =
-            toFloat targetStrength / toFloat (acceptedMissingTroopsStrength ai)
+            min (2 * (2 + ai.strategy.defendMultiplier))
+                (toFloat targetStrength / toFloat (acceptedMissingTroopsStrength ai))
 
         recruitableTroopsDict =
             tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
@@ -177,8 +178,7 @@ checkSettlementForRecruits targetStrength ai s =
                                 recruitableTroopsDict
                             )
                       )
-                    * 2
-                    + logBase 10 (recruitStrengthFactor / toFloat acceptedLackOfDefenseStrength)
+                    + clamp 0 1 (logBase 10 (recruitStrengthFactor / toFloat acceptedLackOfDefenseStrength))
     in
     if recruitStrengthFactor > 0 then
         Just <|
@@ -226,10 +226,10 @@ evaluateSettlementDefense ai s =
                                     / estimatedSettlementDefenseStrength ai s.settlementType
                                 )
                             + (if s.settlementType == Entities.Model.Castle then
-                                0.5
+                                ai.strategy.defendMultiplier * 0.8
 
                                else
-                                0
+                                ai.strategy.defendMultiplier * 0.3333
                               )
                         )
                     )
