@@ -225,6 +225,12 @@ evaluateSettlementDefense ai s =
                                 (toFloat (settlementLackOfTroopStrength ai s)
                                     / estimatedSettlementDefenseStrength ai s.settlementType
                                 )
+                            + (if s.settlementType == Entities.Model.Castle then
+                                0.5
+
+                               else
+                                0
+                              )
                         )
                     )
                 )

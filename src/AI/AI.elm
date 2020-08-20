@@ -91,7 +91,7 @@ showBasicAction basicAction =
 
 getAiActionMultiplier : Float -> Float
 getAiActionMultiplier f =
-    1 + sin (2 * pi * f) / 3
+    1 + sin (pi * f) / 3
 
 
 setLord : AI -> Entities.Model.Lord -> AI

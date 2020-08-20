@@ -245,7 +245,7 @@ initPlayers playerName m count =
                         (2 * (toFloat i / toFloat count + 0.125))
                     )
                     (toFloat i)
-                    (toFloat (hashString playerName) / pi)
+                    (toFloat (hashString playerName) / 97)
             )
             (List.range 1 (count - 1))
         )
@@ -255,11 +255,11 @@ initAI : Entities.Model.Lord -> Float -> Float -> AI.Model.AI
 initAI l i offset =
     AI.Model.AI l
         (AI.Model.ActionMultipliers
-            (AI.getAiActionMultiplier (offset + 0.7 + i / toFloat Entities.Model.playerCount))
-            (AI.getAiActionMultiplier (offset + 0.3 + i / toFloat Entities.Model.playerCount))
-            (AI.getAiActionMultiplier (offset + 0.5 + i / toFloat Entities.Model.playerCount))
-            (AI.getAiActionMultiplier (offset + 0.7 + i / toFloat Entities.Model.playerCount))
-            (AI.getAiActionMultiplier (offset + 0.9 + i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.3 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.7 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 1 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 1.3 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 1.6 + 2 * i / toFloat Entities.Model.playerCount))
         )
 
 
