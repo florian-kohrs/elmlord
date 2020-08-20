@@ -245,20 +245,21 @@ initPlayers playerName m count =
                         (2 * (toFloat i / toFloat count + 0.125))
                     )
                     (toFloat i)
+                    (toFloat (hashString playerName) / pi)
             )
             (List.range 1 (count - 1))
         )
 
 
-initAI : Entities.Model.Lord -> Float -> AI.Model.AI
-initAI l i =
+initAI : Entities.Model.Lord -> Float -> Float -> AI.Model.AI
+initAI l i offset =
     AI.Model.AI l
         (AI.Model.ActionMultipliers
-            (AI.getAiActionMultiplier 0.7 + i / 5)
-            (AI.getAiActionMultiplier 0.3 + i / 7)
-            (AI.getAiActionMultiplier 0.5 + i / 3)
-            (AI.getAiActionMultiplier 0.7 + i / 5)
-            (AI.getAiActionMultiplier 0.9 + i / 7)
+            (AI.getAiActionMultiplier (offset + 0.7 + i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.3 + i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.5 + i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.7 + i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.9 + i / toFloat Entities.Model.playerCount))
         )
 
 
@@ -954,7 +955,6 @@ tickSub model =
 emptyCmd : Model -> ( Model, Cmd Msg.Msg )
 emptyCmd m =
     ( m, Cmd.none )
-
 
 
 main : Program () Model Msg.Msg

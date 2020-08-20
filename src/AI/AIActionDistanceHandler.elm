@@ -53,7 +53,7 @@ distanceFromMoveToPenalty turns =
 
 distanceFromAttackLordPenalty : Int -> Float
 distanceFromAttackLordPenalty turns =
-    toFloat turns * 1.5
+    toFloat turns * 2.5
 
 
 applyActionDistancePenalty : (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
@@ -109,7 +109,7 @@ getBaseActionDistancePenalty basicAction i =
                 distanceFromVillageSiegeActionPenalty i
 
         ImproveBuilding _ _ ->
-            distanceImproveBuildingActionPenalty i
+            distanceImproveBuildingActionPenalty <| max 0 i
 
 
 getAiRoundActionDestination : AiRoundActions -> Maybe Vector.Point

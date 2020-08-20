@@ -49,7 +49,7 @@ troopStrengthToBotherAddingToSettlement =
 
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
-    toFloat 2500 * ai.strategy.defendMultiplier
+    toFloat 3500 * ai.strategy.defendMultiplier
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
@@ -59,7 +59,7 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    (4500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+    (5500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
 
 
 

@@ -57,10 +57,10 @@ evaluateSiegeBattle bS settle ter =
             bS.attacker
 
         newAttacker =
-            { tempAttacker | entity = evaluateBattle tempAttacker.entity transferedSettle.entity.army ter 1 1 }
+            { tempAttacker | entity = evaluateBattle tempAttacker.entity transferedSettle.entity.army (OperatorExt.ternary (settle.settlementType == Entities.Model.Castle) Nothing (Just ter)) 1 (Entities.getSettlementBonus settle bS.defender.land) }
 
         newSettle =
-            { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army ter (Entities.getSettlementBonus settle bS.defender.land) (Entities.getAttackerBonus (Entities.getLordCapital bS.defender.land)) }
+            { transferedSettle | entity = evaluateBattle transferedSettle.entity bS.attacker.entity.army (OperatorExt.ternary (settle.settlementType == Entities.Model.Castle) Nothing (Just ter)) (Entities.getSettlementBonus settle bS.defender.land) (Entities.getAttackerBonus (Entities.getLordCapital bS.defender.land)) }
 
         attackerCasualties =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
@@ -87,10 +87,10 @@ evaluateLordBattle bS ter =
             bS.defender
 
         newAttacker =
-            { tempAttacker | entity = evaluateBattle tempAttacker.entity bS.defender.entity.army ter 1 1 }
+            { tempAttacker | entity = evaluateBattle tempAttacker.entity bS.defender.entity.army (Just ter) 1 1 }
 
         newDefender =
-            { tempDefender | entity = evaluateBattle tempDefender.entity bS.attacker.entity.army ter 1 1 }
+            { tempDefender | entity = evaluateBattle tempDefender.entity bS.attacker.entity.army (Just ter) 1 1 }
 
         attackerCasualties =
             calculateEntityCasualties bS.attacker.entity.army newAttacker.entity.army
@@ -378,7 +378,7 @@ transferTroops l s =
 -------------------------------------------------------------------------------------
 
 
-evaluateBattle : Entities.Model.WorldEntity -> Troops.Army -> Map.Model.Terrain -> Float -> Float -> Entities.Model.WorldEntity
+evaluateBattle : Entities.Model.WorldEntity -> Troops.Army -> Maybe Map.Model.Terrain -> Float -> Float -> Entities.Model.WorldEntity
 evaluateBattle w army ter dF aF =
     evaluateLordCasualities w (sumTroopsDamage army ter aF) dF
 
@@ -409,11 +409,14 @@ calcCasualties t amount d dF =
     max 0 (amount - round (d / (Troops.troopDefense t * dF)))
 
 
-sumTroopsDamage : Troops.Army -> Map.Model.Terrain -> Float -> Float
+sumTroopsDamage : Troops.Army -> Maybe Map.Model.Terrain -> Float -> Float
 sumTroopsDamage army ter aF =
     let
         bonusTroopTypes =
-            Map.terrainToBonus ter
+            MaybeExt.foldMaybe
+                Map.terrainToBonus
+                [ Troops.Archer ]
+                ter
     in
     Dict.foldl
         (\k v dmg ->

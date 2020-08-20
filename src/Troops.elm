@@ -245,13 +245,13 @@ battlefieldBonus : TroopType -> Float
 battlefieldBonus t =
     case t of
         Archer ->
-            1.15
+            1.2
 
         Spear ->
-            1.25
+            1.1
 
         Sword ->
-            1.2
+            1.075
 
         Knight ->
-            1.2
+            1.05

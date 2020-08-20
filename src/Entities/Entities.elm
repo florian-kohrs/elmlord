@@ -43,16 +43,16 @@ settlementTroopsRecruitLimit s quartersLevel troopType =
             if s.settlementType == Castle then
                 case troopType of
                     Troops.Sword ->
-                        40
+                        30
 
                     Troops.Spear ->
                         20
 
                     Troops.Archer ->
-                        30
+                        20
 
                     Troops.Knight ->
-                        10
+                        5
 
             else
                 case troopType of
@@ -379,7 +379,7 @@ getSettlementBonus s l =
         1.1
 
     else
-        List.foldr (\_ y -> 0.1 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100
+        List.foldr (\_ y -> 0.15 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100
 
 
 getAttackerBonus : Maybe Settlement -> Float

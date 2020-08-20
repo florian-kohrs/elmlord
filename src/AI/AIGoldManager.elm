@@ -70,12 +70,13 @@ getBuildingBuildFactors ai capital b =
                     (getBuildingBuildFactor b.buildingType
                         * (goldIncomePerRound
                             ai
-                            * 2
+                            * 1.75
                             / Building.upgradeBuildingCost b
                             + logBase 10
                                 (ai.lord.gold
                                     / Building.upgradeBuildingCost b
                                 )
+                            / 1.5
                           )
                     )
                 )
