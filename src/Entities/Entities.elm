@@ -71,6 +71,27 @@ settlementTroopsRecruitLimit s quartersLevel troopType =
     limit + round (Building.resolveBonusFromBuildingInfo Building.Quarters quartersLevel)
 
 
+settlementNewRecruitsFromTypePerRound : Settlement -> Troops.TroopType -> Int
+settlementNewRecruitsFromTypePerRound s t =
+    case t of
+        Troops.Sword ->
+            case s.settlementType of
+                Village ->
+                    1
+
+                Castle ->
+                    2
+
+        Troops.Spear ->
+            2
+
+        Troops.Archer ->
+            2
+
+        Troops.Knight ->
+            1
+
+
 setLordEntity : Lord -> WorldEntity -> Lord
 setLordEntity l e =
     { l | entity = e }
@@ -346,7 +367,7 @@ applySettlementNewRecruits quarterLevel s =
                 (\t amount ->
                     min (settlementTroopsRecruitLimit s quarterLevel <| Troops.intToTroopType t) <|
                         amount
-                            + Basics.round (2.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)
+                            + (settlementNewRecruitsFromTypePerRound s <| Troops.intToTroopType t)
                 )
                 s.recruitLimits
     }
