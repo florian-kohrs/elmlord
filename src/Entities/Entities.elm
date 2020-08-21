@@ -15,7 +15,7 @@ settlementIncome : SettlementType -> Float
 settlementIncome t =
     case t of
         Castle ->
-            20
+            35
 
         Village ->
             50
