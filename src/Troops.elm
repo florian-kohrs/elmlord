@@ -85,7 +85,7 @@ lordStartTroops : Army
 lordStartTroops =
     List.foldl (\( t, v ) dict -> Dict.insert (troopTypeToInt t) v dict)
         Dict.empty
-        [ ( Archer, 10 ), ( Spear, 25 ), ( Sword, 20 ), ( Knight, 5 ) ]
+        [ ( Archer, 10 ), ( Spear, 15 ), ( Sword, 20 ), ( Knight, 5 ) ]
 
 
 capitalStartTroops : Army
@@ -168,10 +168,10 @@ troopCost t =
             35
 
         Spear ->
-            10
+            15
 
         Sword ->
-            25
+            35
 
         Knight ->
             50
@@ -187,7 +187,7 @@ troopWage t =
             0.3
 
         Sword ->
-            0.15
+            0.2
 
         Knight ->
             0.5
@@ -197,29 +197,29 @@ troopDamage : TroopType -> Float
 troopDamage t =
     case t of
         Archer ->
-            15
+            8
 
         Spear ->
-            10
+            6
 
         Sword ->
-            12
+            10
 
         Knight ->
-            25
+            12
 
 
 troopDefense : TroopType -> Float
 troopDefense t =
     case t of
         Archer ->
-            30
+            35
 
         Spear ->
-            50
+            40
 
         Sword ->
-            70
+            75
 
         Knight ->
             100
@@ -245,13 +245,13 @@ battlefieldBonus : TroopType -> Float
 battlefieldBonus t =
     case t of
         Archer ->
-            1.15
+            1.2
 
         Spear ->
-            1.25
+            1.1
 
         Sword ->
-            1.2
+            1.075
 
         Knight ->
-            1.2
+            1.05

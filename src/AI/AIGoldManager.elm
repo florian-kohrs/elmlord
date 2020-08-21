@@ -18,7 +18,7 @@ filterActionIfLordIsBroke : BasicAction -> AI -> Maybe BasicAction
 filterActionIfLordIsBroke a ai =
     case a of
         HireTroops army s ->
-            if ai.lord.gold > Entities.sumArmyBuyCost s army then
+            if ai.lord.gold > Entities.sumArmyBuyCost army then
                 Just <| HireTroops army s
 
             else
@@ -49,13 +49,13 @@ getBuildingBuildFactor : Building.BuildingType -> Float
 getBuildingBuildFactor t =
     case t of
         Building.Quarters ->
-            1.2
+            1
 
         Building.Barracks ->
             1
 
         Building.Fortress ->
-            0
+            1
 
 
 getBuildingBuildFactors : AI -> Entities.Model.Settlement -> Building.Building -> Maybe AiRoundActionPreference
@@ -70,12 +70,13 @@ getBuildingBuildFactors ai capital b =
                     (getBuildingBuildFactor b.buildingType
                         * (goldIncomePerRound
                             ai
-                            * 2
+                            * 1.75
                             / Building.upgradeBuildingCost b
                             + logBase 10
                                 (ai.lord.gold
                                     / Building.upgradeBuildingCost b
                                 )
+                            / 1.5
                           )
                     )
                 )

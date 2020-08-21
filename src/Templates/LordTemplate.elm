@@ -1,10 +1,9 @@
 module Templates.LordTemplate exposing (..)
 
-import Dict
 import DictExt
 import Entities
 import Entities.Model
-import Html exposing (Html, div, img, span, text, button)
+import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Msg
@@ -35,7 +34,7 @@ generateLordTemplate l =
             , div [ Html.Attributes.class "lord-stats" ]
                 [ div [ Html.Attributes.class "lord-data box-shadow" ]
                     [ img [ src "./assets/images/general/ducats_icon.png" ] []
-                    , span [] [ Html.text ("Gold: " ++ String.fromFloat l.gold) ]
+                    , span [] [ Html.text ("Gold: " ++ Helper.roundDigits l.gold) ]
                     ]
                 , div [ Html.Attributes.class "lord-data box-shadow" ]
                     [ img [ src "./assets/images/map/Castle.png" ] []
@@ -43,7 +42,7 @@ generateLordTemplate l =
                     ]
                 , div [ Html.Attributes.class "lord-troops box-shadow" ]
                     (div [ Html.Attributes.class "lord-troop-header" ]
-                        [ span [] [ Html.text "Current-Army" ] ]
+                        [ span [] [ Html.text "Current Army" ] ]
                         :: DictExt.foldlOverKeys
                             (\k v r -> Helper.troopToHtml (Troops.intToTroopType k) v "lord-troop-container" :: r)
                             (\k r -> Helper.troopToHtml (Troops.intToTroopType k) 0 "lord-troop-container" :: r)

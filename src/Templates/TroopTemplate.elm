@@ -6,8 +6,8 @@ import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Msg
-import Troops
 import OperatorExt
+import Troops
 
 
 generateTroopTemplate : Entities.Model.Lord -> Html Msg.Msg
@@ -20,7 +20,7 @@ generateTroopTemplate l =
                 ]
             , div []
                 (div [ Html.Attributes.class "troop-header" ]
-                    [ span [] [ Html.text "Current-Army" ] ]
+                    [ span [] [ Html.text "Current Army" ] ]
                     :: DictExt.foldlOverKeys
                         (\k v r -> troopToDisbandHtml (Troops.intToTroopType k) v :: r)
                         (\k r -> troopToDisbandHtml (Troops.intToTroopType k) 0 :: r)
@@ -37,9 +37,11 @@ troopToDisbandHtml t v =
     div [ Html.Attributes.class "disband-troop-container" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
         , span [] [ Html.text (String.fromInt v ++ "  " ++ Troops.troopName t) ]
-        , button [ onClick (Msg.TroopAction (Msg.TroopArmyMsg t)), 
-                    Html.Attributes.class (OperatorExt.ternary (v > 0) "disband-button tooltip" "disband-button troop-disabled-button"), 
-                    disabled (v <= 0) ]
+        , button
+            [ onClick (Msg.TroopAction (Msg.TroopArmyMsg t))
+            , Html.Attributes.class (OperatorExt.ternary (v > 0) "disband-button tooltip" "disband-button troop-disabled-button")
+            , disabled (v <= 0)
+            ]
             [ span [] [ Html.text "-" ]
             , div [ Html.Attributes.class "tooltiptext troop-recruiting-tooltip" ]
                 [ span [] [ Html.text "Disband 5 units" ] ]

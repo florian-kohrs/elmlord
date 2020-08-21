@@ -5,7 +5,6 @@ import AI.Model
 import Battle
 import Battle.Model
 import Browser
-import Building
 import DateExt
 import Dict
 import Entities
@@ -33,7 +32,6 @@ import Pathfinder
 import Pathfinder.Drawer
 import Pathfinder.Model
 import Ports
-import Random
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Templates.BattleTemplate as BattleTemplate
@@ -65,7 +63,7 @@ type alias Model =
     , event : Event.EventState
     , playersTurn : Int
     , playerInput : String
-    , volumne : Int
+    , volume : Int
     }
 
 
@@ -106,16 +104,6 @@ hashString s =
         <|
             String.toList
                 s
-
-
-villagesPerLord : Int
-villagesPerLord =
-    3
-
-
-villageCaptialDistance : Float
-villageCaptialDistance =
-    6
 
 
 getPlayer : Model -> Entities.Model.Lord
@@ -237,7 +225,7 @@ initialModel playerName =
         map =
             MapGenerator.createMap (hashString playerName)
     in
-    Model (initPlayers playerName map playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 playerName 10
+    Model (initPlayers playerName map Entities.Model.playerCount) (GameSetup (MainMenue Menue)) Nothing (DateExt.Date 1017 DateExt.Jan) map "" { state = True, events = [] } 0 playerName 10
 
 
 initPlayers : String -> Map.Model.Map -> Int -> Entities.Lords.LordList
@@ -257,20 +245,21 @@ initPlayers playerName m count =
                         (2 * (toFloat i / toFloat count + 0.125))
                     )
                     (toFloat i)
+                    (toFloat (hashString playerName) / 97)
             )
             (List.range 1 (count - 1))
         )
 
 
-initAI : Entities.Model.Lord -> Float -> AI.Model.AI
-initAI l i =
+initAI : Entities.Model.Lord -> Float -> Float -> AI.Model.AI
+initAI l i offset =
     AI.Model.AI l
         (AI.Model.ActionMultipliers
-            (AI.getAiActionMultiplier 0.7 + i / 5)
-            (AI.getAiActionMultiplier 0.3 + i / 7)
-            (AI.getAiActionMultiplier 0.5 + i / 3)
-            (AI.getAiActionMultiplier 0.7 + i / 5)
-            (AI.getAiActionMultiplier 0.9 + i / 7)
+            (AI.getAiActionMultiplier (offset + 0.3 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 0.7 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 1 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 1.3 + 2 * i / toFloat Entities.Model.playerCount))
+            (AI.getAiActionMultiplier (offset + 1.6 + 2 * i / toFloat Entities.Model.playerCount))
         )
 
 
@@ -303,11 +292,11 @@ initSettlementsFor m usedFields e i =
         )
         :: List.map
             Entities.getSettlementFor
-            (getVillagesInQuadrant m e i villagesPerLord |> getSafeSettlementInfos m usedFields)
+            (getVillagesInQuadrant e i Entities.Model.villagesPerLord |> getSafeSettlementInfos m usedFields)
 
 
-getVillagesInQuadrant : Map.Model.Map -> Entities.Model.WorldEntity -> Int -> Int -> List Entities.Model.SettlementInfo
-getVillagesInQuadrant m e q i =
+getVillagesInQuadrant : Entities.Model.WorldEntity -> Int -> Int -> List Entities.Model.SettlementInfo
+getVillagesInQuadrant e q i =
     List.map
         (\index ->
             Entities.Model.SettlementInfo
@@ -323,10 +312,10 @@ getVillagesInQuadrant m e q i =
 
 
 getVillagesPosition : Int -> Int -> Int -> Vector.Point -> Vector.Point
-getVillagesPosition max q {- quadrant -} i p =
+getVillagesPosition max q i p =
     let
         distanceFromCapital =
-            villageCaptialDistance
+            Entities.Model.villageCaptialDistance
                 + toFloat (round (4 * sin (pi * toFloat (i - 1) / toFloat (max - 1))))
 
         rad =
@@ -408,7 +397,7 @@ setGameView model =
     in
     div [ Html.Attributes.class "page-container" ]
         [ findModalWindow model
-        , HeaderTemplate.generateHeaderTemplate model.volumne (Entities.Lords.getPlayer model.lords) model.date
+        , HeaderTemplate.generateHeaderTemplate model.volume (Entities.Lords.getPlayer model.lords) model.date
         , div [ Html.Attributes.class "page-map" ]
             (List.map addStylesheet stylessheets
                 ++ [ buildMapActionTemplate model allClickActions
@@ -420,7 +409,7 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] [] --[ Html.text (Debug.toString (model.lords)) ]
+                   , span [] []
                    ]
             )
         ]
@@ -429,7 +418,7 @@ setGameView model =
 buildMapActionTemplate : Model -> MapAction.Model.InteractableMapSVG -> Html Msg.Msg
 buildMapActionTemplate model allClickActions =
     if isPlayersTurn model then
-        MapActionTemplate.generateMapActionTemplate model.selectedPoint allClickActions
+        MapActionTemplate.generateMapActionTemplate model.selectedPoint (getPlayer model) allClickActions
 
     else
         let
@@ -887,7 +876,7 @@ updateBattle msg model =
             emptyCmd { model | gameState = GameSetup (BattleView (Battle.skipBattle (Map.getTerrainForPoint bS.attacker.entity.position model.map) bS)) }
 
         Msg.FleeBattle bS ->
-            ( { model | gameState = GameSetup GameMenue, lords = Entities.Lords.updatePlayer model.lords (Battle.fleeBattle bS) }, getBattleAftermathSound bS )
+            ( { model | gameState = GameSetup GameMenue, lords = Battle.fleeBattle model.lords bS }, getBattleAftermathSound bS )
 
         Msg.EndBattle bS ->
             ( { model | gameState = GameSetup GameMenue, lords = Battle.applyBattleAftermath model.lords bS }, getBattleAftermathSound bS )
@@ -920,14 +909,14 @@ updateMenue msg model =
         Msg.ChangeName str ->
             emptyCmd { model | playerInput = str }
 
-        Msg.ChangeVolumne vol ->
-            ( { model | volumne = vol }, Ports.updateVolumne vol )
+        Msg.ChangeVolume vol ->
+            ( { model | volume = vol }, Ports.updateVolume vol )
 
         Msg.ShowMenue ->
             emptyCmd { model | gameState = GameSetup (MainMenue Menue) }
 
         Msg.ShowDocumentation ->
-            ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord" )
+            ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord/wiki" )
 
         Msg.SetCampaingn ->
             emptyCmd { model | gameState = GameSetup (MainMenue Campaign) }
@@ -966,11 +955,6 @@ tickSub model =
 emptyCmd : Model -> ( Model, Cmd Msg.Msg )
 emptyCmd m =
     ( m, Cmd.none )
-
-
-playerCount : Int
-playerCount =
-    4
 
 
 main : Program () Model Msg.Msg

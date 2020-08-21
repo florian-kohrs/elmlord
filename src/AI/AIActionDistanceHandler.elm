@@ -14,8 +14,13 @@ import Troops
 import Vector
 
 
-distanceFromSiegeActionPenalty : Int -> Float
-distanceFromSiegeActionPenalty turns =
+distanceFromCapitalSiegeActionPenalty : Int -> Float
+distanceFromCapitalSiegeActionPenalty turns =
+    toFloat (turns - 3) * 0.15
+
+
+distanceFromVillageSiegeActionPenalty : Int -> Float
+distanceFromVillageSiegeActionPenalty turns =
     toFloat turns * 0.1
 
 
@@ -48,7 +53,7 @@ distanceFromMoveToPenalty turns =
 
 distanceFromAttackLordPenalty : Int -> Float
 distanceFromAttackLordPenalty turns =
-    toFloat turns
+    toFloat turns * 2.5
 
 
 applyActionDistancePenalty : (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
@@ -96,11 +101,15 @@ getBaseActionDistancePenalty basicAction i =
         SwapTroops _ _ ->
             distanceSwapTroopsActionPenalty i
 
-        SiegeSettlement _ ->
-            distanceFromSiegeActionPenalty i
+        SiegeSettlement s ->
+            if s.settlementType == Entities.Model.Castle then
+                distanceFromCapitalSiegeActionPenalty i
+
+            else
+                distanceFromVillageSiegeActionPenalty i
 
         ImproveBuilding _ _ ->
-            distanceImproveBuildingActionPenalty i
+            distanceImproveBuildingActionPenalty <| max 0 i
 
 
 getAiRoundActionDestination : AiRoundActions -> Maybe Vector.Point
