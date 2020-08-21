@@ -43,7 +43,7 @@ settlementTroopsRecruitLimit s quartersLevel troopType =
             if s.settlementType == Castle then
                 case troopType of
                     Troops.Sword ->
-                        30
+                        10
 
                     Troops.Spear ->
                         20
@@ -57,13 +57,13 @@ settlementTroopsRecruitLimit s quartersLevel troopType =
             else
                 case troopType of
                     Troops.Sword ->
-                        10
+                        5
 
                     Troops.Spear ->
-                        15
+                        10
 
                     Troops.Archer ->
-                        10
+                        5
 
                     Troops.Knight ->
                         0

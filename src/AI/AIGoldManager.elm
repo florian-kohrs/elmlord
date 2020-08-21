@@ -45,17 +45,17 @@ goldIncomePerRound ai =
     Entities.calculateRoundIncome ai.lord
 
 
-getBuildingBuildFactor : Building.BuildingType -> Float
-getBuildingBuildFactor t =
+getBuildingBuildFactor : AI -> Building.BuildingType -> Float
+getBuildingBuildFactor ai t =
     case t of
         Building.Quarters ->
-            1
+            1 * ai.strategy.growArmyMultiplier
 
         Building.Barracks ->
-            1
+            1 * max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier
 
         Building.Fortress ->
-            1
+            1 * ai.strategy.defendMultiplier
 
 
 getBuildingBuildFactors : AI -> Entities.Model.Settlement -> Building.Building -> Maybe AiRoundActionPreference
@@ -67,7 +67,7 @@ getBuildingBuildFactors ai capital b =
                     ImproveBuilding capital b
                 )
                 (min (2 + ai.strategy.improveSettlementsMultiplier) <|
-                    (getBuildingBuildFactor b.buildingType
+                    (getBuildingBuildFactor ai b.buildingType
                         * (goldIncomePerRound
                             ai
                             * 1.75

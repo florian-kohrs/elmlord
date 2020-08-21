@@ -16,12 +16,12 @@ import Vector
 
 distanceFromCapitalSiegeActionPenalty : Int -> Float
 distanceFromCapitalSiegeActionPenalty turns =
-    toFloat (turns - 3) * 0.15
+    toFloat (turns - 4) * 0.15
 
 
 distanceFromVillageSiegeActionPenalty : Int -> Float
 distanceFromVillageSiegeActionPenalty turns =
-    toFloat turns * 0.1
+    toFloat turns * 0.095
 
 
 distanceSwapTroopsActionPenalty : Int -> Float
@@ -31,7 +31,7 @@ distanceSwapTroopsActionPenalty turns =
 
 distanceHireTroopsActionPenalty : Int -> Float
 distanceHireTroopsActionPenalty turns =
-    toFloat turns * 0.03
+    toFloat turns * 0.045
 
 
 distanceImproveBuildingActionPenalty : Int -> Float

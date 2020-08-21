@@ -316,7 +316,9 @@ evaluateSettlementSiegeAction ai s ls =
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
                 (min (2 + ai.strategy.siegeMultiplier)
-                    (settlementSiegeBoni s
+                    (1.2
+                        - ai.strategy.siegeMultiplier
+                        + settlementSiegeBoni s
                         + logBase 10 (siegeStrengthDiff * siegeStrengthDiff)
                     )
                 )

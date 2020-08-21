@@ -23,7 +23,7 @@ acceptedMissingTroopsStrength ai =
             + toFloat (estimatedNormalPlayerTroopStrength ai)
             + estimatedSettlementDefenseStrength ai Entities.Model.Village
          )
-            / 6
+            / 2
         )
 
 
@@ -34,7 +34,7 @@ maximalAcceptedSettlementStrength ai s =
 
 maximalAcceptedPlayerStrength : AI -> Int
 maximalAcceptedPlayerStrength ai =
-    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 10 + (ai.lord.gold / 4)
+    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 5 + max 500 (ai.lord.gold / 5)
 
 
 acceptedLackOfDefenseStrength : Int
@@ -49,7 +49,7 @@ troopStrengthToBotherAddingToSettlement =
 
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
-    toFloat 3000 * ai.strategy.defendMultiplier
+    toFloat 2750 * ai.strategy.defendMultiplier
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
@@ -59,7 +59,7 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    (5500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+    (6500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
 
 
 
@@ -72,7 +72,7 @@ estimatedNormalPlayerTroopStrength ai =
         x =
             Entities.lordSettlementCount ai.lord
     in
-    (2000 + 500 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
+    (2500 + 650 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
 
 
 estimatedSettlementDefenseStrength : AI -> Entities.Model.SettlementType -> Float
@@ -90,9 +90,15 @@ hireTroopsIfNeeded ai =
     let
         neededStrength =
             totalNeededTroopStrength ai identity
+
+        recruitTroopsActions =
+            checkSettlementsForRecruits neededStrength ai
     in
     if neededStrength > 0 then
-        checkSettlementsForRecruits neededStrength ai
+        recruitTroopsActions
+
+    else if AI.AIGoldManager.goldIncomePerRound ai > 0 || ai.lord.gold > 1000 then
+        List.map (\action -> { action | actionValue = 0.15 }) recruitTroopsActions
 
     else
         []
@@ -107,7 +113,7 @@ takeTroopsFromSettlements : AI -> List AiRoundActionPreference
 takeTroopsFromSettlements ai =
     let
         neededStrength =
-            totalNeededTroopStrength ai <| max 0
+            totalNeededTroopStrength ai identity
     in
     ListExt.justList <| List.map (checkSettlementForAvaiableTroops neededStrength ai) ai.lord.land
 
@@ -127,7 +133,7 @@ checkSettlementForAvaiableTroops targetStrength ai s =
                 (DoSomething <| SwapTroops (Troops.invertArmy availableTroops) s)
                 (min (2 + ai.strategy.defendMultiplier)
                     ((toFloat targetStrength
-                        / toFloat (acceptedMissingTroopsStrength ai)
+                        / (toFloat (acceptedMissingTroopsStrength ai) / 3)
                      )
                         * min 1
                             (toFloat troopStrength
@@ -226,10 +232,10 @@ evaluateSettlementDefense ai s =
                                     / estimatedSettlementDefenseStrength ai s.settlementType
                                 )
                             + (if s.settlementType == Entities.Model.Castle then
-                                ai.strategy.defendMultiplier * 0.8
+                                ai.strategy.defendMultiplier + 0.3
 
                                else
-                                ai.strategy.defendMultiplier * 0.3333
+                                ai.strategy.defendMultiplier * 0.5 + 0.1
                               )
                         )
                     )
