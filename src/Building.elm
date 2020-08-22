@@ -64,13 +64,13 @@ upgradeCostBase : BuildingType -> Float
 upgradeCostBase b =
     case b of
         Quarters ->
-            550
+            400
 
         Barracks ->
             350
 
         Fortress ->
-            500
+            450
 
 
 upgradeBuildingType : List Building -> BuildingType -> List Building
