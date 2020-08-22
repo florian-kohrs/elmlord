@@ -602,19 +602,38 @@ playAiTurn m =
                         }
 
                 other ->
+                    let
+                        newLords =
+                            AI.updateAi ai other (OperatorExt.flip Map.getTerrainForPoint <| m.map) (PathAgent.moveLordOnPath m.map) m.lords
+
+                        updatedAI =
+                            Entities.Lords.getAiWithName newLords ai.lord.entity.name
+                    in
                     { m
                         | lords =
-                            AI.updateAi ai other (OperatorExt.flip Map.getTerrainForPoint <| m.map) (PathAgent.moveLordOnPath m.map) m.lords
+                            newLords
                         , event =
-                            Event.setEvents m.event
-                                (Event.appendEvent m.event.events
-                                    ai.lord.entity.name
-                                    (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                        ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                    )
-                                    --(AI.showAiRoundAction other)
-                                    Event.Minor
+                            MaybeExt.foldMaybe
+                                (\newAI ->
+                                    MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
+                                        m.event
+                                    <|
+                                        AI.showRoundActionActivity ai other
                                 )
+                                m.event
+                                updatedAI
+
+                        {-
+                           Event.setEvents m.event
+                               (Event.appendEvent m.event.events
+                                   ai.lord.entity.name
+                                   (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                       ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                   )
+                                   --(AI.showAiRoundAction other)
+                                   Event.Minor
+                               )
+                        -}
                     }
 
 

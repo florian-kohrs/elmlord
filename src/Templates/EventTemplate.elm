@@ -24,7 +24,7 @@ generateEventOverview event =
             , div []
                 [ button [ onClick (Msg.EventAction Msg.ClearEvents) ] [ Html.text "Clear events" ]
                 ]
-            , div [ Html.Attributes.class "event-logs-body" ] (List.map generateEventComponent event.events)
+            , div [ Html.Attributes.class "event-logs-body" ] (Tuple.first (List.foldr (\e ( r, i ) -> ( generateEventComponent i e :: r, i + 1 )) ( [], 0 ) event.events))
             ]
 
     else
@@ -36,10 +36,10 @@ generateEventOverview event =
     @param {Types.MapTileMsg}: Takes the action type, that the button sends, when it gets clicked
 
 -}
-generateEventComponent : Event.Event -> Html Msg.Msg
-generateEventComponent e =
+generateEventComponent : Int -> Event.Event -> Html Msg.Msg
+generateEventComponent index e =
     div [ Html.Attributes.class ("event-logs-component " ++ OperatorExt.ternary (e.eventType == Event.Important) "important-log" "minor-log") ]
         [ div [] [ span [] [ Html.text e.header ] ]
-        , div [ onClick (Msg.EventAction (Msg.DeleteEvent e.index)), Html.Attributes.class "event-logs-close" ] [ Html.text "x" ]
+        , div [ onClick (Msg.EventAction (Msg.DeleteEvent index)), Html.Attributes.class "event-logs-close" ] [ Html.text "x" ]
         , div [] [ span [] [ Html.text e.text ] ]
         ]

@@ -72,7 +72,7 @@ estimatedNormalPlayerTroopStrength ai =
         x =
             Entities.lordSettlementCount ai.lord
     in
-    (2500 + 650 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
+    (2800 + 400 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
 
 
 estimatedSettlementDefenseStrength : AI -> Entities.Model.SettlementType -> Float

@@ -1,4 +1,4 @@
-module ListExt exposing (getElementAt, indexOf, insertToSortedList, justList)
+module ListExt exposing (getElementAt, indexOf, insertToSortedList, justList, removeElementAt)
 
 import MaybeExt
 
@@ -20,6 +20,21 @@ getElementAt i l =
 
     else
         Maybe.andThen (getElementAt (i - 1)) (List.tail l)
+
+
+removeElementAt : Int -> List a -> List a
+removeElementAt i l =
+    Tuple.first <|
+        List.foldr
+            (\a ( r, index ) ->
+                if index == i then
+                    ( r, index + 1 )
+
+                else
+                    ( a :: r, index + 1 )
+            )
+            ( [], 0 )
+            l
 
 
 indexOf_ : Int -> (a -> Bool) -> List a -> Int

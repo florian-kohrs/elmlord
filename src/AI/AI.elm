@@ -12,6 +12,7 @@ import Dict
 import Entities
 import Entities.Lords
 import Entities.Model
+import Event
 import ListExt
 import Map.Model
 import MapData
@@ -87,6 +88,71 @@ showBasicAction basicAction =
 
         ImproveBuilding settlementModelEntities buildingBuilding ->
             "Improve Building"
+
+
+showRoundActionActivity : AI -> AiRoundActions -> Maybe Event.Event
+showRoundActionActivity ai aiRoundActions =
+    case aiRoundActions of
+        EndRound ->
+            Nothing
+
+        GoSomeWhere p ->
+            Nothing
+
+        DoSomething basicAction ->
+            showBasicActionActivity ai basicAction
+
+
+showBasicActionActivity : AI -> BasicAction -> Maybe Event.Event
+showBasicActionActivity ai action =
+    if ai.lord.entity.position == AI.AIActionDistanceHandler.getBasicActionDestination action then
+        case action of
+            AttackLord l ->
+                Just <|
+                    Event.Event
+                        ai.lord.entity.name
+                        (ai.lord.entity.name ++ " attacked " ++ l.entity.name ++ "!")
+                        Event.Important
+
+            HireTroops _ s ->
+                Just <|
+                    Event.Event
+                        ai.lord.entity.name
+                        (ai.lord.entity.name ++ " recruited troops from " ++ s.entity.name)
+                        Event.Minor
+
+            SwapTroops _ s ->
+                Just <|
+                    Event.Event
+                        ai.lord.entity.name
+                        (ai.lord.entity.name ++ " swapped troops with " ++ s.entity.name)
+                        Event.Minor
+
+            SiegeSettlement s ->
+                Just <|
+                    Event.Event
+                        ai.lord.entity.name
+                        (ai.lord.entity.name ++ " sieged  " ++ s.entity.name ++ "!")
+                        Event.Important
+
+            ImproveBuilding _ b ->
+                Just <|
+                    Event.Event
+                        ai.lord.entity.name
+                        (ai.lord.entity.name ++ " improved " ++ b.name ++ " to level " ++ String.fromInt (b.level + 1))
+                        Event.Minor
+
+    else
+        Nothing
+
+
+
+{- Just <|
+   Event.Event
+       (showBasicAction action)
+       (Vector.showPoint ai.lord.entity.position ++ "<- lord; -> action" ++ Vector.showPoint (AI.AIActionDistanceHandler.getBasicActionDestination action))
+       Event.Minor
+-}
 
 
 getAiActionMultiplier : Float -> Float
