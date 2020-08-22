@@ -14,7 +14,7 @@ winningTitle =
 
 winningDesc : String
 winningDesc =
-    "My lord we have destroyed the last enemy, the campaign is done, we showed them our supremacy."
+    "My lord you have smited your last enemy, the kingdom is yours."
 
 
 losingTitle : String
@@ -24,7 +24,7 @@ losingTitle =
 
 losingDesc : String
 losingDesc =
-    "My lord our castle was taken, the campaign is a lost cause."
+    "Your castle was taken, you are dead."
 
 
 {-| Returns the layout for the ending modal, when the player either won or lost
@@ -54,7 +54,7 @@ generateEndData res =
         ]
     , div []
         [ button []
-            [ span [onClick (Msg.MenueAction Msg.ShowMenue)] [ Html.text "Go to the main menue" ]
+            [ span [ onClick (Msg.MenueAction Msg.ShowMenue) ] [ Html.text "Go to the main menue" ]
             ]
         ]
     ]

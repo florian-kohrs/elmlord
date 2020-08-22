@@ -29,4 +29,4 @@ lordStrengthDiffFactor =
 
 addGoldCastle : Float
 addGoldCastle =
-    1500.0
+    2500.0

@@ -171,7 +171,7 @@ troopCost t =
             15
 
         Sword ->
-            35
+            40
 
         Knight ->
             50
@@ -187,7 +187,7 @@ troopWage t =
             0.3
 
         Sword ->
-            0.2
+            0.25
 
         Knight ->
             0.5
@@ -200,10 +200,10 @@ troopDamage t =
             8
 
         Spear ->
-            6
+            9
 
         Sword ->
-            10
+            8
 
         Knight ->
             12
@@ -216,13 +216,13 @@ troopDefense t =
             35
 
         Spear ->
-            40
+            35
 
         Sword ->
-            75
+            65
 
         Knight ->
-            100
+            90
 
 
 troopName : TroopType -> String
