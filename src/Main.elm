@@ -603,25 +603,16 @@ playAiTurn m =
 
                 other ->
                     let
-                        newLords =
+                        ( newLords, actionEvent ) =
                             AI.updateAi ai other (OperatorExt.flip Map.getTerrainForPoint <| m.map) (PathAgent.moveLordOnPath m.map) m.lords
-
-                        updatedAI =
-                            Entities.Lords.getAiWithName newLords ai.lord.entity.name
                     in
                     { m
                         | lords =
                             newLords
                         , event =
-                            MaybeExt.foldMaybe
-                                (\newAI ->
-                                    MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
-                                        m.event
-                                    <|
-                                        AI.showRoundActionActivity ai other
-                                )
+                            MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
                                 m.event
-                                updatedAI
+                                actionEvent
 
                         {-
                            Event.setEvents m.event
