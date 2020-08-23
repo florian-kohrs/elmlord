@@ -46,11 +46,11 @@ showAiRoundAction aiRoundActions =
             "Go to " ++ Vector.showPoint p
 
         DoSomething basicAction ->
-            showBasicAction basicAction
+            debugBasicAction basicAction
 
 
-showBasicAction : BasicAction -> String
-showBasicAction basicAction =
+debugBasicAction : BasicAction -> String
+debugBasicAction basicAction =
     case basicAction of
         AttackLord l ->
             "Attack Lord " ++ l.entity.name
@@ -90,60 +90,38 @@ showBasicAction basicAction =
             "Improve Building"
 
 
-showRoundActionActivity : AI -> AiRoundActions -> Maybe Event.Event
-showRoundActionActivity ai aiRoundActions =
-    case aiRoundActions of
-        EndRound ->
-            Nothing
-
-        GoSomeWhere p ->
-            Nothing
-
-        DoSomething basicAction ->
-            showBasicActionActivity ai basicAction
-
-
-showBasicActionActivity : AI -> BasicAction -> Maybe Event.Event
+showBasicActionActivity : AI -> BasicAction -> Event.Event
 showBasicActionActivity ai action =
-    if ai.lord.entity.position == AI.AIActionDistanceHandler.getBasicActionDestination action then
-        case action of
-            AttackLord l ->
-                Just <|
-                    Event.Event
-                        ai.lord.entity.name
-                        (ai.lord.entity.name ++ " attacked " ++ l.entity.name ++ "!")
-                        Event.Important
+    case action of
+        AttackLord l ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " attacked " ++ l.entity.name ++ "!")
+                Event.Important
 
-            HireTroops _ s ->
-                Just <|
-                    Event.Event
-                        ai.lord.entity.name
-                        (ai.lord.entity.name ++ " recruited troops from " ++ s.entity.name)
-                        Event.Minor
+        HireTroops _ s ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " recruited troops from " ++ s.entity.name)
+                Event.Minor
 
-            SwapTroops _ s ->
-                Just <|
-                    Event.Event
-                        ai.lord.entity.name
-                        (ai.lord.entity.name ++ " swapped troops with " ++ s.entity.name)
-                        Event.Minor
+        SwapTroops _ s ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " swapped troops with " ++ s.entity.name)
+                Event.Minor
 
-            SiegeSettlement s ->
-                Just <|
-                    Event.Event
-                        ai.lord.entity.name
-                        (ai.lord.entity.name ++ " sieged  " ++ s.entity.name ++ "!")
-                        Event.Important
+        SiegeSettlement s ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " sieged  " ++ s.entity.name ++ "!")
+                Event.Important
 
-            ImproveBuilding _ b ->
-                Just <|
-                    Event.Event
-                        ai.lord.entity.name
-                        (ai.lord.entity.name ++ " improved " ++ b.name ++ " to level " ++ String.fromInt (b.level + 1))
-                        Event.Minor
-
-    else
-        Nothing
+        ImproveBuilding _ b ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " improved " ++ b.name ++ " to level " ++ String.fromInt (b.level + 1))
+                Event.Minor
 
 
 
@@ -165,14 +143,14 @@ setLord ai l =
     { ai | lord = l }
 
 
-updateAi : AI -> AiRoundActions -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+updateAi : AI -> AiRoundActions -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> ( Entities.Lords.LordList, Maybe Event.Event )
 updateAi ai action tileOnPos moveTowards lordList =
     case action of
         EndRound ->
-            lordList
+            ( lordList, Nothing )
 
         GoSomeWhere p ->
-            Entities.Lords.replaceAi lordList <| { ai | lord = moveTowards ai.lord p }
+            ( Entities.Lords.replaceAi lordList <| { ai | lord = moveTowards ai.lord p }, Nothing )
 
         DoSomething basicAction ->
             let
@@ -185,35 +163,39 @@ updateAi ai action tileOnPos moveTowards lordList =
             executeBasicAiAction movedAI destination basicAction tileOnPos moveTowards (Entities.Lords.replaceAi lordList <| movedAI)
 
 
-executeBasicAiAction : AI -> Vector.Point -> BasicAction -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+executeBasicAiAction : AI -> Vector.Point -> BasicAction -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> ( Entities.Lords.LordList, Maybe Event.Event )
 executeBasicAiAction ai destination action tileOnPos moveTowards lordList =
     if ai.lord.entity.position == destination then
-        case action of
-            SiegeSettlement s ->
-                siegeSettlement
-                    ai
-                    s
-                    (tileOnPos destination)
-                    lordList
+        let
+            newLords =
+                case action of
+                    SiegeSettlement s ->
+                        siegeSettlement
+                            ai
+                            s
+                            (tileOnPos destination)
+                            lordList
 
-            AttackLord l ->
-                attackLord
-                    ai
-                    l
-                    (tileOnPos destination)
-                    lordList
+                    AttackLord l ->
+                        attackLord
+                            ai
+                            l
+                            (tileOnPos destination)
+                            lordList
 
-            SwapTroops dict s ->
-                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
+                    SwapTroops dict s ->
+                        Entities.Lords.replaceAi lordList <| { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
 
-            HireTroops dict s ->
-                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.recruitTroops dict ai.lord s }
+                    HireTroops dict s ->
+                        Entities.Lords.replaceAi lordList <| { ai | lord = Entities.recruitTroops dict ai.lord s }
 
-            ImproveBuilding s b ->
-                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.upgradeBuilding ai.lord b s }
+                    ImproveBuilding s b ->
+                        Entities.Lords.replaceAi lordList <| { ai | lord = Entities.upgradeBuilding ai.lord b s }
+        in
+        ( newLords, Just <| showBasicActionActivity ai action )
 
     else
-        lordList
+        ( lordList, Nothing )
 
 
 siegeSettlement : AI -> Entities.Model.Settlement -> Map.Model.Terrain -> Entities.Lords.LordList -> Entities.Lords.LordList
