@@ -67,7 +67,6 @@ buildHexagon p n =
         (getTerrainFor p n)
         Nothing
         []
-        Faction.Faction1
 
 
 getTerrainFor : Vector.Point -> Noise.PermutationTable -> Map.Model.Terrain
