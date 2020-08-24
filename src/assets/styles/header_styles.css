@@ -91,11 +91,11 @@
     cursor: pointer;
 }
 
-.troop-info-icon > img {
-    width: 40px;
-    height: 40px;
+.troop-info-icon > span {
+    font-size: 12px;
     display: block;
-    margin: 14px auto;
+    color: #49505c;
+    padding-top: 20px;
 }
 
 /* Styling for the settings (logview and audio) */
