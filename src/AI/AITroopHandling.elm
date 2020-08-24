@@ -49,7 +49,7 @@ troopStrengthToBotherAddingToSettlement =
 
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
-    toFloat 2750 * ai.strategy.defendMultiplier
+    toFloat 2750 * (2 * ai.strategy.defendMultiplier - 1.2)
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
@@ -59,7 +59,7 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    (6500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+    (5000 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * (2 * ai.strategy.defendMultiplier - 1)
 
 
 
@@ -92,7 +92,7 @@ hireTroopsIfNeeded ai =
             totalNeededTroopStrength ai identity
 
         recruitTroopsActions =
-            checkSettlementsForRecruits neededStrength ai
+            checkSettlementsForRecruits (max 1 neededStrength) ai
     in
     if neededStrength > 0 then
         recruitTroopsActions
@@ -185,6 +185,7 @@ checkSettlementForRecruits targetStrength ai s =
                             )
                       )
                     + clamp 0 1 (logBase 10 (recruitStrengthFactor / toFloat acceptedLackOfDefenseStrength))
+                    + (1 - ai.strategy.defendMultiplier)
     in
     if recruitStrengthFactor > 0 then
         Just <|

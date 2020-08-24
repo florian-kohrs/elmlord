@@ -16,7 +16,7 @@ import Vector
 
 distanceFromCapitalSiegeActionPenalty : Int -> Float
 distanceFromCapitalSiegeActionPenalty turns =
-    toFloat (turns - 4) * 0.15
+    toFloat turns * 0.2
 
 
 distanceFromVillageSiegeActionPenalty : Int -> Float
@@ -56,8 +56,8 @@ distanceFromAttackLordPenalty turns =
     toFloat turns * 2.5
 
 
-applyActionDistancePenalty : (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
-applyActionDistancePenalty turnsToPoint action =
+applyActionDistancePenalty : AI -> (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
+applyActionDistancePenalty ai turnsToPoint action =
     let
         destination =
             getAiRoundActionDestination action.action
@@ -68,12 +68,12 @@ applyActionDistancePenalty turnsToPoint action =
     { action
         | actionValue =
             action.actionValue
-                - getActionDistancePenalty action.action turnsToAction
+                - getActionDistancePenalty ai action.action turnsToAction
     }
 
 
-getActionDistancePenalty : AiRoundActions -> Int -> Float
-getActionDistancePenalty a turnsToPoint =
+getActionDistancePenalty : AI -> AiRoundActions -> Int -> Float
+getActionDistancePenalty ai a turnsToPoint =
     case a of
         EndRound ->
             0
@@ -82,31 +82,35 @@ getActionDistancePenalty a turnsToPoint =
             distanceFromMoveToPenalty turnsToPoint
 
         DoSomething baseAction ->
-            getBaseActionDistancePenalty baseAction turnsToPoint
+            getBaseActionDistancePenalty ai baseAction turnsToPoint
 
 
-getBaseActionDistancePenalty : BasicAction -> Int -> Float
-getBaseActionDistancePenalty basicAction i =
+getBaseActionDistancePenalty : AI -> BasicAction -> Int -> Float
+getBaseActionDistancePenalty ai basicAction i =
     case basicAction of
         AttackLord l ->
-            max 0 <| distanceFromAttackLordPenalty i
+            max 0 <| distanceFromAttackLordPenalty i * (2 - ai.strategy.battleMultiplier)
 
         HireTroops _ _ ->
             if i < 0 then
                 -2
 
             else
-                distanceHireTroopsActionPenalty i
+                distanceHireTroopsActionPenalty i * (2 - ai.strategy.defendMultiplier)
 
         SwapTroops _ _ ->
-            distanceSwapTroopsActionPenalty i
+            if i < 0 then
+                max 0 <| -1 * ((1 - ai.strategy.defendMultiplier) * 3)
+
+            else
+                distanceSwapTroopsActionPenalty i * (2 - ai.strategy.defendMultiplier)
 
         SiegeSettlement s ->
             if s.settlementType == Entities.Model.Castle then
-                distanceFromCapitalSiegeActionPenalty i
+                distanceFromCapitalSiegeActionPenalty i * (2 - ai.strategy.siegeMultiplier)
 
             else
-                distanceFromVillageSiegeActionPenalty i
+                distanceFromVillageSiegeActionPenalty i * (2 - ai.strategy.siegeMultiplier)
 
         ImproveBuilding _ _ ->
             distanceImproveBuildingActionPenalty <| max 0 i

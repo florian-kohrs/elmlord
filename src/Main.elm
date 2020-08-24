@@ -83,7 +83,7 @@ type UiState
 
 aiTickFrequenz : Float
 aiTickFrequenz =
-    2
+    10
 
 
 type MainMenueState
@@ -614,16 +614,16 @@ playAiTurn m =
                                 m.event
                                 actionEvent
 
-                        {-
-                           Event.setEvents m.event
-                               (Event.appendEvent m.event.events
-                                   ai.lord.entity.name
-                                   (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                       ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                   )
-                                   --(AI.showAiRoundAction other)
-                                   Event.Minor
+                        {- Event.appendEvent
+                           m.event
+                           (Event.Event
+                               ai.lord.entity.name
+                               (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                   ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
                                )
+                               --(AI.showAiRoundAction other)
+                               Event.Minor
+                           )
                         -}
                     }
 
