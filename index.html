@@ -17,10 +17,10 @@ var app = Elm.Main.init({
     node: document.getElementById('myapp')
 });
 
-setVolumne(10);
+setVolume(10);
 
-app.ports.updateVolumne.subscribe(function(volumne) {
-    setVolumne(volumne);
+app.ports.updateVolume.subscribe(function(volume) {
+    setVolume(volume);
 });
 
 app.ports.startMusic.subscribe(function() {
@@ -44,9 +44,9 @@ app.ports.openLink.subscribe((link) => {
 });
 
 
-function setVolumne(volumne) {
-    document.getElementById("audio-player").volume = volumne / 100;
-    document.getElementById("sound-player").volume = volumne / 100;
+function setVolume(volume) {
+    document.getElementById("audio-player").volume = volume / 100;
+    document.getElementById("sound-player").volume = volume / 100;
 }
 
 function startMusic() {
