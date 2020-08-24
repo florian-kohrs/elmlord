@@ -131,7 +131,7 @@ setPosition entity pos =
 
 buyAllTroops : Lord -> Settlement -> Lord 
 buyAllTroops l s =
-    Dict.foldl (\k _ b -> buyTroops b (Troops.intToTroopType k) s) l l.entity.army
+    Dict.foldl (\k _ b -> buyTroops b (Troops.intToTroopType k) (Maybe.withDefault s (getSettlementByName b.land s.entity.name))) l l.entity.army
 
 buyTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 buyTroops l t s =
