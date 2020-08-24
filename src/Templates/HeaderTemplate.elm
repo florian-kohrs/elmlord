@@ -109,7 +109,7 @@ headerTroopTemplate lord =
             ]
         ]
     , div [ Html.Attributes.class "troop-info-icon" ]
-        [ img [ src "./assets/images/general/info.png", onClick (Msg.TroopAction Msg.TroopActionMsg) ] [] ]
+        [span [onClick (Msg.TroopAction Msg.TroopActionMsg)] [Html.text "Disband troops"]]
     ]
 
 

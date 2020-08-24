@@ -103,6 +103,7 @@ settlementStateToAction pF lord settlement uistate =
                         settlement.recruitLimits
                         Troops.troopKeyList
                         []
+                    ++ [ button [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyAllTroops settlement))) ] [ span [] [ Html.text "Recruit all" ] ] ]
                     ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
                 )
             ]

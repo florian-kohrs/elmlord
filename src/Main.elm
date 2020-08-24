@@ -827,6 +827,13 @@ updateSettlementStats msg model =
                 Msg.RecruitView
                 model
 
+        Msg.BuyAllTroops s ->
+            updateMultipleTroopStats
+                (Entities.Lords.updatePlayer model.lords (Entities.buyAllTroops (Entities.Lords.getPlayer model.lords) s))
+                s
+                Msg.RecruitView
+                model
+
         Msg.StationTroops t s ->
             updateMultipleTroopStats
                 (Entities.Lords.updatePlayer model.lords (Entities.stationTroops (Entities.Lords.getPlayer model.lords) t s))
