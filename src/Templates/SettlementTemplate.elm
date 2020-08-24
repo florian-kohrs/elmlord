@@ -68,7 +68,7 @@ settlementStateToAction pF lord settlement uistate =
             , checkBuildingCapabilities settlement
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (Entities.settlementIncome settlement.settlementType) ++ " Ducats") ]
+                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (Entities.settlementIncome settlement.settlementType) 2 ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
                     , div []
@@ -215,7 +215,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
         , span [] [ Html.text ("[" ++ String.fromInt aAmount ++ "]") ]
         , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "/" ++ String.fromInt (Entities.getSettlementTroopsRecruitLimit s l t) ++ "]") ]
         , div []
-            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * toFloat (Troops.troopCost t))) ]
+            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * toFloat (Troops.troopCost t)) 2) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button

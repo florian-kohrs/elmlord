@@ -139,7 +139,7 @@ generateTerrainBonuses : Troops.TroopType -> Html Msg.Msg
 generateTerrainBonuses t =
     div [ Html.Attributes.class "battle-terrain-bonus" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
-        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Troops.battlefieldBonus t * 100 - 100))) ++ "%") ]
+        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Troops.battlefieldBonus t * 100 - 100))) 0 ++ "%") ]
         ]
 
 
@@ -163,7 +163,7 @@ generateSettlementBonus bS ter =
                 )
                 :: [ div [ Html.Attributes.class "battle-terrain-bonus" ]
                         [ img [ src (Entities.getSettlementImage settle) ] []
-                        , span [] [ Html.text ("+" ++ Helper.roundDigits (Entities.getSettlementBonus settle bS.defender.land * 100 - 100) ++ "%") ]
+                        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Entities.getSettlementBonus settle bS.defender.land * 100 - 100))) 0 ++ "%") ]
                         ]
                    ]
 

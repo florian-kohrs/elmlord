@@ -4,6 +4,7 @@ import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
 import Msg
 import Troops
+import OperatorExt
 
 
 {-| Returns a container for a troop overview (image, name and amount)
@@ -25,7 +26,7 @@ troopToHtml t amount cls =
     @param {Float}: Takes the float value that has to be round up
 
 -}
-roundDigits : Float -> String
+{- roundDigits : Float -> String
 roundDigits v =
     let
         parts =
@@ -39,4 +40,21 @@ roundDigits v =
             x ++ ".00"
 
         x :: (xs :: _) ->
-            x ++ "." ++ String.left 2 xs
+            x ++ "." ++ String.left 2 xs -}
+
+
+roundDigits : Float -> Int -> String
+roundDigits v i = 
+    let
+        parts =
+            String.split "." (String.fromFloat v)
+    in
+    case parts of
+        [] ->
+            "0.00"
+
+        x :: [] ->
+            x ++ ".00"
+
+        x :: (xs :: _) ->
+            x ++ OperatorExt.ternary (i > 0) ("." ++ String.left i xs) ".00"
