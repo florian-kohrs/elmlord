@@ -376,7 +376,7 @@ applySettlementNewRecruits quarterLevel s =
 getSettlementBonus : Settlement -> List Settlement -> Float
 getSettlementBonus s l =
     if s.settlementType == Village then
-        1.1
+        1.2
 
     else
         List.foldr (\_ y -> 0.15 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100

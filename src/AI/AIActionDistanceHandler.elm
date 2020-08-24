@@ -1,7 +1,6 @@
 module AI.AIActionDistanceHandler exposing (..)
 
 import AI.Model exposing (..)
-import Balancing
 import Building
 import Dict
 import Entities
@@ -16,7 +15,7 @@ import Vector
 
 distanceFromCapitalSiegeActionPenalty : Int -> Float
 distanceFromCapitalSiegeActionPenalty turns =
-    toFloat turns * 0.2
+    toFloat turns * 0.085
 
 
 distanceFromVillageSiegeActionPenalty : Int -> Float
@@ -98,9 +97,13 @@ getBaseActionDistancePenalty ai basicAction i =
             else
                 distanceHireTroopsActionPenalty i * (2 - ai.strategy.defendMultiplier)
 
-        SwapTroops _ _ ->
+        SwapTroops _ s ->
             if i < 0 then
-                max 0 <| -1 * ((1 - ai.strategy.defendMultiplier) * 3)
+                if s.settlementType == Entities.Model.Castle then
+                    min 0 <| 1 - (ai.strategy.defendMultiplier * 3)
+
+                else
+                    min 0 <| (1 - (ai.strategy.defendMultiplier + 0.1) * 1.5)
 
             else
                 distanceSwapTroopsActionPenalty i * (2 - ai.strategy.defendMultiplier)

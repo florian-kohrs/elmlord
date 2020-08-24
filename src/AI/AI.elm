@@ -5,7 +5,6 @@ import AI.AIGoldManager
 import AI.AISettlementHandling
 import AI.AITroopHandling
 import AI.Model exposing (..)
-import Balancing
 import Battle
 import Building
 import Dict
@@ -346,7 +345,7 @@ evaluateSettlementSiegeAction ai s ls =
         siegeStrengthDiff =
             toFloat (Troops.sumArmyStats ai.lord.entity.army)
                 / max
-                    100
+                    (300 * ai.strategy.defendMultiplier)
                     (toFloat (AI.AISettlementHandling.settlementDefenseStrength s (Entities.landlordOnSettlement s ls))
                         * MaybeExt.foldMaybe
                             (\l ->
@@ -364,8 +363,7 @@ evaluateSettlementSiegeAction ai s ls =
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
                 (min (2 + ai.strategy.siegeMultiplier)
-                    (1.1
-                        - ai.strategy.siegeMultiplier
+                    (ai.strategy.siegeMultiplier
                         + settlementSiegeBoni ai s
                         + logBase 10 (siegeStrengthDiff * siegeStrengthDiff)
                     )
@@ -380,10 +378,10 @@ settlementSiegeBoni : AI -> Entities.Model.Settlement -> Float
 settlementSiegeBoni ai s =
     case s.settlementType of
         Entities.Model.Castle ->
-            5 - max 0.9 ai.strategy.siegeMultiplier * 5
+            max 1.1 ai.strategy.siegeMultiplier * 5 - 5
 
         Entities.Model.Village ->
-            2 - max 0.9 ai.strategy.siegeMultiplier * 2
+            max 0.9 ai.strategy.siegeMultiplier - 1
 
 
 lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float

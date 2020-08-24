@@ -1,6 +1,5 @@
 module Battle exposing (applyBattleAftermath, evaluateBattleResult, fleeBattle, getBattleSiegeStats, getLordBattleStats, siegeBattleAftermath, siegeBattleSetDefender, skipBattle)
 
-import Balancing
 import Battle.Model exposing (..)
 import Dict
 import DictExt
@@ -17,6 +16,16 @@ import Troops
 battleFleeTroopLoss : Float
 battleFleeTroopLoss =
     0.3
+
+
+siegeCastleGoldBonus : Float
+siegeCastleGoldBonus =
+    2500.0
+
+
+siegeVillageGoldBonus : Float
+siegeVillageGoldBonus =
+    300
 
 
 {-| Resolves / Calculate a battle skirmish outcome between (lord vs lord or lord vs siege).
@@ -174,10 +183,10 @@ siegeBattleAftermath bS s =
     in
     if Troops.sumTroops s.entity.army <= 0 then
         if s.settlementType == Entities.Model.Castle then
-            handleSettlementTransfer (getGoldBonus attacker) defender (\y -> y.settlementType /= Entities.Model.Castle) []
+            handleSettlementTransfer (getGoldBonus s.settlementType attacker) defender (\y -> y.settlementType /= Entities.Model.Castle) []
 
         else
-            handleSettlementTransfer attacker defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
+            handleSettlementTransfer (getGoldBonus s.settlementType attacker) defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
 
     else
         ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
@@ -279,9 +288,14 @@ skipBattle ter bS =
         skipBattle ter newBattleStats
 
 
-getGoldBonus : Entities.Model.Lord -> Entities.Model.Lord
-getGoldBonus lord =
-    { lord | gold = lord.gold + Balancing.addGoldCastle }
+getGoldBonus : Entities.Model.SettlementType -> Entities.Model.Lord -> Entities.Model.Lord
+getGoldBonus t lord =
+    case t of
+        Entities.Model.Castle ->
+            { lord | gold = lord.gold + siegeCastleGoldBonus }
+
+        Entities.Model.Village ->
+            { lord | gold = lord.gold + siegeVillageGoldBonus }
 
 
 updatedBattleLordFunds : Entities.Model.Lord -> Entities.Model.Lord -> ( Entities.Model.Lord, Entities.Model.Lord )
