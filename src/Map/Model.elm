@@ -16,7 +16,6 @@ type alias MapTile =
     , terrain : Terrain
     , settlement : Maybe Entities.Model.Settlement
     , lords : List Entities.Model.Lord
-    , faction : Faction.Faction
     }
 
 

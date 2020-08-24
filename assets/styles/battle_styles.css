@@ -81,7 +81,8 @@
 
 .battle-action-container {
     display: grid;
-    grid-template-rows: 250px 80px 80px 1fr;
+    grid-template-rows: 320px 45px 45px 1fr;
+    grid-column-gap: 5px ;
     text-align: center;
     color: #49505c;
 }
@@ -110,7 +111,7 @@
 
 .battle-terrain-info {
     display: grid;
-    grid-template-rows: 25% 30% 1fr;
+    grid-template-rows: 25% 25% 1fr;
     height: 70%;
 }
 
@@ -135,7 +136,7 @@
 .battle-terrain-info > div > span {
     font-size: 20px;
     display: block;
-    padding-top: 10px;
+    padding-top: 20px;
 }
 
 .battle-terrain-bonus {

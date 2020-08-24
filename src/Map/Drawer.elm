@@ -79,7 +79,7 @@ getImageForTile t =
 styleMapTile : MapTile -> MapTileDesign
 styleMapTile tile =
     { backgroundColor = Map.terrainToColor tile.terrain
-    , strokeColor = Faction.factionColor tile.faction
+    , strokeColor = "grey"
     , strokeWidth = "2px"
     }
 

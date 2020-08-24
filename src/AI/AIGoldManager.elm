@@ -1,7 +1,6 @@
 module AI.AIGoldManager exposing (..)
 
 import AI.Model exposing (..)
-import Balancing
 import Building
 import Dict
 import Entities

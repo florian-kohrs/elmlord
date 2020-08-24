@@ -56,6 +56,7 @@ type SettlementUIMsg
 
 type SettlementArmyMsg
     = BuyTroops Troops.TroopType Entities.Model.Settlement
+    | BuyAllTroops Entities.Model.Settlement
     | StationTroops Troops.TroopType Entities.Model.Settlement
     | TakeTroops Troops.TroopType Entities.Model.Settlement
     | UpgradeBuilding Building.Building Entities.Model.Settlement

@@ -56,7 +56,7 @@ headerGoldTemplate lord =
     [ img [ onClick (Msg.EndGame True), src "./assets/images/general/ducats_icon.png", Html.Attributes.class "page-header-images" ] []
     , div [ Html.Attributes.class "tooltip" ]
         [ span [ Html.Attributes.class "page-header-span" ]
-            [ Html.text (Helper.roundDigits lord.gold ++ " Ducats")
+            [ Html.text (Helper.roundDigits lord.gold 2 ++ " Ducats")
             , revenueToSpan ( "", List.foldr (+) 0 (List.map Tuple.second (lordToRevenues lord)) )
             ]
         , div [ Html.Attributes.class "tooltiptext gold-tooltip" ]
@@ -109,7 +109,7 @@ headerTroopTemplate lord =
             ]
         ]
     , div [ Html.Attributes.class "troop-info-icon" ]
-        [ img [ src "./assets/images/general/info.png", onClick (Msg.TroopAction Msg.TroopActionMsg) ] [] ]
+        [span [onClick (Msg.TroopAction Msg.TroopActionMsg)] [Html.text "Disband troops"]]
     ]
 
 
@@ -183,10 +183,10 @@ revenuesToTemplate rev =
 revenueToSpan : ( String, Float ) -> Html Msg.Msg
 revenueToSpan ( name, value ) =
     if value > 0 then
-        span [ Html.Attributes.class "positive-income" ] [ Html.text (name ++ "  +" ++ Helper.roundDigits value ++ " Ducats") ]
+        span [ Html.Attributes.class "positive-income" ] [ Html.text (name ++ "  +" ++ Helper.roundDigits value 2 ++ " Ducats") ]
 
     else
-        span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ Helper.roundDigits value ++ " Ducats") ]
+        span [ Html.Attributes.class "negative-income" ] [ Html.text (name ++ " " ++ Helper.roundDigits value 2 ++ " Ducats") ]
 
 
 resolveOnChangeMsg : String -> Msg.Msg

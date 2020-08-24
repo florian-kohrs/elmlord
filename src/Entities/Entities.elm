@@ -117,7 +117,7 @@ lordSettlementCount l =
 
 updateEntityFaction : Faction.Faction -> WorldEntity -> WorldEntity
 updateEntityFaction fa we =
-    { we | faction = fa, army = Troops.emptyTroops }
+    { we | faction = fa, army = we.army }
 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
@@ -129,6 +129,9 @@ setPosition entity pos =
 -- functions for the handling of armies / troops inside of entities
 ----------------------------------------------------------
 
+buyAllTroops : Lord -> Settlement -> Lord 
+buyAllTroops l s =
+    Dict.foldl (\k _ b -> buyTroops b (Troops.intToTroopType k) (Maybe.withDefault s (getSettlementByName b.land s.entity.name))) l l.entity.army
 
 buyTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 buyTroops l t s =
@@ -376,7 +379,7 @@ applySettlementNewRecruits quarterLevel s =
 getSettlementBonus : Settlement -> List Settlement -> Float
 getSettlementBonus s l =
     if s.settlementType == Village then
-        1.1
+        1.2
 
     else
         List.foldr (\_ y -> 0.15 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100

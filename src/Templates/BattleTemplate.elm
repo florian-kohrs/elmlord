@@ -117,12 +117,12 @@ generateActionOverview bS ter =
         [ div [ Html.Attributes.class "battle-terrain-info" ]
             ([ span [] [ Html.text "Battlefield-Terrain" ]
              , div []
-                [ img [ src "./assets/images/map/tree_image_color.png" ] []
+                [ img [ src ("./assets/images/map/" ++ String.toLower (Map.terrainToName ter) ++ "_icon_color.png") ] []
                 , span [] [ Html.text (Map.terrainToName ter) ]
                 ]
              ]
                 ++ List.map generateTerrainBonuses (Map.terrainToBonus ter)
-                ++ [ generateSettlementBonus bS ]
+                ++ generateSettlementBonus bS ter
             )
         , span [ Html.Attributes.class "battle-versus-text" ] [ Html.text "VS." ]
         , generateStatusText bS
@@ -139,7 +139,7 @@ generateTerrainBonuses : Troops.TroopType -> Html Msg.Msg
 generateTerrainBonuses t =
     div [ Html.Attributes.class "battle-terrain-bonus" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
-        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Troops.battlefieldBonus t * 100 - 100))) ++ "%") ]
+        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Troops.battlefieldBonus t * 100 - 100))) 0 ++ "%") ]
         ]
 
 
@@ -148,17 +148,24 @@ generateTerrainBonuses t =
     @param {BattleStats}: Takes information about the battle to get the settlement
 
 -}
-generateSettlementBonus : Battle.Model.BattleStats -> Html Msg.Msg
-generateSettlementBonus bS =
+generateSettlementBonus : Battle.Model.BattleStats -> Map.Model.Terrain -> List (Html Msg.Msg)
+generateSettlementBonus bS ter =
     case bS.settlement of
         Nothing ->
-            div [] []
+            [ div [] [] ]
 
         Just settle ->
-            div [ Html.Attributes.class "battle-terrain-bonus" ]
-                [ img [ src (Entities.getSettlementImage settle) ] []
-                , span [] [ Html.text ("+" ++ Helper.roundDigits (Entities.getSettlementBonus settle bS.defender.land * 100 - 100) ++ "%") ]
-                ]
+            OperatorExt.ternary (settle.settlementType == Entities.Model.Castle && ter /= Map.Model.Forest)
+                (generateTerrainBonuses Troops.Archer)
+                (div
+                    []
+                    []
+                )
+                :: [ div [ Html.Attributes.class "battle-terrain-bonus" ]
+                        [ img [ src (Entities.getSettlementImage settle) ] []
+                        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Entities.getSettlementBonus settle bS.defender.land * 100 - 100))) 0 ++ "%") ]
+                        ]
+                   ]
 
 
 {-| Displays the status text about the ongoing battle
