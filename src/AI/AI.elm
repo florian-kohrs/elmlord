@@ -364,10 +364,12 @@ evaluateSettlementSiegeAction ai s ls =
             (AiRoundActionPreference
                 (DoSomething (SiegeSettlement s))
                 (min (2 + ai.strategy.siegeMultiplier)
-                    (1.1
+                    ((1.1
                         - ai.strategy.siegeMultiplier
                         + settlementSiegeBoni ai s
                         + logBase 10 (siegeStrengthDiff * siegeStrengthDiff)
+                     )
+                        * settlementSiegeMultiplier ai s
                     )
                 )
             )
@@ -380,10 +382,23 @@ settlementSiegeBoni : AI -> Entities.Model.Settlement -> Float
 settlementSiegeBoni ai s =
     case s.settlementType of
         Entities.Model.Castle ->
-            5 - max 0.9 ai.strategy.siegeMultiplier * 5
+            max 1.1 ai.strategy.siegeMultiplier * 3 - 3
 
         Entities.Model.Village ->
             2 - max 0.9 ai.strategy.siegeMultiplier * 2
+
+
+settlementSiegeMultiplier : AI -> Entities.Model.Settlement -> Float
+settlementSiegeMultiplier ai s =
+    case s.settlementType of
+        Entities.Model.Castle ->
+            1
+
+        Entities.Model.Village ->
+            clamp
+                0.25
+                1
+                (toFloat (Troops.sumArmyStats ai.lord.entity.army) / toFloat (AI.AITroopHandling.estimatedNormalPlayerTroopStrength ai))
 
 
 lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float

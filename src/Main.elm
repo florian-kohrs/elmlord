@@ -100,7 +100,7 @@ hashString s =
                 , count + 1
                 )
             )
-            ( 1, 1 )
+            ( 2276, 1 )
         <|
             String.toList
                 s
@@ -610,21 +610,19 @@ playAiTurn m =
                         | lords =
                             newLords
                         , event =
-                            MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
+                            --  MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
+                            --      m.event
+                            --      actionEvent
+                            Event.appendEvent
                                 m.event
-                                actionEvent
-
-                        {- Event.appendEvent
-                           m.event
-                           (Event.Event
-                               ai.lord.entity.name
-                               (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                   ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                               )
-                               --(AI.showAiRoundAction other)
-                               Event.Minor
-                           )
-                        -}
+                                (Event.Event
+                                    ai.lord.entity.name
+                                    (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                        ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                    )
+                                    --(AI.showAiRoundAction other)
+                                    Event.Minor
+                                )
                     }
 
 

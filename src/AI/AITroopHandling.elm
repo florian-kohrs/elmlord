@@ -34,7 +34,7 @@ maximalAcceptedSettlementStrength ai s =
 
 maximalAcceptedPlayerStrength : AI -> Int
 maximalAcceptedPlayerStrength ai =
-    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 5 + max 500 (ai.lord.gold / 5)
+    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 6 + max 500 (ai.lord.gold / 5)
 
 
 acceptedLackOfDefenseStrength : Int
@@ -59,7 +59,7 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    (5000 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * (2 * ai.strategy.defendMultiplier - 1)
+    (5050 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
 
 
 
@@ -233,10 +233,10 @@ evaluateSettlementDefense ai s =
                                     / estimatedSettlementDefenseStrength ai s.settlementType
                                 )
                             + (if s.settlementType == Entities.Model.Castle then
-                                ai.strategy.defendMultiplier + 0.3
+                                ai.strategy.defendMultiplier + 0.6
 
                                else
-                                ai.strategy.defendMultiplier * 0.5 + 0.1
+                                ai.strategy.defendMultiplier * 0.3 + 0.25
                               )
                         )
                     )
