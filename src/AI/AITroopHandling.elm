@@ -62,12 +62,10 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    (min (5500 * max 1 ai.strategy.defendMultiplier)
+    min 5500
         (1250 * x)
         * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))
         * max 0.85 (2 * ai.strategy.defendMultiplier - 1)
-    )
-        * ai.strategy.defendMultiplier
 
 
 

@@ -352,7 +352,7 @@ evaluateSettlementSiegeAction ai s ls =
                                 Entities.getSettlementBonus s ai.lord.land
                             )
                             1
-                            (Entities.landlordOnSettlement s ls)
+                            (Entities.findLordWithSettlement s ls)
                     )
     in
     if
@@ -379,7 +379,7 @@ settlementSiegeBoni : AI -> Entities.Model.Settlement -> Float
 settlementSiegeBoni ai s =
     case s.settlementType of
         Entities.Model.Castle ->
-            max 1.1 ai.strategy.siegeMultiplier * 3 - 3
+            1 + ai.strategy.siegeMultiplier * 2 - 2
 
         Entities.Model.Village ->
             max 0.9 ai.strategy.siegeMultiplier - 1
@@ -393,7 +393,7 @@ settlementSiegeMultiplier ai s =
 
         Entities.Model.Village ->
             clamp
-                0.25
+                0.5
                 1
                 (toFloat (Troops.sumArmyStats ai.lord.entity.army) / toFloat (AI.AITroopHandling.estimatedNormalPlayerTroopStrength ai))
 

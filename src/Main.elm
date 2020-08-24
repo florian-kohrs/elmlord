@@ -610,19 +610,21 @@ playAiTurn m =
                         | lords =
                             newLords
                         , event =
-                            --  MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
-                            --      m.event
-                            --      actionEvent
-                            Event.appendEvent
+                            MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
                                 m.event
-                                (Event.Event
-                                    ai.lord.entity.name
-                                    (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                        ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                    )
-                                    --(AI.showAiRoundAction other)
-                                    Event.Minor
-                                )
+                                actionEvent
+
+                        {- Event.appendEvent
+                           m.event
+                           (Event.Event
+                               ai.lord.entity.name
+                               (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                   ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
+                               )
+                               --(AI.showAiRoundAction other)
+                               Event.Minor
+                           )
+                        -}
                     }
 
 
@@ -958,9 +960,19 @@ updateEvent msg model =
             { model | event = Event.clearEvents model.event }
 
 
+isGameOver : Model -> Bool
+isGameOver m =
+    case m.gameState of
+        GameOver _ ->
+            True
+
+        _ ->
+            False
+
+
 tickSub : Model -> Sub Msg.Msg
 tickSub model =
-    if isPlayersTurn model then
+    if isPlayersTurn model || isGameOver model then
         Sub.none
 
     else

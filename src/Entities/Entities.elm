@@ -129,9 +129,11 @@ setPosition entity pos =
 -- functions for the handling of armies / troops inside of entities
 ----------------------------------------------------------
 
-buyAllTroops : Lord -> Settlement -> Lord 
+
+buyAllTroops : Lord -> Settlement -> Lord
 buyAllTroops l s =
     Dict.foldl (\k _ b -> buyTroops b (Troops.intToTroopType k) (Maybe.withDefault s (getSettlementByName b.land s.entity.name))) l l.entity.army
+
 
 buyTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 buyTroops l t s =
@@ -487,7 +489,7 @@ isLandlord s l =
 
 findLordWithSettlement : Settlement -> List Lord -> Maybe Lord
 findLordWithSettlement settlement =
-    List.foldr
+    List.foldl
         (\l r ->
             if l.entity.faction == settlement.entity.faction then
                 Just l
