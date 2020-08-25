@@ -5266,10 +5266,9 @@ var $author$project$Vector$Point = F2(
 	function (x, y) {
 		return {x: x, y: y};
 	});
-var $author$project$Faction$Faction1 = {$: 'Faction1'};
-var $author$project$Map$Model$MapTile = F6(
-	function (indices, point, terrain, settlement, lords, faction) {
-		return {faction: faction, indices: indices, lords: lords, point: point, settlement: settlement, terrain: terrain};
+var $author$project$Map$Model$MapTile = F5(
+	function (indices, point, terrain, settlement, lords) {
+		return {indices: indices, lords: lords, point: point, settlement: settlement, terrain: terrain};
 	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
@@ -5504,14 +5503,13 @@ var $author$project$MapData$mapPositionForIndex = function (p) {
 };
 var $author$project$MapGenerator$buildHexagon = F2(
 	function (p, n) {
-		return A6(
+		return A5(
 			$author$project$Map$Model$MapTile,
 			p,
 			$author$project$MapData$mapPositionForIndex(p),
 			A2($author$project$MapGenerator$getTerrainFor, p, n),
 			$elm$core$Maybe$Nothing,
-			_List_Nil,
-			$author$project$Faction$Faction1);
+			_List_Nil);
 	});
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
@@ -6209,7 +6207,7 @@ var $author$project$Main$hashString = function (s) {
 					r + ($elm$core$Char$toCode(c) * count),
 					count + 1);
 			}),
-		_Utils_Tuple2(1, 1),
+		_Utils_Tuple2(2276, 1),
 		$elm$core$String$toList(s)).a;
 };
 var $author$project$Entities$Lords$Cons = F2(
@@ -6414,6 +6412,7 @@ var $author$project$Pathfinder$getClosestFreeFieldAt = F3(
 			A2($author$project$Vector$Point, 0, 0),
 			A6($author$project$Pathfinder$getClosestFreeFieldAt_, p, p, _List_Nil, nav, invalidDict, $elm$core$Dict$empty));
 	});
+var $author$project$Faction$Faction1 = {$: 'Faction1'};
 var $author$project$Faction$Faction2 = {$: 'Faction2'};
 var $author$project$Faction$Faction3 = {$: 'Faction3'};
 var $author$project$Faction$Faction4 = {$: 'Faction4'};
@@ -7175,13 +7174,21 @@ var $elm$time$Time$every = F2(
 		return $elm$time$Time$subscription(
 			A2($elm$time$Time$Every, interval, tagger));
 	});
+var $author$project$Main$isGameOver = function (m) {
+	var _v0 = m.gameState;
+	if (_v0.$ === 'GameOver') {
+		return true;
+	} else {
+		return false;
+	}
+};
 var $author$project$Main$isPlayersTurn = function (model) {
 	return !model.playersTurn;
 };
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$Main$tickSub = function (model) {
-	return $author$project$Main$isPlayersTurn(model) ? $elm$core$Platform$Sub$none : A2(
+	return ($author$project$Main$isPlayersTurn(model) || $author$project$Main$isGameOver(model)) ? $elm$core$Platform$Sub$none : A2(
 		$elm$time$Time$every,
 		$author$project$Main$aiTickFrequenz,
 		function (_v0) {
@@ -7778,18 +7785,6 @@ var $elm$core$List$singleton = function (value) {
 };
 var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
 var $elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
-var $author$project$Faction$factionColor = function (faction) {
-	switch (faction.$) {
-		case 'Faction1':
-			return '#ff4c4c';
-		case 'Faction2':
-			return 'blue';
-		case 'Faction3':
-			return 'green';
-		default:
-			return 'yellow';
-	}
-};
 var $author$project$Map$terrainToColor = function (t) {
 	switch (t.$) {
 		case 'Grass':
@@ -7805,7 +7800,7 @@ var $author$project$Map$terrainToColor = function (t) {
 var $author$project$Map$Drawer$styleMapTile = function (tile) {
 	return {
 		backgroundColor: $author$project$Map$terrainToColor(tile.terrain),
-		strokeColor: $author$project$Faction$factionColor(tile.faction),
+		strokeColor: 'grey',
 		strokeWidth: '2px'
 	};
 };
@@ -8365,6 +8360,15 @@ var $author$project$AI$getImproveBuildingActions = function (ai) {
 var $author$project$AI$Model$SiegeSettlement = function (a) {
 	return {$: 'SiegeSettlement', a: a};
 };
+var $author$project$Entities$findLordWithSettlement = function (settlement) {
+	return A2(
+		$elm$core$List$foldl,
+		F2(
+			function (l, r) {
+				return _Utils_eq(l.entity.faction, settlement.entity.faction) ? $elm$core$Maybe$Just(l) : r;
+			}),
+		$elm$core$Maybe$Nothing);
+};
 var $author$project$Building$resolveBonusFromBuilding = function (b) {
 	return A2($author$project$Building$resolveBonusFromBuildingInfo, b.buildingType, b.level);
 };
@@ -8426,9 +8430,42 @@ var $author$project$AI$settlementSiegeBoni = F2(
 	function (ai, s) {
 		var _v0 = s.settlementType;
 		if (_v0.$ === 'Castle') {
-			return (A2($elm$core$Basics$max, 1.1, ai.strategy.siegeMultiplier) * 5) - 5;
+			return (1 + (ai.strategy.siegeMultiplier * 2)) - 2;
 		} else {
 			return A2($elm$core$Basics$max, 0.9, ai.strategy.siegeMultiplier) - 1;
+		}
+	});
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
+var $author$project$Entities$lordSettlementCount = function (l) {
+	return A3(
+		$elm$core$List$foldl,
+		$elm$core$Basics$always(
+			$elm$core$Basics$add(1)),
+		0,
+		l.land);
+};
+var $author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength = function (ai) {
+	var x = $author$project$Entities$lordSettlementCount(ai.lord);
+	return (3500 + (400 * x)) * $elm$core$Basics$round(((ai.strategy.battleMultiplier + ai.strategy.siegeMultiplier) / 2) - ai.strategy.defendMultiplier);
+};
+var $author$project$AI$settlementSiegeMultiplier = F2(
+	function (ai, s) {
+		var _v0 = s.settlementType;
+		if (_v0.$ === 'Castle') {
+			return 1;
+		} else {
+			return A3(
+				$elm$core$Basics$clamp,
+				0.5,
+				1,
+				$author$project$Troops$sumArmyStats(ai.lord.entity.army) / $author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength(ai));
 		}
 	});
 var $author$project$AI$evaluateSettlementSiegeAction = F3(
@@ -8445,7 +8482,7 @@ var $author$project$AI$evaluateSettlementSiegeAction = F3(
 					return A2($author$project$Entities$getSettlementBonus, s, ai.lord.land);
 				},
 				1,
-				A2($author$project$Entities$landlordOnSettlement, s, ls)));
+				A2($author$project$Entities$findLordWithSettlement, s, ls)));
 		return (siegeStrengthDiff >= 1) ? $elm$core$Maybe$Just(
 			A2(
 				$author$project$AI$Model$AiRoundActionPreference,
@@ -8454,7 +8491,7 @@ var $author$project$AI$evaluateSettlementSiegeAction = F3(
 				A2(
 					$elm$core$Basics$min,
 					2 + ai.strategy.siegeMultiplier,
-					(ai.strategy.siegeMultiplier + A2($author$project$AI$settlementSiegeBoni, ai, s)) + A2($elm$core$Basics$logBase, 10, siegeStrengthDiff * siegeStrengthDiff)))) : $elm$core$Maybe$Nothing;
+					(ai.strategy.siegeMultiplier + A2($author$project$AI$settlementSiegeBoni, ai, s)) + A2($elm$core$Basics$logBase, 10, siegeStrengthDiff * siegeStrengthDiff)) * A2($author$project$AI$settlementSiegeMultiplier, ai, s))) : $elm$core$Maybe$Nothing;
 	});
 var $author$project$AI$getSettlementAttackActions = F2(
 	function (ai, enemies) {
@@ -8482,28 +8519,9 @@ var $author$project$AI$Model$SwapTroops = F2(
 		return {$: 'SwapTroops', a: a, b: b};
 	});
 var $author$project$AI$AITroopHandling$acceptedLackOfDefenseStrength = 300;
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $author$project$Entities$lordSettlementCount = function (l) {
-	return A3(
-		$elm$core$List$foldl,
-		$elm$core$Basics$always(
-			$elm$core$Basics$add(1)),
-		0,
-		l.land);
-};
-var $author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength = function (ai) {
-	var x = $author$project$Entities$lordSettlementCount(ai.lord);
-	return (3500 + (400 * x)) * $elm$core$Basics$round(((ai.strategy.battleMultiplier + ai.strategy.siegeMultiplier) / 2) - ai.strategy.defendMultiplier);
-};
 var $author$project$AI$AITroopHandling$estimatedNormalCastleTroopStrength = function (ai) {
 	var x = $author$project$Entities$lordSettlementCount(ai.lord);
-	return ((A2(
-		$elm$core$Basics$min,
-		7500 * A2($elm$core$Basics$max, 1, ai.strategy.defendMultiplier),
-		1250 * x) * ((1 / x) + ((1 - (1 / x)) / (((x * x) * 0.01) + 1)))) * A2($elm$core$Basics$max, 0.85, (2 * ai.strategy.defendMultiplier) - 1)) * ai.strategy.defendMultiplier;
+	return (A2($elm$core$Basics$min, 5500, 1250 * x) * ((1 / x) + ((1 - (1 / x)) / (((x * x) * 0.01) + 1)))) * A2($elm$core$Basics$max, 0.85, (2 * ai.strategy.defendMultiplier) - 1);
 };
 var $author$project$AI$AITroopHandling$estimatedNormalVillageTroopStrength = function (ai) {
 	var x = $author$project$Entities$lordSettlementCount(ai.lord);
@@ -8516,10 +8534,6 @@ var $author$project$AI$AITroopHandling$estimatedSettlementDefenseStrength = F2(
 		} else {
 			return $author$project$AI$AITroopHandling$estimatedNormalCastleTroopStrength(ai);
 		}
-	});
-var $elm$core$Basics$clamp = F3(
-	function (low, high, number) {
-		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
 	});
 var $author$project$Troops$troopStrengthDeffSum = function (t) {
 	return $elm$core$Basics$round(
@@ -8600,7 +8614,7 @@ var $author$project$AI$AITroopHandling$evaluateSettlementDefense = F2(
 							(($author$project$Troops$sumArmyStats(swapTroops) / A2($author$project$AI$AITroopHandling$settlementLackOfTroopStrength, ai, s)) + A2(
 								$elm$core$Basics$max,
 								0,
-								A2($author$project$AI$AITroopHandling$settlementLackOfTroopStrength, ai, s) / A2($author$project$AI$AITroopHandling$estimatedSettlementDefenseStrength, ai, s.settlementType))) + (_Utils_eq(s.settlementType, $author$project$Entities$Model$Castle) ? (ai.strategy.defendMultiplier + 0.55) : ((ai.strategy.defendMultiplier * 0.3) + 0.2))))) : $elm$core$Maybe$Nothing;
+								A2($author$project$AI$AITroopHandling$settlementLackOfTroopStrength, ai, s) / A2($author$project$AI$AITroopHandling$estimatedSettlementDefenseStrength, ai, s.settlementType))) + (_Utils_eq(s.settlementType, $author$project$Entities$Model$Castle) ? (ai.strategy.defendMultiplier + 0.6) : ((ai.strategy.defendMultiplier * 0.3) + 0.25))))) : $elm$core$Maybe$Nothing;
 			} else {
 				return $elm$core$Maybe$Nothing;
 			}
@@ -9182,7 +9196,7 @@ var $author$project$AI$AITroopHandling$checkSettlementsForRecruits = F2(
 	});
 var $author$project$AI$AITroopHandling$maximalAcceptedPlayerStrength = function (ai) {
 	return $elm$core$Basics$round(
-		($author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength(ai) * 5) + A2($elm$core$Basics$max, 500, ai.lord.gold / 5));
+		($author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength(ai) * 6) + A2($elm$core$Basics$max, 500, ai.lord.gold / 5));
 };
 var $author$project$AI$AITroopHandling$maximalAcceptedSettlementStrength = F2(
 	function (ai, s) {
@@ -9537,14 +9551,18 @@ var $author$project$Battle$getGoldBonus = F2(
 				{gold: lord.gold + $author$project$Battle$siegeVillageGoldBonus});
 		}
 	});
-var $author$project$Entities$updateEntityFaction = F2(
-	function (fa, we) {
+var $author$project$OperatorExt$ternary = F3(
+	function (bool, op1, op2) {
+		return bool ? op1 : op2;
+	});
+var $author$project$Entities$updateEntityFaction = F3(
+	function (fa, we, army) {
 		return _Utils_update(
 			we,
-			{army: we.army, faction: fa});
+			{army: army, faction: fa});
 	});
-var $author$project$Battle$handleSettlementTransfer = F4(
-	function (attacker, defender, aFunc, ndl) {
+var $author$project$Battle$handleSettlementTransfer = F5(
+	function (attacker, defender, aFunc, ndl, full) {
 		return _Utils_Tuple2(
 			_Utils_update(
 				attacker,
@@ -9556,7 +9574,11 @@ var $author$project$Battle$handleSettlementTransfer = F4(
 								return _Utils_update(
 									x,
 									{
-										entity: A2($author$project$Entities$updateEntityFaction, attacker.entity.faction, x.entity)
+										entity: A3(
+											$author$project$Entities$updateEntityFaction,
+											attacker.entity.faction,
+											x.entity,
+											A3($author$project$OperatorExt$ternary, full, x.entity.army, $author$project$Troops$emptyTroops))
 									});
 							},
 							A2($elm$core$List$filter, aFunc, defender.land)),
@@ -9587,14 +9609,15 @@ var $author$project$Battle$siegeBattleAftermath = F2(
 	function (bS, s) {
 		var defender = bS.defender;
 		var attacker = bS.attacker;
-		return ($author$project$Troops$sumTroops(s.entity.army) <= 0) ? (_Utils_eq(s.settlementType, $author$project$Entities$Model$Castle) ? A4(
+		return ($author$project$Troops$sumTroops(s.entity.army) <= 0) ? (_Utils_eq(s.settlementType, $author$project$Entities$Model$Castle) ? A5(
 			$author$project$Battle$handleSettlementTransfer,
 			A2($author$project$Battle$getGoldBonus, s.settlementType, attacker),
 			defender,
 			function (y) {
 				return !_Utils_eq(y.settlementType, $author$project$Entities$Model$Castle);
 			},
-			_List_Nil) : A4(
+			_List_Nil,
+			true) : A5(
 			$author$project$Battle$handleSettlementTransfer,
 			A2($author$project$Battle$getGoldBonus, s.settlementType, attacker),
 			defender,
@@ -9606,7 +9629,8 @@ var $author$project$Battle$siegeBattleAftermath = F2(
 				function (y) {
 					return !_Utils_eq(y.entity.name, s.entity.name);
 				},
-				defender.land))) : _Utils_Tuple2(
+				defender.land),
+			false)) : _Utils_Tuple2(
 			attacker,
 			_Utils_update(
 				defender,
@@ -9629,10 +9653,6 @@ var $author$project$Entities$Lords$updateLord = F2(
 						{lord: l}) : ai;
 				},
 				ais));
-	});
-var $author$project$OperatorExt$ternary = F3(
-	function (bool, op1, op2) {
-		return bool ? op1 : op2;
 	});
 var $author$project$Battle$transferLordFunds = F2(
 	function (fl, sl) {
@@ -9660,7 +9680,7 @@ var $author$project$Battle$updatedBattleLordFunds = F2(
 	});
 var $author$project$Battle$applyBattleAftermath = F2(
 	function (ls, bs) {
-		var _v0 = bs.siege ? _Utils_Tuple2(bs.attacker, bs.defender) : A2($author$project$Battle$updatedBattleLordFunds, bs.attacker, bs.defender);
+		var _v0 = $author$project$MaybeExt$hasValue(bs.settlement) ? _Utils_Tuple2(bs.attacker, bs.defender) : A2($author$project$Battle$updatedBattleLordFunds, bs.attacker, bs.defender);
 		var tAL = _v0.a;
 		var tDL = _v0.b;
 		var _v1 = bs.settlement;
@@ -9685,7 +9705,7 @@ var $author$project$Battle$applyBattleAftermath = F2(
 	});
 var $author$project$Battle$getLordBattleStats = F2(
 	function (attacker, defender) {
-		return {attacker: attacker, attackerCasualties: $author$project$Troops$emptyTroops, defender: defender, defenderCasualties: $author$project$Troops$emptyTroops, finished: false, round: 1, settlement: $elm$core$Maybe$Nothing, siege: false};
+		return {attacker: attacker, attackerCasualties: $author$project$Troops$emptyTroops, defender: defender, defenderCasualties: $author$project$Troops$emptyTroops, finished: false, round: 1, settlement: $elm$core$Maybe$Nothing};
 	});
 var $author$project$Battle$calculateEntityCasualties = F2(
 	function (armyBefore, armyAfter) {
@@ -9915,16 +9935,12 @@ var $author$project$Battle$evaluateSiegeBattle = F3(
 	});
 var $author$project$Battle$evaluateBattleResult = F2(
 	function (bS, t) {
-		if (bS.siege) {
-			var _v0 = bS.settlement;
-			if (_v0.$ === 'Nothing') {
-				return bS;
-			} else {
-				var settle = _v0.a;
-				return A3($author$project$Battle$evaluateSiegeBattle, bS, settle, t);
-			}
-		} else {
+		var _v0 = bS.settlement;
+		if (_v0.$ === 'Nothing') {
 			return A2($author$project$Battle$evaluateLordBattle, bS, t);
+		} else {
+			var settle = _v0.a;
+			return A3($author$project$Battle$evaluateSiegeBattle, bS, settle, t);
 		}
 	});
 var $author$project$Battle$skipBattle = F2(
@@ -10038,15 +10054,6 @@ var $author$project$AI$showBasicActionActivity = F2(
 					$author$project$Event$Minor);
 		}
 	});
-var $author$project$Entities$findLordWithSettlement = function (settlement) {
-	return A2(
-		$elm$core$List$foldr,
-		F2(
-			function (l, r) {
-				return _Utils_eq(l.entity.faction, settlement.entity.faction) ? $elm$core$Maybe$Just(l) : r;
-			}),
-		$elm$core$Maybe$Nothing);
-};
 var $author$project$Battle$getBattleSiegeStats = F3(
 	function (l, ls, s) {
 		return A2(
@@ -10060,8 +10067,7 @@ var $author$project$Battle$getBattleSiegeStats = F3(
 						defenderCasualties: $author$project$Troops$emptyTroops,
 						finished: false,
 						round: 1,
-						settlement: $elm$core$Maybe$Just(s),
-						siege: true
+						settlement: $elm$core$Maybe$Just(s)
 					});
 			},
 			A2(
@@ -10398,7 +10404,7 @@ var $author$project$Battle$fleeBattle = F2(
 	function (ls, bS) {
 		var tempPlayer = bS.attacker;
 		var tempEnemy = bS.defender;
-		var playerAfterGoldLoss = bS.siege ? tempPlayer : _Utils_update(
+		var playerAfterGoldLoss = $author$project$MaybeExt$hasValue(bS.settlement) ? tempPlayer : _Utils_update(
 			tempPlayer,
 			{gold: tempPlayer.gold / 2});
 		var newPlayer = A2(
@@ -10447,7 +10453,7 @@ var $author$project$Ports$transitSoundToMusic = _Platform_outgoingPort(
 	});
 var $author$project$Main$getBattleAftermathSound = function (bS) {
 	return (!(!$author$project$Troops$sumTroops(bS.attacker.entity.army))) ? $author$project$Ports$transitSoundToMusic(
-		_Utils_Tuple2('Kampfsieg', 3500)) : $author$project$Ports$startMusic('play');
+		_Utils_Tuple2('Kampfsieg', 3500)) : $author$project$Ports$startMusic('');
 };
 var $author$project$Ports$playSound = _Platform_outgoingPort('playSound', $elm$json$Json$Encode$string);
 var $author$project$Main$updateBattle = F2(
@@ -10626,8 +10632,7 @@ var $author$project$Main$updateLordAction = F3(
 									defenderCasualties: $author$project$Troops$emptyTroops,
 									finished: false,
 									round: 1,
-									settlement: $elm$core$Maybe$Nothing,
-									siege: false
+									settlement: $elm$core$Maybe$Nothing
 								}))
 					}),
 				$author$project$Ports$playSound('KampfschreiLight'));
@@ -10705,8 +10710,7 @@ var $author$project$Main$updateMaptileAction = F2(
 													defenderCasualties: $author$project$Troops$emptyTroops,
 													finished: false,
 													round: 1,
-													settlement: $elm$core$Maybe$Just(settlement),
-													siege: true
+													settlement: $elm$core$Maybe$Just(settlement)
 												}))
 									}),
 								$author$project$Ports$playSound('KampfschreiLight'));
@@ -10752,7 +10756,7 @@ var $author$project$Main$updateMenue = F2(
 				var _v1 = A2(
 					$author$project$Main$startGame,
 					name,
-					$author$project$Ports$startMusic('play'));
+					$author$project$Ports$startMusic('background'));
 				var startModel = _v1.a;
 				var cmd = _v1.b;
 				return _Utils_Tuple2(
@@ -10793,13 +10797,14 @@ var $author$project$Main$updateMenue = F2(
 						}),
 					$author$project$Ports$openLink('https://github.com/flofe104/elmlord/wiki'));
 			case 'SetCampaingn':
-				return $author$project$Main$emptyCmd(
+				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
 							gameState: $author$project$Main$GameSetup(
 								$author$project$Main$MainMenue($author$project$Main$Campaign))
-						}));
+						}),
+					$author$project$Ports$startMusic('menue'));
 			default:
 				return _Utils_Tuple2(
 					_Utils_update(
@@ -10844,6 +10849,21 @@ var $author$project$Entities$buyTroops = F3(
 			l,
 			s);
 	});
+var $author$project$Entities$getSettlementByName = F2(
+	function (l, s) {
+		var _v0 = A2(
+			$elm$core$List$filter,
+			function (x) {
+				return _Utils_eq(x.entity.name, s);
+			},
+			l);
+		if (!_v0.b) {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var x = _v0.a;
+			return $elm$core$Maybe$Just(x);
+		}
+	});
 var $author$project$Entities$buyAllTroops = F2(
 	function (l, s) {
 		return A3(
@@ -10854,7 +10874,10 @@ var $author$project$Entities$buyAllTroops = F2(
 						$author$project$Entities$buyTroops,
 						b,
 						$author$project$Troops$intToTroopType(k),
-						s);
+						A2(
+							$elm$core$Maybe$withDefault,
+							s,
+							A2($author$project$Entities$getSettlementByName, b.land, s.entity.name)));
 				}),
 			l,
 			l.entity.army);
@@ -10904,21 +10927,6 @@ var $author$project$Entities$takeTroops = F3(
 					l.entity),
 				land: A4($author$project$Entities$updateSettlementTroops, l.land, s.entity.name, t, (-1) * amount)
 			});
-	});
-var $author$project$Entities$getSettlementByName = F2(
-	function (l, s) {
-		var _v0 = A2(
-			$elm$core$List$filter,
-			function (x) {
-				return _Utils_eq(x.entity.name, s);
-			},
-			l);
-		if (!_v0.b) {
-			return $elm$core$Maybe$Nothing;
-		} else {
-			var x = _v0.a;
-			return $elm$core$Maybe$Just(x);
-		}
 	});
 var $author$project$Main$updateMultipleTroopStats = F4(
 	function (l, s, u, m) {
@@ -11406,6 +11414,49 @@ var $author$project$Entities$Drawer$getLordAction = F2(
 				_List_Nil,
 				action));
 	});
+var $author$project$Faction$factionColor = function (faction) {
+	switch (faction.$) {
+		case 'Faction1':
+			return '#ff4c4c';
+		case 'Faction2':
+			return 'blue';
+		case 'Faction3':
+			return 'green';
+		default:
+			return 'yellow';
+	}
+};
+var $author$project$MapData$settlementStrokeWidth = 5;
+var $author$project$Entities$Drawer$getSvgBorderFor = F2(
+	function (f, p) {
+		return A2(
+			$elm$svg$Svg$polygon,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Events$onClick(
+					$author$project$Msg$Click(p)),
+					$elm$svg$Svg$Attributes$overflow('visible'),
+					$elm$svg$Svg$Attributes$stroke(
+					$author$project$Faction$factionColor(f)),
+					$elm$svg$Svg$Attributes$strokeWidth(
+					$elm$core$String$fromInt($author$project$MapData$settlementStrokeWidth) + 'px'),
+					$elm$svg$Svg$Attributes$points(
+					$author$project$BasicDrawing$pointsToHexagonPoints(
+						A2(
+							$author$project$BasicDrawing$calculateHexagonPoints,
+							$author$project$MapData$mapPositionForIndex(p),
+							$author$project$MapData$hexRadius))),
+					$elm$svg$Svg$Attributes$opacity('0.8')
+				]),
+			_List_Nil);
+	});
+var $author$project$MapData$settlementBorderZIndex = 6;
+var $author$project$Entities$Drawer$showEntityBorder = function (e) {
+	return A2(
+		$author$project$MapAction$Model$SvgItem,
+		$author$project$MapData$settlementBorderZIndex,
+		A2($author$project$Entities$Drawer$getSvgBorderFor, e.faction, e.position));
+};
 var $author$project$Entities$factionToImage = function (fac) {
 	switch (fac.$) {
 		case 'Faction1':
@@ -11435,16 +11486,25 @@ var $author$project$Entities$Drawer$showLord = function (lord) {
 		$author$project$MapData$lordZIndex,
 		$author$project$Entities$Drawer$getSvgForLord(lord));
 };
-var $author$project$Entities$Drawer$drawLord = F2(
-	function (player, l) {
+var $author$project$Entities$Drawer$drawLord = F3(
+	function (player, l, dict) {
+		var drawnLordBorder = A2(
+			$author$project$MapAction$Model$InteractableSvg,
+			$author$project$Entities$Drawer$showEntityBorder(l.entity),
+			_List_Nil);
 		var drawnLord = A2(
 			$author$project$MapAction$Model$InteractableSvg,
 			$author$project$Entities$Drawer$showLord(l),
 			A2($author$project$Entities$Drawer$getLordAction, player, l));
-		return A2(
+		return A3(
 			$author$project$MapAction$addToMap,
 			$author$project$MapData$hashMapPoint(l.entity.position),
-			drawnLord);
+			drawnLordBorder,
+			A3(
+				$author$project$MapAction$addToMap,
+				$author$project$MapData$hashMapPoint(l.entity.position),
+				drawnLord,
+				dict));
 	});
 var $author$project$MapAction$SubModel$EnterSettlement = {$: 'EnterSettlement'};
 var $author$project$MapAction$SubModel$SettlementMsg = F2(
@@ -11502,41 +11562,11 @@ var $author$project$Entities$Drawer$showSettlement = function (s) {
 		$author$project$MapData$settlementZIndex,
 		$author$project$Entities$Drawer$getSvgForSettlement(s));
 };
-var $author$project$MapData$settlementStrokeWidth = 5;
-var $author$project$Entities$Drawer$getSvgBorderForSettlement = function (s) {
-	return A2(
-		$elm$svg$Svg$polygon,
-		_List_fromArray(
-			[
-				$elm$svg$Svg$Events$onClick(
-				$author$project$Msg$Click(s.entity.position)),
-				$elm$svg$Svg$Attributes$overflow('visible'),
-				$elm$svg$Svg$Attributes$stroke(
-				$author$project$Faction$factionColor(s.entity.faction)),
-				$elm$svg$Svg$Attributes$strokeWidth(
-				$elm$core$String$fromInt($author$project$MapData$settlementStrokeWidth) + 'px'),
-				$elm$svg$Svg$Attributes$points(
-				$author$project$BasicDrawing$pointsToHexagonPoints(
-					A2(
-						$author$project$BasicDrawing$calculateHexagonPoints,
-						$author$project$MapData$mapPositionForIndex(s.entity.position),
-						$author$project$MapData$hexRadius))),
-				$elm$svg$Svg$Attributes$opacity('0.8')
-			]),
-		_List_Nil);
-};
-var $author$project$MapData$settlementBorderZIndex = 6;
-var $author$project$Entities$Drawer$showSettlementBorder = function (s) {
-	return A2(
-		$author$project$MapAction$Model$SvgItem,
-		$author$project$MapData$settlementBorderZIndex,
-		$author$project$Entities$Drawer$getSvgBorderForSettlement(s));
-};
 var $author$project$Entities$Drawer$drawSettlement = F3(
 	function (player, s, dict) {
 		var drawnSettlementBorder = A2(
 			$author$project$MapAction$Model$InteractableSvg,
-			$author$project$Entities$Drawer$showSettlementBorder(s),
+			$author$project$Entities$Drawer$showEntityBorder(s.entity),
 			_List_Nil);
 		var drawnSettlement = A2(
 			$author$project$MapAction$Model$InteractableSvg,
@@ -12042,25 +12072,32 @@ var $author$project$Templates$BattleTemplate$generateActionButtonsByState = func
 				]))
 		]);
 };
-var $author$project$Templates$HelperTemplate$roundDigits = function (v) {
-	var parts = A2(
-		$elm$core$String$split,
-		'.',
-		$elm$core$String$fromFloat(v));
-	if (!parts.b) {
-		return '0.00';
-	} else {
-		if (!parts.b.b) {
-			var x = parts.a;
-			return x + '.00';
+var $author$project$Templates$HelperTemplate$roundDigits = F2(
+	function (v, i) {
+		var parts = A2(
+			$elm$core$String$split,
+			'.',
+			$elm$core$String$fromFloat(v));
+		if (!parts.b) {
+			return '0.00';
 		} else {
-			var x = parts.a;
-			var _v1 = parts.b;
-			var xs = _v1.a;
-			return x + ('.' + A2($elm$core$String$left, 2, xs));
+			if (!parts.b.b) {
+				var x = parts.a;
+				return x + '.00';
+			} else {
+				var x = parts.a;
+				var _v1 = parts.b;
+				var xs = _v1.a;
+				return _Utils_ap(
+					x,
+					A3(
+						$author$project$OperatorExt$ternary,
+						i > 0,
+						'.' + A2($elm$core$String$left, i, xs),
+						'.00'));
+			}
 		}
-	}
-};
+	});
 var $author$project$Templates$BattleTemplate$generateTerrainBonuses = function (t) {
 	return A2(
 		$elm$html$Html$div,
@@ -12085,9 +12122,11 @@ var $author$project$Templates$BattleTemplate$generateTerrainBonuses = function (
 				_List_fromArray(
 					[
 						$elm$html$Html$text(
-						'+' + ($author$project$Templates$HelperTemplate$roundDigits(
+						'+' + (A2(
+							$author$project$Templates$HelperTemplate$roundDigits,
 							$elm$core$Basics$round(
-								($author$project$Troops$battlefieldBonus(t) * 100) - 100)) + '%'))
+								($author$project$Troops$battlefieldBonus(t) * 100) - 100),
+							0) + '%'))
 					]))
 			]));
 };
@@ -12132,8 +12171,11 @@ var $author$project$Templates$BattleTemplate$generateSettlementBonus = F2(
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										'+' + ($author$project$Templates$HelperTemplate$roundDigits(
-											(A2($author$project$Entities$getSettlementBonus, settle, bS.defender.land) * 100) - 100) + '%'))
+										'+' + (A2(
+											$author$project$Templates$HelperTemplate$roundDigits,
+											$elm$core$Basics$round(
+												(A2($author$project$Entities$getSettlementBonus, settle, bS.defender.land) * 100) - 100),
+											0) + '%'))
 									]))
 							]))
 					]));
@@ -12484,28 +12526,8 @@ var $author$project$Entities$getPlayerImage = function (l) {
 };
 var $author$project$Templates$BattleTemplate$determineBattleMap = F2(
 	function (bS, t) {
-		if (bS.siege) {
-			var _v0 = bS.settlement;
-			if (_v0.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				var settle = _v0.a;
-				return _List_fromArray(
-					[
-						A3(
-						$author$project$Templates$BattleTemplate$generateArmyOverview,
-						bS.attacker.entity,
-						$author$project$Entities$getPlayerImage(bS.attacker),
-						bS.attackerCasualties),
-						A2($author$project$Templates$BattleTemplate$generateActionOverview, bS, t),
-						A3(
-						$author$project$Templates$BattleTemplate$generateArmyOverview,
-						A2($author$project$Battle$siegeBattleSetDefender, bS, settle).b.entity,
-						$author$project$Entities$getSettlementImage(settle),
-						bS.defenderCasualties)
-					]);
-			}
-		} else {
+		var _v0 = bS.settlement;
+		if (_v0.$ === 'Nothing') {
 			return _List_fromArray(
 				[
 					A3(
@@ -12518,6 +12540,22 @@ var $author$project$Templates$BattleTemplate$determineBattleMap = F2(
 					$author$project$Templates$BattleTemplate$generateArmyOverview,
 					bS.defender.entity,
 					$author$project$Entities$getPlayerImage(bS.defender),
+					bS.defenderCasualties)
+				]);
+		} else {
+			var settle = _v0.a;
+			return _List_fromArray(
+				[
+					A3(
+					$author$project$Templates$BattleTemplate$generateArmyOverview,
+					bS.attacker.entity,
+					$author$project$Entities$getPlayerImage(bS.attacker),
+					bS.attackerCasualties),
+					A2($author$project$Templates$BattleTemplate$generateActionOverview, bS, t),
+					A3(
+					$author$project$Templates$BattleTemplate$generateArmyOverview,
+					A2($author$project$Battle$siegeBattleSetDefender, bS, settle).b.entity,
+					$author$project$Entities$getSettlementImage(settle),
 					bS.defenderCasualties)
 				]);
 		}
@@ -12749,7 +12787,7 @@ var $author$project$Templates$LordTemplate$generateLordTemplate = function (l) {
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												'Gold: ' + $author$project$Templates$HelperTemplate$roundDigits(l.gold))
+												'Gold: ' + A2($author$project$Templates$HelperTemplate$roundDigits, l.gold, 2))
 											]))
 									])),
 								A2(
@@ -13194,8 +13232,10 @@ var $author$project$Templates$SettlementTemplate$generateRecruitTroopContainer =
 							_List_fromArray(
 								[
 									$elm$html$Html$text(
-									$author$project$Templates$HelperTemplate$roundDigits(
-										((100.0 - A2($author$project$Building$resolveBonusFromBuildings, s.buildings, $author$project$Building$Fortress)) / 100) * $author$project$Troops$troopCost(t)))
+									A2(
+										$author$project$Templates$HelperTemplate$roundDigits,
+										((100.0 - A2($author$project$Building$resolveBonusFromBuildings, s.buildings, $author$project$Building$Fortress)) / 100) * $author$project$Troops$troopCost(t),
+										2))
 								])),
 							A2(
 							$elm$html$Html$img,
@@ -13474,8 +13514,10 @@ var $author$project$Templates$SettlementTemplate$settlementStateToAction = F4(
 								_List_fromArray(
 									[
 										$elm$html$Html$text(
-										'Income: +' + ($author$project$Templates$HelperTemplate$roundDigits(
-											$author$project$Entities$settlementIncome(settlement.settlementType)) + ' Ducats'))
+										'Income: +' + (A2(
+											$author$project$Templates$HelperTemplate$roundDigits,
+											$author$project$Entities$settlementIncome(settlement.settlementType),
+											2) + ' Ducats'))
 									])),
 								A2(
 								$elm$html$Html$div,
@@ -14463,7 +14505,7 @@ var $author$project$Templates$HeaderTemplate$revenueToSpan = function (_v0) {
 		_List_fromArray(
 			[
 				$elm$html$Html$text(
-				name + ('  +' + ($author$project$Templates$HelperTemplate$roundDigits(value) + ' Ducats')))
+				name + ('  +' + (A2($author$project$Templates$HelperTemplate$roundDigits, value, 2) + ' Ducats')))
 			])) : A2(
 		$elm$html$Html$span,
 		_List_fromArray(
@@ -14473,7 +14515,7 @@ var $author$project$Templates$HeaderTemplate$revenueToSpan = function (_v0) {
 		_List_fromArray(
 			[
 				$elm$html$Html$text(
-				name + (' ' + ($author$project$Templates$HelperTemplate$roundDigits(value) + ' Ducats')))
+				name + (' ' + (A2($author$project$Templates$HelperTemplate$roundDigits, value, 2) + ' Ducats')))
 			]));
 };
 var $author$project$Templates$HeaderTemplate$revenuesToTemplate = function (rev) {
@@ -14518,7 +14560,7 @@ var $author$project$Templates$HeaderTemplate$headerGoldTemplate = function (lord
 					_List_fromArray(
 						[
 							$elm$html$Html$text(
-							$author$project$Templates$HelperTemplate$roundDigits(lord.gold) + ' Ducats'),
+							A2($author$project$Templates$HelperTemplate$roundDigits, lord.gold, 2) + ' Ducats'),
 							$author$project$Templates$HeaderTemplate$revenueToSpan(
 							_Utils_Tuple2(
 								'',
@@ -15458,7 +15500,7 @@ var $author$project$Main$view = function (model) {
 				$elm$html$Html$audio,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$src('./assets/sounds/menue.wav'),
+						$elm$html$Html$Attributes$src('./assets/sounds/songs/background.wav'),
 						$elm$html$Html$Attributes$loop(true),
 						$elm$html$Html$Attributes$id('audio-player')
 					]),

@@ -372,7 +372,7 @@ view model =
 
             GameOver _ ->
                 setGameView model
-        , audio [ src "./assets/sounds/menue.wav", Html.Attributes.loop True, Html.Attributes.id "audio-player" ] []
+        , audio [ src "./assets/sounds/songs/background.wav", Html.Attributes.loop True, Html.Attributes.id "audio-player" ] []
         , audio [ Html.Attributes.id "sound-player" ] []
         ]
 
@@ -697,7 +697,6 @@ updateMaptileAction model ma =
                                             , attackerCasualties = Troops.emptyTroops
                                             , defenderCasualties = Troops.emptyTroops
                                             , settlement = Just settlement
-                                            , siege = True
                                             , finished = False
                                             }
                                         )
@@ -745,7 +744,6 @@ updateLordAction msg lord m =
                             , attackerCasualties = Troops.emptyTroops
                             , defenderCasualties = Troops.emptyTroops
                             , settlement = Nothing
-                            , siege = False
                             , finished = False
                             }
                         )
@@ -905,7 +903,7 @@ getBattleAftermathSound bS =
         Ports.transitSoundToMusic ( "Kampfsieg", 3500 )
 
     else
-        Ports.startMusic "play"
+        Ports.startMusic ""
 
 
 
@@ -919,7 +917,7 @@ updateMenue msg model =
         Msg.StartGame name ->
             let
                 ( startModel, cmd ) =
-                    startGame name <| Ports.startMusic "play"
+                    startGame name <| Ports.startMusic "background"
             in
             ( { startModel | gameState = GameSetup GameMenue }, cmd )
 
@@ -936,7 +934,7 @@ updateMenue msg model =
             ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord/wiki" )
 
         Msg.SetCampaingn ->
-            emptyCmd { model | gameState = GameSetup (MainMenue Campaign) }
+            ( { model | gameState = GameSetup (MainMenue Campaign) }, Ports.startMusic "menue")
 
         Msg.ShowCredits ->
             ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord" )

@@ -11,6 +11,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Map
 import Map.Model
+import MaybeExt
 import Msg
 import OperatorExt
 import Templates.HelperTemplate as Helper
@@ -40,22 +41,18 @@ and with this information displays different layouts / elements
 -}
 determineBattleMap : Battle.Model.BattleStats -> Map.Model.Terrain -> List (Html Msg.Msg)
 determineBattleMap bS t =
-    if bS.siege then
-        case bS.settlement of
-            Nothing ->
-                []
+    case bS.settlement of
+        Nothing ->
+            [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
+            , generateActionOverview bS t
+            , generateArmyOverview bS.defender.entity (Entities.getPlayerImage bS.defender) bS.defenderCasualties
+            ]
 
-            Just settle ->
-                [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
-                , generateActionOverview bS t
-                , generateArmyOverview (Tuple.second (Battle.siegeBattleSetDefender bS settle)).entity (Entities.getSettlementImage settle) bS.defenderCasualties
-                ]
-
-    else
-        [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
-        , generateActionOverview bS t
-        , generateArmyOverview bS.defender.entity (Entities.getPlayerImage bS.defender) bS.defenderCasualties
-        ]
+        Just settle ->
+            [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
+            , generateActionOverview bS t
+            , generateArmyOverview (Tuple.second (Battle.siegeBattleSetDefender bS settle)).entity (Entities.getSettlementImage settle) bS.defenderCasualties
+            ]
 
 
 {-| Displays the army (all troops) of an entity

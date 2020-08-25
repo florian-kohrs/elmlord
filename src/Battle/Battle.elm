@@ -37,16 +37,12 @@ Notice that only one round will be calculated!
 -}
 evaluateBattleResult : BattleStats -> Map.Model.Terrain -> BattleStats
 evaluateBattleResult bS t =
-    if bS.siege then
-        case bS.settlement of
-            Nothing ->
-                bS
+    case bS.settlement of
+        Nothing ->
+            evaluateLordBattle bS t
 
-            Just settle ->
-                evaluateSiegeBattle bS settle t
-
-    else
-        evaluateLordBattle bS t
+        Just settle ->
+            evaluateSiegeBattle bS settle t
 
 
 {-| Resolves / Calculate a battle skirmish outcome for sieges
@@ -202,7 +198,7 @@ fleeBattle ls bS =
             bS.defender
 
         playerAfterGoldLoss =
-            if bS.siege then
+            if MaybeExt.hasValue bS.settlement then
                 tempPlayer
 
             else
@@ -223,7 +219,7 @@ applyBattleAftermath : Entities.Lords.LordList -> BattleStats -> Entities.Lords.
 applyBattleAftermath ls bs =
     let
         ( tAL, tDL ) =
-            if bs.siege then
+            if MaybeExt.hasValue bs.settlement then
                 ( bs.attacker, bs.defender )
 
             else
@@ -252,7 +248,6 @@ getBattleSiegeStats l ls s =
                 , attackerCasualties = Troops.emptyTroops
                 , defenderCasualties = Troops.emptyTroops
                 , settlement = Just s
-                , siege = True
                 , finished = False
                 }
         )
@@ -270,7 +265,6 @@ getLordBattleStats attacker defender =
     , attackerCasualties = Troops.emptyTroops
     , defenderCasualties = Troops.emptyTroops
     , settlement = Nothing
-    , siege = False
     , finished = False
     }
 
