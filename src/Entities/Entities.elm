@@ -115,9 +115,9 @@ lordSettlementCount l =
 ----------------------------------------------------------
 
 
-updateEntityFaction : Faction.Faction -> WorldEntity -> WorldEntity
-updateEntityFaction fa we =
-    { we | faction = fa, army = we.army }
+updateEntityFaction : Faction.Faction -> WorldEntity -> Troops.Army -> WorldEntity
+updateEntityFaction fa we army =
+    { we | faction = fa, army = army }
 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity

@@ -183,10 +183,10 @@ siegeBattleAftermath bS s =
     in
     if Troops.sumTroops s.entity.army <= 0 then
         if s.settlementType == Entities.Model.Castle then
-            handleSettlementTransfer (getGoldBonus s.settlementType attacker) defender (\y -> y.settlementType /= Entities.Model.Castle) []
+            handleSettlementTransfer (getGoldBonus s.settlementType attacker) defender (\y -> y.settlementType /= Entities.Model.Castle) [] True
 
         else
-            handleSettlementTransfer (getGoldBonus s.settlementType attacker) defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land)
+            handleSettlementTransfer (getGoldBonus s.settlementType attacker) defender (\y -> y.entity.name == s.entity.name) (List.filter (\y -> y.entity.name /= s.entity.name) defender.land) False
 
     else
         ( attacker, { defender | land = updateSettlementBattleField s defender.land } )
@@ -339,11 +339,11 @@ checkDefenderArmy defender settle =
             Troops.sumTroops s.entity.army == 0
 
 
-handleSettlementTransfer : Entities.Model.Lord -> Entities.Model.Lord -> (Entities.Model.Settlement -> Bool) -> List Entities.Model.Settlement -> ( Entities.Model.Lord, Entities.Model.Lord )
-handleSettlementTransfer attacker defender aFunc ndl =
+handleSettlementTransfer : Entities.Model.Lord -> Entities.Model.Lord -> (Entities.Model.Settlement -> Bool) -> List Entities.Model.Settlement -> Bool -> ( Entities.Model.Lord, Entities.Model.Lord )
+handleSettlementTransfer attacker defender aFunc ndl full =
     ( { attacker
         | land =
-            List.map (\x -> { x | entity = Entities.updateEntityFaction attacker.entity.faction x.entity })
+            List.map (\x -> { x | entity = Entities.updateEntityFaction attacker.entity.faction x.entity (OperatorExt.ternary full x.entity.army Troops.emptyTroops) })
                 (List.filter aFunc defender.land)
                 ++ attacker.land
       }
