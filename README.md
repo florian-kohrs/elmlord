@@ -30,7 +30,7 @@ After this you just have to open the _index.html_ in a browser.
 ## Credits
 
 The tasks were divided among ourselves as follows:
-* [@flofe104 (Florian Khors):](https://github.com/flofe104) Map / Mapgenerator, AI-Bots, Pathfinder / Pathagent, Model-Structure, MapActions, Sounds
+* [@flofe104 (Florian Kohrs):](https://github.com/flofe104) Map / Mapgenerator, AI-Bots, Pathfinder / Pathagent, Model-Structure, MapActions, Sounds
 * [@serquicky (Michael Frank):](https://github.com/serquicky) Battle-System, Templates / User-Interface, Ports, Buildings / Settlement, Events
 
 Special thanks to [MDomroese](https://gitlab.com/MDomroese) for the settlement illustration and the great lord profile pictures.
