@@ -18,7 +18,7 @@ elm reactor
 ```
 
 #### Rollout
-When the development is finished, the application needs to be recompiled to JavaScript. 
+When the development is finished, the application needs to be recompiled to JavaScript.
 
 ```
 elm make src/Main.elm --output elm.js
@@ -31,10 +31,9 @@ The application is currently hosted under a [netlify site](https://kind-ardinghe
 ## Credits
 
 The tasks were divided among ourselves as follows:
-* [@flofe104 (Florian Kohrs):](https://github.com/flofe104) Map / Mapgenerator, AI-Bots, Pathfinder / Pathagent, Model-Structure, MapActions, Sounds
+* [@flofe104 (Florian Kohrs):](https://github.com/flofe104) Map / Mapgenerator, AI-Bots, Pathfinder / Pathagent, Model-Structure, MapActions, Music composition/ Guitar recording (Clarinette and Low Wistle by Felix Kohrs)
 * [@serquicky (Michael Frank):](https://github.com/serquicky) Battle-System, Templates / User-Interface, Ports, Buildings / Settlement, Events
 
 Special thanks to [MDomroese](https://gitlab.com/MDomroese) for the settlement illustration and the great lord profile pictures.
 
 Background-Style: [old paper or parchment - The Misguided Millennial](https://www.pinterest.de/pin/817333032353382769/)
-
