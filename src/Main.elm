@@ -180,11 +180,11 @@ getSelectedPath m =
             Entities.Lords.getPlayer m.lords
     in
     case m.selectedPoint of
-        Nothing ->
-            Nothing
-
         Just point ->
             getPathTo player.entity.position point m.map
+
+        _ ->
+            Nothing
 
 
 getPathTo : Vector.Point -> Vector.Point -> Map.Model.Map -> Maybe Pathfinder.Model.Path
@@ -409,7 +409,6 @@ setGameView model =
                             (MapAction.allSvgs allClickActions)
                         ]
                    , EventTemplate.generateEventOverview model.event
-                   , span [] []
                    ]
             )
         ]
@@ -934,7 +933,7 @@ updateMenue msg model =
             ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord/wiki" )
 
         Msg.SetCampaingn ->
-            ( { model | gameState = GameSetup (MainMenue Campaign) }, Ports.startMusic "menue")
+            ( { model | gameState = GameSetup (MainMenue Campaign) }, Ports.startMusic "menue" )
 
         Msg.ShowCredits ->
             ( { model | gameState = GameSetup (MainMenue Menue) }, Ports.openLink "https://github.com/flofe104/elmlord" )

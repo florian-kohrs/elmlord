@@ -24,9 +24,47 @@ startBuildings =
     ]
 
 
+-- general building functions
+----------------------------------------------------------
+
 upgradeBuildingCost : Building -> Float
 upgradeBuildingCost b =
     upgradeBuildingInfoCost b.buildingType (b.level + 1)
+
+
+upgradeBuildingType : List Building -> BuildingType -> List Building
+upgradeBuildingType b bt =
+    List.map (\x -> { x | level = OperatorExt.ternary (x.buildingType == bt) (x.level + 1) x.level }) b
+
+
+getBuilding : BuildingType -> List Building -> Maybe Building
+getBuilding t bs =
+    List.head <| List.filter (\b -> b.buildingType == t) bs
+
+
+resolveBonusFromBuildingInfo : BuildingType -> Int -> Float
+resolveBonusFromBuildingInfo t l =
+    buildingToBonus t * toFloat l
+
+
+resolveBonusFromBuildings : List Building -> BuildingType -> Float
+resolveBonusFromBuildings bs t =
+    case getBuilding t bs of
+        Nothing ->
+            0
+
+        Just b ->
+            resolveBonusFromBuilding b
+
+
+
+-- Resolve a building type to different values like
+----------------------------------------------------------
+
+
+resolveBonusFromBuilding : Building -> Float
+resolveBonusFromBuilding b =
+    resolveBonusFromBuildingInfo b.buildingType b.level
 
 
 upgradeBuildingInfoCost : BuildingType -> Int -> Float
@@ -71,33 +109,3 @@ upgradeCostBase b =
 
         Fortress ->
             450
-
-
-upgradeBuildingType : List Building -> BuildingType -> List Building
-upgradeBuildingType b bt =
-    List.map (\x -> { x | level = OperatorExt.ternary (x.buildingType == bt) (x.level + 1) x.level }) b
-
-
-getBuilding : BuildingType -> List Building -> Maybe Building
-getBuilding t bs =
-    List.head <| List.filter (\b -> b.buildingType == t) bs
-
-
-resolveBonusFromBuildingInfo : BuildingType -> Int -> Float
-resolveBonusFromBuildingInfo t l =
-    buildingToBonus t * toFloat l
-
-
-resolveBonusFromBuilding : Building -> Float
-resolveBonusFromBuilding b =
-    resolveBonusFromBuildingInfo b.buildingType b.level
-
-
-resolveBonusFromBuildings : List Building -> BuildingType -> Float
-resolveBonusFromBuildings bs t =
-    case getBuilding t bs of
-        Nothing ->
-            0
-
-        Just b ->
-            resolveBonusFromBuilding b

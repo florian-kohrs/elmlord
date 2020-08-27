@@ -9,7 +9,7 @@ port startMusic : String -> Cmd msg
 
 port playSound : String -> Cmd msg
 
-
+-- plays a sound and after this resumes the set background-music
 port transitSoundToMusic : ( String, Int ) -> Cmd msg
 
 

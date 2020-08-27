@@ -2,7 +2,6 @@ module Troops exposing (..)
 
 import Dict
 import MaybeExt
-import OperatorExt
 
 
 type alias Army =
@@ -14,6 +13,11 @@ type TroopType
     | Spear
     | Sword
     | Knight
+
+
+
+-- base entity (lords, settlements, etc.) armies
+----------------------------------------------------------
 
 
 lordStartTroops : Army
@@ -37,44 +41,15 @@ villageStartTroops =
         [ ( Archer, 15 ), ( Spear, 0 ), ( Sword, 15 ), ( Knight, 0 ) ]
 
 
+
+-- General troop functions
+-- merge, update, etc. armies
+----------------------------------------------------------
+
+
 mergeTroops : Army -> Army -> Army
 mergeTroops a1 a2 =
     Dict.merge Dict.insert (\k v1 v2 r -> Dict.insert k (v1 + v2) r) Dict.insert a1 a2 Dict.empty
-
-
-troopTypeToInt : TroopType -> Int
-troopTypeToInt t =
-    case t of
-        Sword ->
-            0
-
-        Spear ->
-            1
-
-        Archer ->
-            2
-
-        Knight ->
-            3
-
-
-intToTroopType : Int -> TroopType
-intToTroopType i =
-    case i of
-        0 ->
-            Sword
-
-        1 ->
-            Spear
-
-        2 ->
-            Archer
-
-        3 ->
-            Knight
-
-        _ ->
-            Spear
 
 
 troopTypeList : List TroopType
@@ -129,13 +104,7 @@ sumTroopStats t amount =
 
 invertArmy : Army -> Army
 invertArmy =
-    Dict.map (\k v -> -v)
-
-
-
--- Resolve a troop type to different, for values like
--- wages, costs, fighting-stats, etc.
-----------------------------------------------------------
+    Dict.map (\_ v -> -v)
 
 
 averageTroopStrengthCostRatio : Float
@@ -154,6 +123,12 @@ averageTroopStrengthCostRatio =
             )
             ( 0, 1 )
             troopTypeList
+
+
+
+-- Resolve a troop type to different values like
+-- wages, costs, fighting-stats, etc.
+----------------------------------------------------------
 
 
 troopStrengthDeffSum : TroopType -> Int
@@ -255,3 +230,38 @@ battlefieldBonus t =
 
         Knight ->
             1.05
+
+
+troopTypeToInt : TroopType -> Int
+troopTypeToInt t =
+    case t of
+        Sword ->
+            0
+
+        Spear ->
+            1
+
+        Archer ->
+            2
+
+        Knight ->
+            3
+
+
+intToTroopType : Int -> TroopType
+intToTroopType i =
+    case i of
+        0 ->
+            Sword
+
+        1 ->
+            Spear
+
+        2 ->
+            Archer
+
+        3 ->
+            Knight
+
+        _ ->
+            Spear

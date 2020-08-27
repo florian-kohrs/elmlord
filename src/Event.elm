@@ -26,14 +26,6 @@ setEvents eventState eventList =
     { eventState | events = eventList }
 
 
-
-{-
-   appendEvent : List Event -> String -> String -> EventType -> List Event
-   appendEvent l h t e =
-       { index = List.length l, header = h, text = t, eventType = e } :: l
--}
-
-
 appendEvent : EventState -> Event -> EventState
 appendEvent es e =
     { es | events = e :: es.events }
