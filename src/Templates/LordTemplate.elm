@@ -11,11 +11,9 @@ import Templates.HelperTemplate as Helper
 import Troops
 
 
-{-| Returns the layout for the lord modal (View [Lord-Name])
+-- lord overview modal
+--------------------------------------------------------
 
-    @param {Lord}: Takes the chosen Lord
-
--}
 generateLordTemplate : Entities.Model.Lord -> Html Msg.Msg
 generateLordTemplate l =
     div [ Html.Attributes.class "modal-background" ]

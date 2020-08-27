@@ -16,13 +16,11 @@ import Templates.HelperTemplate as Helper
 import Troops
 
 
-{-| Returns the layout for the settlement modal (Enter/View [Settlement-Name])
 
-    @param {Lord}: Takes the lord of the settlement
-    @param {Settlement}: Takes the chosen settlement
-    @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
+-- settlement overview with
+--------------------------------------------------------
 
--}
+
 generateSettlementModalTemplate : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> Html Msg.Msg
 generateSettlementModalTemplate pF lord settlement uistate =
     div [ Html.Attributes.class "modal-background" ]
@@ -52,13 +50,6 @@ generateSettlementModalTemplate pF lord settlement uistate =
         ]
 
 
-{-| Returns the specific layout in dependence to the state
-
-    @param {Lord}: Takes the lord of the settlement
-    @param {Settlement}: Takes the chosen settlement
-    @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
-
--}
 settlementStateToAction : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> List (Html Msg.Msg)
 settlementStateToAction pF lord settlement uistate =
     case uistate of
@@ -103,8 +94,9 @@ settlementStateToAction pF lord settlement uistate =
                         settlement.recruitLimits
                         Troops.troopKeyList
                         []
-                    ++ [ button [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyAllTroops settlement))) ] [ span [] [ Html.text "Recruit all" ] ] ]
-                    ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
+                    ++ [ button [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyAllTroops settlement))) ] [ span [] [ Html.text "Recruit all" ] ]
+                       , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ]
+                       ]
                 )
             ]
 
@@ -160,6 +152,9 @@ settlementStateToAction pF lord settlement uistate =
             ]
 
 
+-- settlement interface components
+--------------------------------------------------------
+
 checkBuildingCapabilities : Entities.Model.Settlement -> Html Msg.Msg
 checkBuildingCapabilities s =
     if s.settlementType == Entities.Model.Castle then
@@ -169,13 +164,6 @@ checkBuildingCapabilities s =
         div [] []
 
 
-{-| Returns the listview with the stationed troops, the player can take units out or station new troops to the settlement.
-The function is used for the List.map2 function.
-
-    @param {Troop}: Current troop/unit of the lord (specifically the amount!)
-    @param {(Troop, Settlement)}: Tuple with the current troop/unit and the settlement of this unit
-
--}
 generateStationTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Model.Settlement -> Html Msg.Msg
 generateStationTroopContainer lt ltAmount stAmount sE =
     div [ Html.Attributes.class "troop-stationing-container" ]
@@ -201,13 +189,6 @@ generateStationTroopContainer lt ltAmount stAmount sE =
         ]
 
 
-{-| Displays the listcomponent of the stationed troops list
-
-    @param {(Troop, Troop)}: Current troop/unit of the lord (specifically the amount!)
-    @param {Settlement}: Takes the chosen settlement
-    @param {Lord}: Takes the current lord
-
--}
 generateRecruitTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Model.Settlement -> Entities.Model.Lord -> Html Msg.Msg
 generateRecruitTroopContainer t aAmount sAmount s l =
     div [ Html.Attributes.class "troop-recruiting-container" ]
@@ -281,13 +262,11 @@ displayBuildingBonus ( b, i ) =
         ]
 
 
-{-| Validates whether the player can buy new troops or not (if the player has the gold for the troops and the settlement has enough recruits)
 
-    @param {TroopType}: Takes the troopType that the player wants to buy
-    @param {Settlement}: Takes the chosen settlement
-    @param {Lord}: Takes the current lord (to determine if the player has the gold)
+-- validate troop actions (buy, station, etc.)
+--------------------------------------------------------
 
--}
+
 validateBuyTroops : Troops.TroopType -> Entities.Model.Settlement -> Entities.Model.Lord -> Bool
 validateBuyTroops t s l =
     not
@@ -296,22 +275,11 @@ validateBuyTroops t s l =
         )
 
 
-{-| Validates whether the player can station or take troops out of the settlement
-
-    @param {Int}: Takes the current number of troops that are stationed or in the army
-
--}
 validateStationTroops : Int -> Bool
 validateStationTroops amount =
     not (amount > 0)
 
 
-{-| Validates whether the settlement belongs to the player or to another lord, in dependence to this return a message
-
-    @param {Lord}: Takes the current lord
-    @param {Settlement}: Takes the current settlement
-
--}
 validateSettlement : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> List (Html Msg.Msg)
 validateSettlement pF l s =
     [ div [ Html.Attributes.class "settlement-enemy-overview" ]

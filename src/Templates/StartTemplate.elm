@@ -11,7 +11,7 @@ import String exposing (..)
 
 
 
--- Start menu with some menu selections
+-- Starts the game with the menue selection
 
 
 startMenuTemplate : List (Html Msg.Msg)
@@ -66,8 +66,6 @@ resolveOnChangeMsg str =
 
 generateInputMsg : String -> Html Msg.Msg
 generateInputMsg str =
-    if Entities.validatePlayerName str || str == "" then
-        span [ HtmlAttr.class "error-msg" ] [ Html.text "Invalid name, please take another name!" ]
-
-    else
-        span [] []
+    OperatorExt.ternary (validatePlayerName str || str == "")
+        (span [ HtmlAttr.class "error-msg" ] [ Html.text "Invalid name, please take another name!" ])
+        (span [] [])

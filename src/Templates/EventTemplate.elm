@@ -8,12 +8,11 @@ import Msg
 import OperatorExt
 
 
-{-| Returns the layout for the map actions, in dependence to the chosen point (in the model)
 
-    @param {Maybe Point}: Takes the point that is currently chosen point (at the start no point is chosen, therefore Maybe)
-    @param {MapDrawer.InteractableMapSVG}: Takes a dict with all possible actions
+-- events component (top right component)
+--------------------------------------------------------
 
--}
+
 generateEventOverview : Event.EventState -> Html Msg.Msg
 generateEventOverview event =
     if event.state then
@@ -31,11 +30,6 @@ generateEventOverview event =
         div [] []
 
 
-{-| Function for map, that displays a button for each possible action
-
-    @param {Types.MapTileMsg}: Takes the action type, that the button sends, when it gets clicked
-
--}
 generateEventComponent : Int -> Event.Event -> Html Msg.Msg
 generateEventComponent index e =
     div [ Html.Attributes.class ("event-logs-component " ++ OperatorExt.ternary (e.eventType == Event.Important) "important-log" "minor-log") ]
