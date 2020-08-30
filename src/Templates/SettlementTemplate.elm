@@ -94,7 +94,12 @@ settlementStateToAction pF lord settlement uistate =
                         settlement.recruitLimits
                         Troops.troopKeyList
                         []
-                    ++ [ button [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyAllTroops settlement))) ] [ span [] [ Html.text "Recruit all" ] ]
+                    ++ [ button
+                            [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyAllTroops settlement)))
+
+                            --, disabled (validateBuyAllTroops settlement lord)
+                            ]
+                            [ span [] [ Html.text "Recruit all" ] ]
                        , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ]
                        ]
                 )
@@ -152,8 +157,10 @@ settlementStateToAction pF lord settlement uistate =
             ]
 
 
+
 -- settlement interface components
 --------------------------------------------------------
+
 
 checkBuildingCapabilities : Entities.Model.Settlement -> Html Msg.Msg
 checkBuildingCapabilities s =
@@ -273,6 +280,11 @@ validateBuyTroops t s l =
         ((l.gold - (toFloat (Troops.troopCost t) * (1 - Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100)) >= 0)
             && MaybeExt.foldMaybe (\v -> v > 0) False (Dict.get (Troops.troopTypeToInt t) s.recruitLimits)
         )
+
+
+validateBuyAllTroops : Entities.Model.Settlement -> Entities.Model.Lord -> Bool
+validateBuyAllTroops s l =
+    not <| l.gold >= Entities.sumArmyBuyCost s.recruitLimits
 
 
 validateStationTroops : Int -> Bool

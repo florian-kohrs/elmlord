@@ -132,14 +132,27 @@ setPosition entity pos =
 
 buyAllTroops : Lord -> Settlement -> Lord
 buyAllTroops l s =
-    Dict.foldl (\k _ b -> buyTroops b (Troops.intToTroopType k) (Maybe.withDefault s (getSettlementByName b.land s.entity.name))) l l.entity.army
+    Dict.foldl (\k _ b -> buyMaxTroops 99 b (Troops.intToTroopType k) (Maybe.withDefault s (getSettlementByName b.land s.entity.name))) l l.entity.army
+
+
+troopGroupAmount : Int
+troopGroupAmount =
+    5
 
 
 buyTroops : Lord -> Troops.TroopType -> Settlement -> Lord
-buyTroops l t s =
+buyTroops =
+    buyMaxTroops troopGroupAmount
+
+
+buyMaxTroops : Int -> Lord -> Troops.TroopType -> Settlement -> Lord
+buyMaxTroops maxTroops l t s =
     let
         amount =
-            getPossibleTroopAmount s.recruitLimits t
+            getPossibleTroopAmount
+                (min maxTroops (floor (l.gold / toFloat (Troops.troopCost t))))
+                s.recruitLimits
+                t
     in
     recruitTroops (Dict.singleton (Troops.troopTypeToInt t) amount) l s
 
@@ -148,7 +161,7 @@ stationTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 stationTroops l t s =
     let
         amount =
-            getPossibleTroopAmount l.entity.army t
+            getPossibleTroopAmount troopGroupAmount l.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity, land = updateSettlementTroops l.land s.entity.name t amount }
 
@@ -157,7 +170,7 @@ takeTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 takeTroops l t s =
     let
         amount =
-            getPossibleTroopAmount s.entity.army t
+            getPossibleTroopAmount troopGroupAmount s.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity, land = updateSettlementTroops l.land s.entity.name t (-1 * amount) }
 
@@ -166,7 +179,7 @@ disbandTroops : Lord -> Troops.TroopType -> Lord
 disbandTroops l t =
     let
         amount =
-            getPossibleTroopAmount l.entity.army t
+            getPossibleTroopAmount troopGroupAmount l.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity }
 
@@ -186,14 +199,14 @@ setSettlementRecruits army s =
     { s | recruitLimits = army }
 
 
-getPossibleTroopAmount : Troops.Army -> Troops.TroopType -> Int
-getPossibleTroopAmount army t =
+getPossibleTroopAmount : Int -> Troops.Army -> Troops.TroopType -> Int
+getPossibleTroopAmount maxAmount army t =
     case Dict.get (Troops.troopTypeToInt t) army of
         Nothing ->
             0
 
         Just amount ->
-            min 5 amount
+            min maxAmount amount
 
 
 swapLordTroopsWithSettlement : Lord -> Settlement -> Dict.Dict Int Int -> Lord

@@ -46,13 +46,18 @@ troopStrengthToBotherAddingToSettlement =
     0
 
 
+maxVillageTroopStrength : Int
+maxVillageTroopStrength =
+    3000
+
+
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
     let
         x =
-            toFloat <| Entities.lordSettlementCount ai.lord
+            Entities.lordSettlementCount ai.lord
     in
-    min 3000 (1000 + 550 * x) * max 0.666 (2 * ai.strategy.defendMultiplier - 1.2)
+    toFloat (min maxVillageTroopStrength (1000 + 550 * x)) * max 0.666 (2 * ai.strategy.defendMultiplier - 1.2)
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
