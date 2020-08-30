@@ -9237,7 +9237,7 @@ var $author$project$AI$AITroopHandling$hireTroopsIfNeeded = function (ai) {
 };
 var $author$project$Troops$invertArmy = $elm$core$Dict$map(
 	F2(
-		function (k, v) {
+		function (_v0, v) {
 			return -v;
 		}));
 var $author$project$AI$AITroopHandling$settlementDisposableTroops = F2(
@@ -11369,11 +11369,11 @@ var $author$project$Pathfinder$Drawer$drawPath = F3(
 var $author$project$Main$getSelectedPath = function (m) {
 	var player = $author$project$Entities$Lords$getPlayer(m.lords);
 	var _v0 = m.selectedPoint;
-	if (_v0.$ === 'Nothing') {
-		return $elm$core$Maybe$Nothing;
-	} else {
+	if (_v0.$ === 'Just') {
 		var point = _v0.a;
 		return A3($author$project$Main$getPathTo, player.entity.position, point, m.map);
+	} else {
+		return $elm$core$Maybe$Nothing;
 	}
 };
 var $author$project$Main$buildPathSvgs = F2(
@@ -12140,45 +12140,43 @@ var $author$project$Templates$BattleTemplate$generateSettlementBonus = F2(
 				]);
 		} else {
 			var settle = _v0.a;
-			return A2(
-				$elm$core$List$cons,
-				A3(
+			return _List_fromArray(
+				[
+					A3(
 					$author$project$OperatorExt$ternary,
 					_Utils_eq(settle.settlementType, $author$project$Entities$Model$Castle) && (!_Utils_eq(ter, $author$project$Map$Model$Forest)),
 					$author$project$Templates$BattleTemplate$generateTerrainBonuses($author$project$Troops$Archer),
 					A2($elm$html$Html$div, _List_Nil, _List_Nil)),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('battle-terrain-bonus')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$img,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$src(
-										$author$project$Entities$getSettlementImage(settle))
-									]),
-								_List_Nil),
-								A2(
-								$elm$html$Html$span,
-								_List_Nil,
-								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										'+' + (A2(
-											$author$project$Templates$HelperTemplate$roundDigits,
-											$elm$core$Basics$round(
-												(A2($author$project$Entities$getSettlementBonus, settle, bS.defender.land) * 100) - 100),
-											0) + '%'))
-									]))
-							]))
-					]));
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('battle-terrain-bonus')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$img,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$src(
+									$author$project$Entities$getSettlementImage(settle))
+								]),
+							_List_Nil),
+							A2(
+							$elm$html$Html$span,
+							_List_Nil,
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									'+' + (A2(
+										$author$project$Templates$HelperTemplate$roundDigits,
+										$elm$core$Basics$round(
+											(A2($author$project$Entities$getSettlementBonus, settle, bS.defender.land) * 100) - 100),
+										0) + '%'))
+								]))
+						]))
+				]);
 		}
 	});
 var $author$project$Templates$BattleTemplate$generateStatusText = function (bS) {
@@ -13691,51 +13689,47 @@ var $author$project$Templates$SettlementTemplate$settlementStateToAction = F4(
 										settlement.recruitLimits,
 										$author$project$Troops$troopKeyList,
 										_List_Nil),
-									_Utils_ap(
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$button,
-												_List_fromArray(
-													[
-														$elm$html$Html$Events$onClick(
-														$author$project$Msg$SettlementAction(
-															$author$project$Msg$TroopMsg(
-																$author$project$Msg$BuyAllTroops(settlement))))
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$span,
-														_List_Nil,
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Recruit all')
-															]))
-													]))
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$button,
-												_List_fromArray(
-													[
-														$elm$html$Html$Events$onClick(
-														$author$project$Msg$SettlementAction(
-															$author$project$Msg$UIMsg(
-																$author$project$Msg$ShowSettlement(settlement))))
-													]),
-												_List_fromArray(
-													[
-														A2(
-														$elm$html$Html$span,
-														_List_Nil,
-														_List_fromArray(
-															[
-																$elm$html$Html$text('Back')
-															]))
-													]))
-											]))))))
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Events$onClick(
+													$author$project$Msg$SettlementAction(
+														$author$project$Msg$TroopMsg(
+															$author$project$Msg$BuyAllTroops(settlement))))
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$span,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Recruit all')
+														]))
+												])),
+											A2(
+											$elm$html$Html$button,
+											_List_fromArray(
+												[
+													$elm$html$Html$Events$onClick(
+													$author$project$Msg$SettlementAction(
+														$author$project$Msg$UIMsg(
+															$author$project$Msg$ShowSettlement(settlement))))
+												]),
+											_List_fromArray(
+												[
+													A2(
+													$elm$html$Html$span,
+													_List_Nil,
+													_List_fromArray(
+														[
+															$elm$html$Html$text('Back')
+														]))
+												]))
+										])))))
 					]);
 			case 'StationView':
 				return _List_fromArray(
@@ -15129,8 +15123,7 @@ var $author$project$Main$setGameView = function (model) {
 										]),
 									$author$project$MapAction$allSvgs(allClickActions))
 								])),
-							$author$project$Templates$EventTemplate$generateEventOverview(model.event),
-							A2($elm$html$Html$span, _List_Nil, _List_Nil)
+							$author$project$Templates$EventTemplate$generateEventOverview(model.event)
 						])))
 			]));
 };
@@ -15146,16 +15139,20 @@ var $author$project$Entities$validatePlayerName = function (v) {
 		$author$project$Entities$Model$aiNames);
 };
 var $author$project$Templates$StartTemplate$generateInputMsg = function (str) {
-	return ($author$project$Entities$validatePlayerName(str) || (str === '')) ? A2(
-		$elm$html$Html$span,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('error-msg')
-			]),
-		_List_fromArray(
-			[
-				$elm$html$Html$text('Invalid name, please take another name!')
-			])) : A2($elm$html$Html$span, _List_Nil, _List_Nil);
+	return A3(
+		$author$project$OperatorExt$ternary,
+		$author$project$Entities$validatePlayerName(str) || (str === ''),
+		A2(
+			$elm$html$Html$span,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('error-msg')
+				]),
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Invalid name, please take another name!')
+				])),
+		A2($elm$html$Html$span, _List_Nil, _List_Nil));
 };
 var $author$project$Msg$ChangeName = function (a) {
 	return {$: 'ChangeName', a: a};
