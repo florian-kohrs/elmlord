@@ -270,14 +270,6 @@ settlementStationTroopsFactor ai s =
 
         Entities.Model.Village ->
             clamp 0.5 1 <| 0.75 * ai.strategy.defendMultiplier
-settlementStationTroopsFactor : AI -> Entities.Model.Settlement -> Float
-settlementStationTroopsFactor ai s =
-    case s.settlementType of
-        Entities.Model.Castle ->
-            1
-
-        Entities.Model.Village ->
-            clamp 0.5 1 <| 0.75 * ai.strategy.defendMultiplier
 
 
 evaluateSettlementDefense : AI -> Entities.Model.Settlement -> Maybe AiRoundActionPreference
