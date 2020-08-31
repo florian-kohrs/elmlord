@@ -3,10 +3,6 @@ module Building exposing (..)
 import OperatorExt
 
 
-
--- TODO Maybe set level (int) to float
-
-
 type alias Building =
     { name : String
     , level : Int
@@ -28,53 +24,12 @@ startBuildings =
     ]
 
 
+-- general building functions
+----------------------------------------------------------
+
 upgradeBuildingCost : Building -> Float
 upgradeBuildingCost b =
     upgradeBuildingInfoCost b.buildingType (b.level + 1)
-
-
-upgradeBuildingInfoCost : BuildingType -> Int -> Float
-upgradeBuildingInfoCost t l =
-    upgradeCostBase t + (upgradeCostBase t / 2) * Basics.toFloat l
-
-
-buildingToBonus : BuildingType -> Float
-buildingToBonus b =
-    case b of
-        Quarters ->
-            2
-
-        Barracks ->
-            4
-
-        Fortress ->
-            10
-
-
-buildingToBonusInfo : BuildingType -> Int -> String
-buildingToBonusInfo b i =
-    case b of
-        Quarters ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " recruit space in all Settlements"
-
-        Barracks ->
-            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " Recruits per turn in Captial"
-
-        Fortress ->
-            "-" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% Troopcost"
-
-
-upgradeCostBase : BuildingType -> Float
-upgradeCostBase b =
-    case b of
-        Quarters ->
-            550
-
-        Barracks ->
-            350
-
-        Fortress ->
-            500
 
 
 upgradeBuildingType : List Building -> BuildingType -> List Building
@@ -92,11 +47,6 @@ resolveBonusFromBuildingInfo t l =
     buildingToBonus t * toFloat l
 
 
-resolveBonusFromBuilding : Building -> Float
-resolveBonusFromBuilding b =
-    resolveBonusFromBuildingInfo b.buildingType b.level
-
-
 resolveBonusFromBuildings : List Building -> BuildingType -> Float
 resolveBonusFromBuildings bs t =
     case getBuilding t bs of
@@ -105,3 +55,57 @@ resolveBonusFromBuildings bs t =
 
         Just b ->
             resolveBonusFromBuilding b
+
+
+
+-- Resolve a building type to different values like
+----------------------------------------------------------
+
+
+resolveBonusFromBuilding : Building -> Float
+resolveBonusFromBuilding b =
+    resolveBonusFromBuildingInfo b.buildingType b.level
+
+
+upgradeBuildingInfoCost : BuildingType -> Int -> Float
+upgradeBuildingInfoCost t l =
+    upgradeCostBase t + (upgradeCostBase t / 2) * Basics.toFloat l
+
+
+buildingToBonus : BuildingType -> Float
+buildingToBonus b =
+    case b of
+        Quarters ->
+            2
+
+        Barracks ->
+            5
+
+        Fortress ->
+            10
+
+
+buildingToBonusInfo : BuildingType -> Int -> String
+buildingToBonusInfo b i =
+    case b of
+        Quarters ->
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ " recruit space in all settlements"
+
+        Barracks ->
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% attacker-bonus in offensive battles"
+
+        Fortress ->
+            "+" ++ String.fromFloat (Basics.toFloat i * buildingToBonus b) ++ "% defender-bonus in the capital "
+
+
+upgradeCostBase : BuildingType -> Float
+upgradeCostBase b =
+    case b of
+        Quarters ->
+            400
+
+        Barracks ->
+            350
+
+        Fortress ->
+            450

@@ -1,10 +1,9 @@
 module Templates.LordTemplate exposing (..)
 
-import Dict
 import DictExt
 import Entities
 import Entities.Model
-import Html exposing (Html, button, div, img, span, text)
+import Html exposing (Html, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 import Msg
@@ -12,11 +11,9 @@ import Templates.HelperTemplate as Helper
 import Troops
 
 
-{-| Returns the layout for the lord modal (View [Lord-Name])
+-- lord overview modal
+--------------------------------------------------------
 
-    @param {Lord}: Takes the chosen Lord
-
--}
 generateLordTemplate : Entities.Model.Lord -> Html Msg.Msg
 generateLordTemplate l =
     div [ Html.Attributes.class "modal-background" ]
@@ -35,7 +32,7 @@ generateLordTemplate l =
             , div [ Html.Attributes.class "lord-stats" ]
                 [ div [ Html.Attributes.class "lord-data box-shadow" ]
                     [ img [ src "./assets/images/general/ducats_icon.png" ] []
-                    , span [] [ Html.text ("Gold: " ++ String.fromFloat l.gold) ]
+                    , span [] [ Html.text ("Gold: " ++ Helper.roundDigits l.gold 2) ]
                     ]
                 , div [ Html.Attributes.class "lord-data box-shadow" ]
                     [ img [ src "./assets/images/map/Castle.png" ] []

@@ -1,7 +1,6 @@
 module AI.AIGoldManager exposing (..)
 
 import AI.Model exposing (..)
-import Balancing
 import Building
 import Dict
 import Entities
@@ -18,7 +17,7 @@ filterActionIfLordIsBroke : BasicAction -> AI -> Maybe BasicAction
 filterActionIfLordIsBroke a ai =
     case a of
         HireTroops army s ->
-            if ai.lord.gold > Entities.sumArmyBuyCost s army then
+            if ai.lord.gold >= Entities.sumArmyBuyCost army then
                 Just <| HireTroops army s
 
             else
@@ -45,17 +44,17 @@ goldIncomePerRound ai =
     Entities.calculateRoundIncome ai.lord
 
 
-getBuildingBuildFactor : Building.BuildingType -> Float
-getBuildingBuildFactor t =
+getBuildingBuildFactor : AI -> Building.BuildingType -> Float
+getBuildingBuildFactor ai t =
     case t of
         Building.Quarters ->
-            1.2
+            1 * ai.strategy.growArmyMultiplier
 
         Building.Barracks ->
-            1
+            1 * max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier
 
         Building.Fortress ->
-            0
+            1 * ai.strategy.defendMultiplier
 
 
 getBuildingBuildFactors : AI -> Entities.Model.Settlement -> Building.Building -> Maybe AiRoundActionPreference
@@ -67,15 +66,16 @@ getBuildingBuildFactors ai capital b =
                     ImproveBuilding capital b
                 )
                 (min (2 + ai.strategy.improveSettlementsMultiplier) <|
-                    (getBuildingBuildFactor b.buildingType
+                    (getBuildingBuildFactor ai b.buildingType
                         * (goldIncomePerRound
                             ai
-                            * 2
+                            * 1.75
                             / Building.upgradeBuildingCost b
                             + logBase 10
                                 (ai.lord.gold
                                     / Building.upgradeBuildingCost b
                                 )
+                            / 1.5
                           )
                     )
                 )

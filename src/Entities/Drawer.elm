@@ -20,12 +20,16 @@ import Vector
 
 
 drawLord : Lord -> Lord -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
-drawLord player l =
+drawLord player l dict =
     let
         drawnLord =
             MapAction.Model.InteractableSvg (showLord l) (getLordAction player l)
+
+        drawnLordBorder =
+            MapAction.Model.InteractableSvg (showEntityBorder l.entity) []
     in
-    MapAction.addToMap (MapData.hashMapPoint l.entity.position) drawnLord
+    MapAction.addToMap (MapData.hashMapPoint l.entity.position) drawnLord dict
+        |> MapAction.addToMap (MapData.hashMapPoint l.entity.position) drawnLordBorder
 
 
 drawSettlement : Lord -> Settlement -> MapAction.Model.InteractableMapSVG -> MapAction.Model.InteractableMapSVG
@@ -35,7 +39,7 @@ drawSettlement player s dict =
             MapAction.Model.InteractableSvg (showSettlement s) (getSettlementAction player s)
 
         drawnSettlementBorder =
-            MapAction.Model.InteractableSvg (showSettlementBorder s) []
+            MapAction.Model.InteractableSvg (showEntityBorder s.entity) []
     in
     MapAction.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlement dict
         |> MapAction.addToMap (MapData.hashMapPoint s.entity.position) drawnSettlementBorder
@@ -91,9 +95,11 @@ showSettlement s =
     MapAction.Model.SvgItem MapData.settlementZIndex (getSvgForSettlement s)
 
 
-showSettlementBorder : Settlement -> MapAction.Model.SvgItem
-showSettlementBorder s =
-    MapAction.Model.SvgItem MapData.settlementBorderZIndex (getSvgBorderForSettlement s)
+showEntityBorder : WorldEntity -> MapAction.Model.SvgItem
+showEntityBorder e =
+    MapAction.Model.SvgItem
+        MapData.settlementBorderZIndex
+        (getSvgBorderFor e.faction e.position)
 
 
 getSvgForLord : Lord -> Svg.Svg Msg.Msg
@@ -104,14 +110,14 @@ getSvgForLord l =
         1
 
 
-getSvgBorderForSettlement : Settlement -> Svg.Svg Msg.Msg
-getSvgBorderForSettlement s =
+getSvgBorderFor : Faction.Faction -> Vector.Point -> Svg.Svg Msg.Msg
+getSvgBorderFor f p =
     Svg.polygon
-        [ Svg.Events.onClick (Msg.Click s.entity.position)
+        [ Svg.Events.onClick (Msg.Click p)
         , overflow "visible"
-        , stroke (Faction.factionColor s.entity.faction)
+        , stroke (Faction.factionColor f)
         , strokeWidth (String.fromInt MapData.settlementStrokeWidth ++ "px")
-        , points (BasicDrawing.pointsToHexagonPoints (BasicDrawing.calculateHexagonPoints (MapData.mapPositionForIndex s.entity.position) MapData.hexRadius))
+        , points (BasicDrawing.pointsToHexagonPoints (BasicDrawing.calculateHexagonPoints (MapData.mapPositionForIndex p) MapData.hexRadius))
         , opacity "0.8"
         ]
         []

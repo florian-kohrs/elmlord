@@ -5,7 +5,7 @@ import Dict
 import DictExt
 import Entities
 import Entities.Model
-import Faction exposing (Faction)
+import Faction
 import Html exposing (Html, button, div, img, span, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -16,13 +16,11 @@ import Templates.HelperTemplate as Helper
 import Troops
 
 
-{-| Returns the layout for the settlement modal (Enter/View [Settlement-Name])
 
-    @param {Lord}: Takes the lord of the settlement
-    @param {Settlement}: Takes the chosen settlement
-    @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
+-- settlement overview with
+--------------------------------------------------------
 
--}
+
 generateSettlementModalTemplate : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> Html Msg.Msg
 generateSettlementModalTemplate pF lord settlement uistate =
     div [ Html.Attributes.class "modal-background" ]
@@ -52,13 +50,6 @@ generateSettlementModalTemplate pF lord settlement uistate =
         ]
 
 
-{-| Returns the specific layout in dependence to the state
-
-    @param {Lord}: Takes the lord of the settlement
-    @param {Settlement}: Takes the chosen settlement
-    @param {UiSettlementState}: Takes the state of the modal windows (exp. View for Recruiting, Stationing, etc.)
-
--}
 settlementStateToAction : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> Msg.UiSettlementState -> List (Html Msg.Msg)
 settlementStateToAction pF lord settlement uistate =
     case uistate of
@@ -68,7 +59,7 @@ settlementStateToAction pF lord settlement uistate =
             , checkBuildingCapabilities settlement
             , div [ Html.Attributes.class "settlement-info box-shadow" ]
                 [ span [ Html.Attributes.class "header-span" ] [ Html.text "Settlement Info" ]
-                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (Entities.settlementIncome settlement.settlementType) ++ " Ducats") ]
+                , span [ Html.Attributes.class "income-span" ] [ Html.text ("Income: +" ++ Helper.roundDigits (Entities.settlementIncome settlement.settlementType) 2 ++ " Ducats") ]
                 , div [ Html.Attributes.class "stationed-troops-overview" ]
                     [ span [ Html.Attributes.class "troop-span" ] [ Html.text "Stationed Troops: " ]
                     , div []
@@ -103,7 +94,14 @@ settlementStateToAction pF lord settlement uistate =
                         settlement.recruitLimits
                         Troops.troopKeyList
                         []
-                    ++ [ button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ] ]
+                    ++ [ button
+                            [ onClick (Msg.SettlementAction (Msg.TroopMsg (Msg.BuyAllTroops settlement)))
+
+                            --, disabled (validateBuyAllTroops settlement lord)
+                            ]
+                            [ span [] [ Html.text "Recruit all" ] ]
+                       , button [ onClick (Msg.SettlementAction (Msg.UIMsg (Msg.ShowSettlement settlement))) ] [ span [] [ Html.text "Back" ] ]
+                       ]
                 )
             ]
 
@@ -159,6 +157,11 @@ settlementStateToAction pF lord settlement uistate =
             ]
 
 
+
+-- settlement interface components
+--------------------------------------------------------
+
+
 checkBuildingCapabilities : Entities.Model.Settlement -> Html Msg.Msg
 checkBuildingCapabilities s =
     if s.settlementType == Entities.Model.Castle then
@@ -168,13 +171,6 @@ checkBuildingCapabilities s =
         div [] []
 
 
-{-| Returns the listview with the stationed troops, the player can take units out or station new troops to the settlement.
-The function is used for the List.map2 function.
-
-    @param {Troop}: Current troop/unit of the lord (specifically the amount!)
-    @param {(Troop, Settlement)}: Tuple with the current troop/unit and the settlement of this unit
-
--}
 generateStationTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Model.Settlement -> Html Msg.Msg
 generateStationTroopContainer lt ltAmount stAmount sE =
     div [ Html.Attributes.class "troop-stationing-container" ]
@@ -200,13 +196,6 @@ generateStationTroopContainer lt ltAmount stAmount sE =
         ]
 
 
-{-| Displays the listcomponent of the stationed troops list
-
-    @param {(Troop, Troop)}: Current troop/unit of the lord (specifically the amount!)
-    @param {Settlement}: Takes the chosen settlement
-    @param {Lord}: Takes the current lord
-
--}
 generateRecruitTroopContainer : Troops.TroopType -> Int -> Int -> Entities.Model.Settlement -> Entities.Model.Lord -> Html Msg.Msg
 generateRecruitTroopContainer t aAmount sAmount s l =
     div [ Html.Attributes.class "troop-recruiting-container" ]
@@ -214,7 +203,7 @@ generateRecruitTroopContainer t aAmount sAmount s l =
         , span [] [ Html.text ("[" ++ String.fromInt aAmount ++ "]") ]
         , span [] [ Html.text ("[" ++ String.fromInt sAmount ++ "/" ++ String.fromInt (Entities.getSettlementTroopsRecruitLimit s l t) ++ "]") ]
         , div []
-            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * toFloat (Troops.troopCost t))) ]
+            [ span [] [ Html.text (Helper.roundDigits (((100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100) * toFloat (Troops.troopCost t)) 2) ]
             , img [ src "./assets/images/general/ducats_icon.png" ] []
             ]
         , button
@@ -234,7 +223,9 @@ generateRecruitTroopContainer t aAmount sAmount s l =
 displayBuildingComponents : ( Building.Building, Entities.Model.Lord, Entities.Model.Settlement ) -> Html Msg.Msg
 displayBuildingComponents ( b, l, s ) =
     div [ Html.Attributes.class "settlement-building-component" ]
-        [ div [] []
+        [ div [ Html.Attributes.class "building-icon-container" ]
+            [ img [ src ("./assets/images/buildings/" ++ b.name ++ ".png") ] []
+            ]
         , div [] [ span [] [ Html.text b.name ] ]
         , div [ Html.Attributes.class "tooltip" ]
             [ img [ Html.Attributes.class "info-icon", src "./assets/images/general/info.png" ] []
@@ -278,13 +269,11 @@ displayBuildingBonus ( b, i ) =
         ]
 
 
-{-| Validates whether the player can buy new troops or not (if the player has the gold for the troops and the settlement has enough recruits)
 
-    @param {TroopType}: Takes the troopType that the player wants to buy
-    @param {Settlement}: Takes the chosen settlement
-    @param {Lord}: Takes the current lord (to determine if the player has the gold)
+-- validate troop actions (buy, station, etc.)
+--------------------------------------------------------
 
--}
+
 validateBuyTroops : Troops.TroopType -> Entities.Model.Settlement -> Entities.Model.Lord -> Bool
 validateBuyTroops t s l =
     not
@@ -293,22 +282,16 @@ validateBuyTroops t s l =
         )
 
 
-{-| Validates whether the player can station or take troops out of the settlement
+validateBuyAllTroops : Entities.Model.Settlement -> Entities.Model.Lord -> Bool
+validateBuyAllTroops s l =
+    not <| l.gold >= Entities.sumArmyBuyCost s.recruitLimits
 
-    @param {Int}: Takes the current number of troops that are stationed or in the army
 
--}
 validateStationTroops : Int -> Bool
 validateStationTroops amount =
     not (amount > 0)
 
 
-{-| Validates whether the settlement belongs to the player or to another lord, in dependence to this return a message
-
-    @param {Lord}: Takes the current lord
-    @param {Settlement}: Takes the current settlement
-
--}
 validateSettlement : Faction.Faction -> Entities.Model.Lord -> Entities.Model.Settlement -> List (Html Msg.Msg)
 validateSettlement pF l s =
     [ div [ Html.Attributes.class "settlement-enemy-overview" ]

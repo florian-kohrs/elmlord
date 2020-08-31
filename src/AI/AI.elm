@@ -6,13 +6,13 @@ import AI.AIOffsensiveActionHandler
 import AI.AISettlementHandling
 import AI.AITroopHandling
 import AI.Model exposing (..)
-import Balancing
 import Battle
 import Building
 import Dict
 import Entities
 import Entities.Lords
 import Entities.Model
+import Event
 import ListExt
 import Map.Model
 import MapData
@@ -46,11 +46,11 @@ debugAiRoundAction aiRoundActions =
             "Go to " ++ Vector.showPoint p
 
         DoSomething basicAction ->
-            showBasicAction basicAction
+            debugBasicAction basicAction
 
 
-showBasicAction : BasicAction -> String
-showBasicAction basicAction =
+debugBasicAction : BasicAction -> String
+debugBasicAction basicAction =
     case basicAction of
         AttackLord l ->
             "Attack Lord " ++ l.entity.name
@@ -90,9 +90,52 @@ showBasicAction basicAction =
             "Improve Building"
 
 
+showBasicActionActivity : AI -> BasicAction -> Event.Event
+showBasicActionActivity ai action =
+    case action of
+        AttackLord l ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " attacked " ++ l.entity.name ++ "!")
+                Event.Important
+
+        HireTroops _ s ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " recruited troops from " ++ s.entity.name)
+                Event.Minor
+
+        SwapTroops _ s ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " swapped troops with " ++ s.entity.name)
+                Event.Minor
+
+        SiegeSettlement s ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " sieged  " ++ s.entity.name ++ "!")
+                Event.Important
+
+        ImproveBuilding _ b ->
+            Event.Event
+                ai.lord.entity.name
+                (ai.lord.entity.name ++ " improved " ++ b.name ++ " to level " ++ String.fromInt (b.level + 1))
+                Event.Minor
+
+
+
+{- Just <|
+   Event.Event
+       (showBasicAction action)
+       (Vector.showPoint ai.lord.entity.position ++ "<- lord; -> action" ++ Vector.showPoint (AI.AIActionDistanceHandler.getBasicActionDestination action))
+       Event.Minor
+-}
+
+
 getAiActionMultiplier : Float -> Float
 getAiActionMultiplier f =
-    1 + sin (2 * pi * f) / 3
+    1 + sin (pi * f) / 3
 
 
 setLord : AI -> Entities.Model.Lord -> AI
@@ -100,14 +143,14 @@ setLord ai l =
     { ai | lord = l }
 
 
-updateAi : AI -> AiRoundActions -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+updateAi : AI -> AiRoundActions -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> ( Entities.Lords.LordList, Maybe Event.Event )
 updateAi ai action tileOnPos moveTowards lordList =
     case action of
         EndRound ->
-            lordList
+            ( lordList, Nothing )
 
         GoSomeWhere p ->
-            Entities.Lords.replaceAi lordList <| { ai | lord = moveTowards ai.lord p }
+            ( Entities.Lords.replaceAi lordList <| { ai | lord = moveTowards ai.lord p }, Nothing )
 
         DoSomething basicAction ->
             let
@@ -120,35 +163,39 @@ updateAi ai action tileOnPos moveTowards lordList =
             executeBasicAiAction movedAI destination basicAction tileOnPos moveTowards (Entities.Lords.replaceAi lordList <| movedAI)
 
 
-executeBasicAiAction : AI -> Vector.Point -> BasicAction -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> Entities.Lords.LordList
+executeBasicAiAction : AI -> Vector.Point -> BasicAction -> (Vector.Point -> Map.Model.Terrain) -> (Entities.Model.Lord -> Vector.Point -> Entities.Model.Lord) -> Entities.Lords.LordList -> ( Entities.Lords.LordList, Maybe Event.Event )
 executeBasicAiAction ai destination action tileOnPos moveTowards lordList =
     if ai.lord.entity.position == destination then
-        case action of
-            SiegeSettlement s ->
-                siegeSettlement
-                    ai
-                    s
-                    (tileOnPos destination)
-                    lordList
+        let
+            newLords =
+                case action of
+                    SiegeSettlement s ->
+                        siegeSettlement
+                            ai
+                            s
+                            (tileOnPos destination)
+                            lordList
 
-            AttackLord l ->
-                attackLord
-                    ai
-                    l
-                    (tileOnPos destination)
-                    lordList
+                    AttackLord l ->
+                        attackLord
+                            ai
+                            l
+                            (tileOnPos destination)
+                            lordList
 
-            SwapTroops dict s ->
-                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
+                    SwapTroops dict s ->
+                        Entities.Lords.replaceAi lordList <| { ai | lord = Entities.swapLordTroopsWithSettlement ai.lord s dict }
 
-            HireTroops dict s ->
-                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.recruitTroops dict ai.lord s }
+                    HireTroops dict s ->
+                        Entities.Lords.replaceAi lordList <| { ai | lord = Entities.recruitTroops dict ai.lord s }
 
-            ImproveBuilding s b ->
-                Entities.Lords.replaceAi lordList <| { ai | lord = Entities.upgradeBuilding ai.lord b s }
+                    ImproveBuilding s b ->
+                        Entities.Lords.replaceAi lordList <| { ai | lord = Entities.upgradeBuilding ai.lord b s }
+        in
+        ( newLords, Just <| showBasicActionActivity ai action )
 
     else
-        lordList
+        ( lordList, Nothing )
 
 
 siegeSettlement : AI -> Entities.Model.Settlement -> Map.Model.Terrain -> Entities.Lords.LordList -> Entities.Lords.LordList
@@ -198,7 +245,7 @@ getAiAction ai distanceTo canMoveInTurn enemies =
 getAiActionsWithDistancePenalty : AI -> (Entities.Model.Lord -> Vector.Point -> Int) -> List Entities.Model.Lord -> List AiRoundActionPreference
 getAiActionsWithDistancePenalty ai distanceTo enemies =
     List.map
-        (AI.AIActionDistanceHandler.applyActionDistancePenalty (distanceTo ai.lord))
+        (AI.AIActionDistanceHandler.applyActionDistancePenalty ai (distanceTo ai.lord))
         (getAiActions ai enemies)
 
 

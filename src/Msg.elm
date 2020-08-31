@@ -2,7 +2,6 @@ module Msg exposing (..)
 
 import Battle.Model
 import Building
-import Entities
 import Entities.Model
 import MapAction.SubModel
 import Troops
@@ -42,6 +41,7 @@ type TroopOverviewMsg
     = TroopActionMsg
     | TroopArmyMsg Troops.TroopType
 
+
 type SettlementMsg
     = UIMsg SettlementUIMsg
     | TroopMsg SettlementArmyMsg
@@ -56,6 +56,7 @@ type SettlementUIMsg
 
 type SettlementArmyMsg
     = BuyTroops Troops.TroopType Entities.Model.Settlement
+    | BuyAllTroops Entities.Model.Settlement
     | StationTroops Troops.TroopType Entities.Model.Settlement
     | TakeTroops Troops.TroopType Entities.Model.Settlement
     | UpgradeBuilding Building.Building Entities.Model.Settlement

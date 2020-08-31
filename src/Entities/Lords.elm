@@ -14,6 +14,11 @@ lordListToList (Cons l ais) =
     l :: List.map .lord ais
 
 
+getAiWithName : LordList -> String -> Maybe AI.Model.AI
+getAiWithName (Cons l ais) name =
+    List.head <| List.filter (\ai -> ai.lord.entity.name == name) ais
+
+
 updateNpcs : LordList -> List AI.Model.AI -> LordList
 updateNpcs (Cons l _) ais =
     Cons l ais

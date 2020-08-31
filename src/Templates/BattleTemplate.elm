@@ -2,7 +2,6 @@ module Templates.BattleTemplate exposing (generateBattleTemplate)
 
 import Battle
 import Battle.Model
-import Dict
 import DictExt
 import Entities
 import Entities.Model
@@ -17,12 +16,11 @@ import Templates.HelperTemplate as Helper
 import Troops
 
 
-{-| Returns the layout for the battle modal (Engage [Lord] / Siege [Settlement])
 
-    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
-    @param {Terrain}: Takes terrain on which the battle takes place on
+-- battle window modal
+--------------------------------------------------------
 
--}
+
 generateBattleTemplate : Battle.Model.BattleStats -> Map.Model.Terrain -> Html Msg.Msg
 generateBattleTemplate bS t =
     div [ Html.Attributes.class "modal-background" ]
@@ -31,40 +29,27 @@ generateBattleTemplate bS t =
         ]
 
 
-{-| Determines which kind of battle this is (player vs player or player vs settlement)
-and with this information displays different layouts / elements
-
-    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
-    @param {Terrain}: Takes terrain on which the battle takes place on
-
--}
 determineBattleMap : Battle.Model.BattleStats -> Map.Model.Terrain -> List (Html Msg.Msg)
 determineBattleMap bS t =
-    if bS.siege then
-        case bS.settlement of
-            Nothing ->
-                []
+    case bS.settlement of
+        Nothing ->
+            [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
+            , generateActionOverview bS t
+            , generateArmyOverview bS.defender.entity (Entities.getPlayerImage bS.defender) bS.defenderCasualties
+            ]
 
-            Just settle ->
-                [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
-                , generateActionOverview bS t
-                , generateArmyOverview (Tuple.second (Battle.siegeBattleSetDefender bS settle)).entity (Entities.getSettlementImage settle) bS.defenderCasualties
-                ]
-
-    else
-        [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
-        , generateActionOverview bS t
-        , generateArmyOverview bS.defender.entity (Entities.getPlayerImage bS.defender) bS.defenderCasualties
-        ]
+        Just settle ->
+            [ generateArmyOverview bS.attacker.entity (Entities.getPlayerImage bS.attacker) bS.attackerCasualties
+            , generateActionOverview bS t
+            , generateArmyOverview (Tuple.second (Battle.siegeBattleSetDefender bS settle)).entity (Entities.getSettlementImage settle) bS.defenderCasualties
+            ]
 
 
-{-| Displays the army (all troops) of an entity
 
-    @param {WorldEntity}: Takes the entity to which the troops belong (lord or settlement)
-    @param {String}: Takes the url for the image that have to be displayed
-    @param {List Troop}: Takes the current casualities of this entity
+-- show armies in the modal window
+--------------------------------------------------------
 
--}
+
 generateArmyOverview : Entities.Model.WorldEntity -> String -> Troops.Army -> Html Msg.Msg
 generateArmyOverview we image casu =
     div [ Html.Attributes.class "battle-army-overview" ]
@@ -84,12 +69,6 @@ generateArmyOverview we image casu =
         ]
 
 
-{-| Displays the current troops and casualties of an entity
-
-    @param {Troop}: Takes the current army troop of the entity
-    @param {Troop}: Takes the current army troop casualties of the entity
-
--}
 generateTroopOverview : Troops.TroopType -> Int -> Int -> Html Msg.Msg
 generateTroopOverview troop amount casuAmount =
     div [ Html.Attributes.class "battle-troop-container" ]
@@ -105,24 +84,18 @@ generateTroopOverview troop amount casuAmount =
         ]
 
 
-{-| Displays the terrian premiums (bonuses) and possible player actions
-
-    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
-    @param {Terrain}: Takes terrain on which the battle takes place on
-
--}
 generateActionOverview : Battle.Model.BattleStats -> Map.Model.Terrain -> Html Msg.Msg
 generateActionOverview bS ter =
     div [ Html.Attributes.class "battle-action-container" ]
         [ div [ Html.Attributes.class "battle-terrain-info" ]
             ([ span [] [ Html.text "Battlefield-Terrain" ]
              , div []
-                [ img [ src "./assets/images/map/tree_image_color.png" ] []
+                [ img [ src ("./assets/images/map/" ++ String.toLower (Map.terrainToName ter) ++ "_icon_color.png") ] []
                 , span [] [ Html.text (Map.terrainToName ter) ]
                 ]
              ]
                 ++ List.map generateTerrainBonuses (Map.terrainToBonus ter)
-                ++ [ generateSettlementBonus bS ]
+                ++ generateSettlementBonus bS ter
             )
         , span [ Html.Attributes.class "battle-versus-text" ] [ Html.text "VS." ]
         , generateStatusText bS
@@ -130,42 +103,34 @@ generateActionOverview bS ter =
         ]
 
 
-{-| Displays the terrain bonus for a troop type (archer, swordsman, etc.)
-
-    @param {TroopType}: Takes the troop type for which the bonus has to be determined
-
--}
 generateTerrainBonuses : Troops.TroopType -> Html Msg.Msg
 generateTerrainBonuses t =
     div [ Html.Attributes.class "battle-terrain-bonus" ]
         [ img [ src ("./assets/images/troops/" ++ String.toLower (Troops.troopName t) ++ ".png") ] []
-        , span [] [ Html.text ("+" ++ Helper.roundDigits (Troops.battlefieldBonus t * 100 - 100) ++ "%") ]
+        , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Troops.battlefieldBonus t * 100 - 100))) 0 ++ "%") ]
         ]
 
 
-{-| Displays the terrain bonus for the settlement
-
-    @param {BattleStats}: Takes information about the battle to get the settlement
-
--}
-generateSettlementBonus : Battle.Model.BattleStats -> Html Msg.Msg
-generateSettlementBonus bS =
+generateSettlementBonus : Battle.Model.BattleStats -> Map.Model.Terrain -> List (Html Msg.Msg)
+generateSettlementBonus bS ter =
     case bS.settlement of
         Nothing ->
-            div [] []
+            [ div [] [] ]
 
         Just settle ->
-            div [ Html.Attributes.class "battle-terrain-bonus" ]
+            [ OperatorExt.ternary (settle.settlementType == Entities.Model.Castle && ter /= Map.Model.Forest)
+                (generateTerrainBonuses Troops.Archer)
+                (div
+                    []
+                    []
+                )
+            , div [ Html.Attributes.class "battle-terrain-bonus" ]
                 [ img [ src (Entities.getSettlementImage settle) ] []
-                , span [] [ Html.text ("+" ++ Helper.roundDigits (Entities.getSettlementBonus settle bS.defender.land * 100 - 100) ++ "%") ]
+                , span [] [ Html.text ("+" ++ Helper.roundDigits (toFloat (round (Entities.getSettlementBonus settle bS.defender.land * 100 - 100))) 0 ++ "%") ]
                 ]
+            ]
 
 
-{-| Displays the status text about the ongoing battle
-
-    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
-
--}
 generateStatusText : Battle.Model.BattleStats -> Html Msg.Msg
 generateStatusText bS =
     if bS.finished then
@@ -177,11 +142,6 @@ generateStatusText bS =
         span [ Html.Attributes.class "battle-skirmish-text" ] [ Html.text ("Skirmish-Round: " ++ String.fromInt bS.round) ]
 
 
-{-| Displays the possible actions for the player (buttons)
-
-    @param {BattleStats}: Takes information about the battle (troops, names, states, etc.)
-
--}
 generateActionButtonsByState : Battle.Model.BattleStats -> List (Html Msg.Msg)
 generateActionButtonsByState bS =
     if bS.finished then

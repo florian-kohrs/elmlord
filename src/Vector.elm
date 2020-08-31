@@ -2,11 +2,15 @@ module Vector exposing (..)
 
 
 type alias Vector =
-    { x : Float, y : Float }
+    { x : Float
+    , y : Float
+    }
 
 
 type alias Point =
-    { x : Int, y : Int }
+    { x : Int
+    , y : Int
+    }
 
 
 showVector : Vector -> String

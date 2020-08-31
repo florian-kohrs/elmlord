@@ -1,7 +1,6 @@
 module AI.AIActionDistanceHandler exposing (..)
 
 import AI.Model exposing (..)
-import Balancing
 import Building
 import Dict
 import Entities
@@ -14,9 +13,14 @@ import Troops
 import Vector
 
 
-distanceFromSiegeActionPenalty : Int -> Float
-distanceFromSiegeActionPenalty turns =
-    toFloat turns * 0.1
+distanceFromCapitalSiegeActionPenalty : Int -> Float
+distanceFromCapitalSiegeActionPenalty turns =
+    toFloat turns * 0.085
+
+
+distanceFromVillageSiegeActionPenalty : Int -> Float
+distanceFromVillageSiegeActionPenalty turns =
+    toFloat turns * 0.095
 
 
 distanceSwapTroopsActionPenalty : Int -> Float
@@ -26,7 +30,7 @@ distanceSwapTroopsActionPenalty turns =
 
 distanceHireTroopsActionPenalty : Int -> Float
 distanceHireTroopsActionPenalty turns =
-    toFloat turns * 0.03
+    toFloat turns * 0.045
 
 
 distanceImproveBuildingActionPenalty : Int -> Float
@@ -48,11 +52,11 @@ distanceFromMoveToPenalty turns =
 
 distanceFromAttackLordPenalty : Int -> Float
 distanceFromAttackLordPenalty turns =
-    toFloat turns
+    toFloat turns * 2.5
 
 
-applyActionDistancePenalty : (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
-applyActionDistancePenalty turnsToPoint action =
+applyActionDistancePenalty : AI -> (Vector.Point -> Int) -> AiRoundActionPreference -> AiRoundActionPreference
+applyActionDistancePenalty ai turnsToPoint action =
     let
         destination =
             getAiRoundActionDestination action.action
@@ -63,12 +67,12 @@ applyActionDistancePenalty turnsToPoint action =
     { action
         | actionValue =
             action.actionValue
-                - getActionDistancePenalty action.action turnsToAction
+                - getActionDistancePenalty ai action.action turnsToAction
     }
 
 
-getActionDistancePenalty : AiRoundActions -> Int -> Float
-getActionDistancePenalty a turnsToPoint =
+getActionDistancePenalty : AI -> AiRoundActions -> Int -> Float
+getActionDistancePenalty ai a turnsToPoint =
     case a of
         EndRound ->
             0
@@ -77,30 +81,42 @@ getActionDistancePenalty a turnsToPoint =
             distanceFromMoveToPenalty turnsToPoint
 
         DoSomething baseAction ->
-            getBaseActionDistancePenalty baseAction turnsToPoint
+            getBaseActionDistancePenalty ai baseAction turnsToPoint
 
 
-getBaseActionDistancePenalty : BasicAction -> Int -> Float
-getBaseActionDistancePenalty basicAction i =
+getBaseActionDistancePenalty : AI -> BasicAction -> Int -> Float
+getBaseActionDistancePenalty ai basicAction i =
     case basicAction of
         AttackLord l ->
-            max 0 <| distanceFromAttackLordPenalty i
+            max 0 <| distanceFromAttackLordPenalty i * (2 - ai.strategy.battleMultiplier)
 
         HireTroops _ _ ->
             if i < 0 then
                 -2
 
             else
-                distanceHireTroopsActionPenalty i
+                distanceHireTroopsActionPenalty i * (2 - ai.strategy.defendMultiplier)
 
-        SwapTroops _ _ ->
-            distanceSwapTroopsActionPenalty i
+        SwapTroops _ s ->
+            if i < 0 then
+                if s.settlementType == Entities.Model.Castle then
+                    min 0 <| 1 - (ai.strategy.defendMultiplier * 3)
 
-        SiegeSettlement _ ->
-            distanceFromSiegeActionPenalty i
+                else
+                    min 0 <| (1 - (ai.strategy.defendMultiplier + 0.1) * 1.5)
+
+            else
+                distanceSwapTroopsActionPenalty i * (2 - ai.strategy.defendMultiplier)
+
+        SiegeSettlement s ->
+            if s.settlementType == Entities.Model.Castle then
+                distanceFromCapitalSiegeActionPenalty i * (2 - ai.strategy.siegeMultiplier)
+
+            else
+                distanceFromVillageSiegeActionPenalty i * (2 - ai.strategy.siegeMultiplier)
 
         ImproveBuilding _ _ ->
-            distanceImproveBuildingActionPenalty i
+            distanceImproveBuildingActionPenalty <| max 0 i
 
 
 getAiRoundActionDestination : AiRoundActions -> Maybe Vector.Point

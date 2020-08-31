@@ -1,5 +1,7 @@
 module Event exposing (..)
 
+import ListExt
+
 
 type alias EventState =
     { state : Bool
@@ -13,8 +15,7 @@ type EventType
 
 
 type alias Event =
-    { index : Int
-    , header : String
+    { header : String
     , text : String
     , eventType : EventType
     }
@@ -25,14 +26,14 @@ setEvents eventState eventList =
     { eventState | events = eventList }
 
 
-appendEvent : List Event -> String -> String -> EventType -> List Event
-appendEvent l h t e =
-    { index = List.length l, header = h, text = t, eventType = e } :: l
+appendEvent : EventState -> Event -> EventState
+appendEvent es e =
+    { es | events = e :: es.events }
 
 
 removeEvent : EventState -> Int -> EventState
 removeEvent e i =
-    { e | events = List.filter (\x -> x.index /= i) e.events }
+    { e | events = ListExt.removeElementAt i e.events }
 
 
 updateEventState : EventState -> EventState

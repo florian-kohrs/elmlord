@@ -1,6 +1,5 @@
 module Templates.MapActionTemplate exposing (..)
 
-import Dict
 import DictExt
 import Entities.Model
 import Faction exposing (Faction)
@@ -18,12 +17,11 @@ import Troops
 import Vector
 
 
-{-| Returns the layout for the map actions, in dependence to the chosen point (in the model)
 
-    @param {Maybe Point}: Takes the point that is currently chosen point (at the start no point is chosen, therefore Maybe)
-    @param {MapDrawer.InteractableMapSVG}: Takes a dict with all possible actions
+-- Map actions interface (top-left component)
+--------------------------------------------------------
 
--}
+
 generateMapActionTemplate : Maybe Vector.Point -> Entities.Model.Lord -> MapAction.Model.InteractableMapSVG -> Html Msg.Msg
 generateMapActionTemplate p player dict =
     let
@@ -45,15 +43,13 @@ generateMapActionTemplate p player dict =
         ]
 
 
-{-| Function for map, that displays a button for each possible action
-
-    @param {Msg.MapTileMsg}: Takes the action type, that the button sends, when it gets clicked
-
--}
 generateMapActionButtons : MapAction.SubModel.MapTileMsg -> Html Msg.Msg
 generateMapActionButtons svga =
     button [ onClick (Msg.MapTileAction svga) ] [ span [] [ Html.text (MapAction.Viewer.mapTileMsgToToolTip svga) ] ]
 
+
+-- troop overview on map action tile (bottom-left component)
+--------------------------------------------------------
 
 generateTroopOverview : Faction -> List MapAction.SubModel.MapTileMsg -> Html Msg.Msg
 generateTroopOverview pf actions =
@@ -64,18 +60,14 @@ generateTroopOverview pf actions =
         enemyTroops =
             combineTroopDicts Troops.emptyTroops actions (\f -> f /= pf)
     in
-    if Troops.sumTroops playerTroops /= 0 || Troops.sumTroops enemyTroops /= 0 then
-        div [ Html.Attributes.class "map-troop-overview" ]
-            ((span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Enemy troops on map tile" ]
-                :: getTroopOverviewData enemyTroops
-             )
-                ++ (span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Your troops on map tile" ]
-                        :: getTroopOverviewData playerTroops
-                   )
-            )
-
-    else
-        div [] []
+    div [ Html.Attributes.class "map-troop-overview" ]
+        ((span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Enemy troops on map tile" ]
+            :: getTroopOverviewData enemyTroops
+         )
+            ++ (span [ Html.Attributes.class "map-troop-overview-header" ] [ Html.text "Your troops on map tile" ]
+                    :: getTroopOverviewData playerTroops
+               )
+        )
 
 
 getTroopOverviewData : Troops.Army -> List (Html Msg.Msg)

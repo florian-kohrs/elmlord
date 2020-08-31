@@ -2,9 +2,9 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <title>Elmlord</title>
-  <script type="text/javascript" src="elm.js"></script>
+    <meta charset="UTF-8">
+    <title>Elmlord</title>
+    <script type="text/javascript" src="elm.js"></script>
 </head>
 
 <body>
@@ -13,52 +13,55 @@
 
 <script type="text/javascript">
 
-var app = Elm.Main.init({
-    node: document.getElementById('myapp')
-});
+    var app = Elm.Main.init({
+        node: document.getElementById('myapp')
+    });
 
-setVolumne(10);
+    setVolume(10);
 
-app.ports.updateVolumne.subscribe(function(volumne) {
-    setVolumne(volumne);
-});
+    app.ports.updateVolume.subscribe(function (volume) {
+        setVolume(volume);
+    });
 
-app.ports.startMusic.subscribe(function() {
-    startMusic();
-});
+    app.ports.startMusic.subscribe(function (song) {
+        startMusic(song);
+    });
 
-app.ports.playSound.subscribe(function(sound) {
-    muteAndUnmuteSound("sound-player", "audio-player", "./assets/sounds/SoundEffects/" + sound + ".wav");
-});
+    app.ports.playSound.subscribe(function (sound) {
+        muteAndUnmuteSound("sound-player", "audio-player", "./assets/sounds/soundeffects/" + sound + ".wav");
+    });
 
-app.ports.transitSoundToMusic.subscribe((object) => {
-    muteAndUnmuteSound("sound-player", "audio-player", "./assets/sounds/SoundEffects/" + object[0] + ".wav");
-    
-    setTimeout(() => {
-        startMusic();
-    }, object[1]);
-});
- 
-app.ports.openLink.subscribe((link) => {
-    window.open(link, '_blank');
-});
+    app.ports.transitSoundToMusic.subscribe((object) => {
+        muteAndUnmuteSound("sound-player", "audio-player", "./assets/sounds/soundeffects/" + object[0] + ".wav");
+
+        setTimeout(() => {
+            startMusic(null);
+        }, object[1]);
+    });
+
+    app.ports.openLink.subscribe((link) => {
+        window.open(link, '_blank');
+    });
 
 
-function setVolumne(volumne) {
-    document.getElementById("audio-player").volume = volumne / 100;
-    document.getElementById("sound-player").volume = volumne / 100;
-}
+    function setVolume(volume) {
+        document.getElementById("audio-player").volume = volume / 100;
+        document.getElementById("sound-player").volume = volume / 100;
+    }
 
-function startMusic() {
-    document.getElementById("sound-player").pause();
-    document.getElementById("audio-player").play();
-}
+    function startMusic(song) {
+        if (song)
+            document.getElementById("audio-player").setAttribute("src", "./assets/sounds/songs/" + song + ".wav");
 
-function muteAndUnmuteSound(playerOne, playerTwo, sound) {
-    document.getElementById(playerTwo).pause();
-    document.getElementById(playerOne).setAttribute("src", sound);
-    document.getElementById(playerOne).play();
-}
+        document.getElementById("sound-player").pause();
+        document.getElementById("audio-player").play();
+    }
+
+    function muteAndUnmuteSound(playerOne, playerTwo, sound) {
+        document.getElementById(playerTwo).pause();
+        document.getElementById(playerOne).setAttribute("src", sound);
+        document.getElementById(playerOne).play();
+    }
 
 </script>
 

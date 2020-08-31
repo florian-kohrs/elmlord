@@ -11,6 +11,5 @@ type alias BattleStats =
     , attackerCasualties : Troops.Army
     , defenderCasualties : Troops.Army
     , settlement : Maybe Entities.Model.Settlement
-    , siege : Bool
     , finished : Bool
     }

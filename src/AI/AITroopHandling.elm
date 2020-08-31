@@ -3,7 +3,6 @@ module AI.AITroopHandling exposing (..)
 import AI.AIGoldManager exposing (..)
 import AI.AISettlementHandling
 import AI.Model exposing (..)
-import Balancing
 import Building
 import Dict
 import Entities
@@ -23,18 +22,18 @@ acceptedMissingTroopsStrength ai =
             + toFloat (estimatedNormalPlayerTroopStrength ai)
             + estimatedSettlementDefenseStrength ai Entities.Model.Village
          )
-            / 6
+            / 2
         )
 
 
 maximalAcceptedSettlementStrength : AI -> Entities.Model.Settlement -> Int
 maximalAcceptedSettlementStrength ai s =
-    round <| estimatedSettlementDefenseStrength ai s.settlementType * 1.5
+    round <| estimatedSettlementDefenseStrength ai s.settlementType * 1.75
 
 
 maximalAcceptedPlayerStrength : AI -> Int
 maximalAcceptedPlayerStrength ai =
-    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 1.5
+    round <| toFloat (estimatedNormalPlayerTroopStrength ai) * 6 + max 500 (ai.lord.gold / 5)
 
 
 acceptedLackOfDefenseStrength : Int
@@ -179,7 +178,7 @@ takeTroopsFromSettlements : AI -> List AiRoundActionPreference
 takeTroopsFromSettlements ai =
     let
         neededStrength =
-            totalNeededTroopStrength ai <| max 0
+            totalNeededTroopStrength ai identity
     in
     ListExt.justList <| List.map (checkSettlementForAvaiableTroops neededStrength ai) ai.lord.land
 
@@ -198,9 +197,10 @@ checkSettlementForAvaiableTroops targetStrength ai s =
             AiRoundActionPreference
                 (DoSomething <| SwapTroops (Troops.invertArmy availableTroops) s)
                 (min (2 + ai.strategy.defendMultiplier)
-                    (toFloat targetStrength
-                        / toFloat (acceptedMissingTroopsStrength ai)
-                        + min 1
+                    ((toFloat targetStrength
+                        / (toFloat (acceptedMissingTroopsStrength ai) / 3)
+                     )
+                        * min 1
                             (toFloat troopStrength
                                 / toFloat targetStrength
                             )
@@ -223,7 +223,8 @@ checkSettlementForRecruits : Int -> AI -> Entities.Model.Settlement -> Maybe AiR
 checkSettlementForRecruits targetStrength ai s =
     let
         recruitNeedFactor =
-            toFloat targetStrength / toFloat (acceptedMissingTroopsStrength ai)
+            min (2 * (2 + ai.strategy.defendMultiplier))
+                (toFloat targetStrength / toFloat (acceptedMissingTroopsStrength ai))
 
         recruitableTroopsDict =
             tryBuyTroopsWithTotalStrenghtFrom ai targetStrength s
@@ -248,9 +249,8 @@ checkSettlementForRecruits targetStrength ai s =
                                 recruitableTroopsDict
                             )
                       )
-                    * 2
-                    + recruitStrengthFactor
-                    / 2
+                    + clamp 0 1 (logBase 10 (recruitStrengthFactor / toFloat acceptedLackOfDefenseStrength))
+                    + (max 0 <| ai.strategy.defendMultiplier - 1)
     in
     if recruitStrengthFactor > 0 then
         Just <|
@@ -262,6 +262,14 @@ checkSettlementForRecruits targetStrength ai s =
         Nothing
 
 
+settlementStationTroopsFactor : AI -> Entities.Model.Settlement -> Float
+settlementStationTroopsFactor ai s =
+    case s.settlementType of
+        Entities.Model.Castle ->
+            1
+
+        Entities.Model.Village ->
+            clamp 0.5 1 <| 0.75 * ai.strategy.defendMultiplier
 settlementStationTroopsFactor : AI -> Entities.Model.Settlement -> Float
 settlementStationTroopsFactor ai s =
     case s.settlementType of
@@ -284,10 +292,10 @@ evaluateSettlementDefense ai s =
     else if hasTroopsToSatisfySettlementDefense ai then
         let
             swapTroops =
-                takeDispensableTroopsWithMaxStrength
+                takeDisposableTroopsWithMaxStrength
                     ai.lord.entity.army
                     (estimatedNormalPlayerTroopStrength ai)
-                    (settlementLackOfTroopStrength ai s)
+                    (round (toFloat (settlementLackOfTroopStrength ai s) * settlementStationTroopsFactor ai s))
         in
         if Troops.sumArmyStats swapTroops > 0 then
             Just
@@ -303,6 +311,12 @@ evaluateSettlementDefense ai s =
                                 (toFloat (settlementLackOfTroopStrength ai s)
                                     / estimatedSettlementDefenseStrength ai s.settlementType
                                 )
+                            + (if s.settlementType == Entities.Model.Castle then
+                                ai.strategy.defendMultiplier + 0.6
+
+                               else
+                                ai.strategy.defendMultiplier * 0.3 + 0.25
+                              )
                         )
                     )
                 )
@@ -351,8 +365,8 @@ hasTroopsToSatisfySettlementDefense ai =
         >= troopStrengthToBotherAddingToSettlement
 
 
-takeDispensableTroopsWithMaxStrength : Troops.Army -> Int -> Int -> Troops.Army
-takeDispensableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength =
+takeDisposableTroopsWithMaxStrength : Troops.Army -> Int -> Int -> Troops.Army
+takeDisposableTroopsWithMaxStrength sourceArmy sourceNeededStrength maxStrength =
     takeTroopsToLeaveArmyAtStrength
         (max
             sourceNeededStrength

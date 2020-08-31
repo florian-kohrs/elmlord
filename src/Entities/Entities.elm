@@ -15,7 +15,7 @@ settlementIncome : SettlementType -> Float
 settlementIncome t =
     case t of
         Castle ->
-            20
+            35
 
         Village ->
             50
@@ -43,32 +43,53 @@ settlementTroopsRecruitLimit s quartersLevel troopType =
             if s.settlementType == Castle then
                 case troopType of
                     Troops.Sword ->
-                        40
+                        10
 
                     Troops.Spear ->
                         20
 
                     Troops.Archer ->
-                        30
+                        20
 
                     Troops.Knight ->
-                        10
+                        5
 
             else
                 case troopType of
                     Troops.Sword ->
-                        10
+                        5
 
                     Troops.Spear ->
-                        15
+                        10
 
                     Troops.Archer ->
-                        10
+                        5
 
                     Troops.Knight ->
                         0
     in
     limit + round (Building.resolveBonusFromBuildingInfo Building.Quarters quartersLevel)
+
+
+settlementNewRecruitsFromTypePerRound : Settlement -> Troops.TroopType -> Int
+settlementNewRecruitsFromTypePerRound s t =
+    case t of
+        Troops.Sword ->
+            case s.settlementType of
+                Village ->
+                    1
+
+                Castle ->
+                    2
+
+        Troops.Spear ->
+            2
+
+        Troops.Archer ->
+            2
+
+        Troops.Knight ->
+            1
 
 
 setLordEntity : Lord -> WorldEntity -> Lord
@@ -94,9 +115,9 @@ lordSettlementCount l =
 ----------------------------------------------------------
 
 
-updateEntityFaction : Faction.Faction -> WorldEntity -> WorldEntity
-updateEntityFaction fa we =
-    { we | faction = fa, army = Troops.emptyTroops }
+updateEntityFaction : Faction.Faction -> WorldEntity -> Troops.Army -> WorldEntity
+updateEntityFaction fa we army =
+    { we | faction = fa, army = army }
 
 
 setPosition : WorldEntity -> Vector.Point -> WorldEntity
@@ -109,11 +130,29 @@ setPosition entity pos =
 ----------------------------------------------------------
 
 
+buyAllTroops : Lord -> Settlement -> Lord
+buyAllTroops l s =
+    Dict.foldl (\k _ b -> buyMaxTroops 99 b (Troops.intToTroopType k) (Maybe.withDefault s (getSettlementByName b.land s.entity.name))) l l.entity.army
+
+
+troopGroupAmount : Int
+troopGroupAmount =
+    5
+
+
 buyTroops : Lord -> Troops.TroopType -> Settlement -> Lord
-buyTroops l t s =
+buyTroops =
+    buyMaxTroops troopGroupAmount
+
+
+buyMaxTroops : Int -> Lord -> Troops.TroopType -> Settlement -> Lord
+buyMaxTroops maxTroops l t s =
     let
         amount =
-            getPossibleTroopAmount s.recruitLimits t
+            getPossibleTroopAmount
+                (min maxTroops (floor (l.gold / toFloat (Troops.troopCost t))))
+                s.recruitLimits
+                t
     in
     recruitTroops (Dict.singleton (Troops.troopTypeToInt t) amount) l s
 
@@ -122,7 +161,7 @@ stationTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 stationTroops l t s =
     let
         amount =
-            getPossibleTroopAmount l.entity.army t
+            getPossibleTroopAmount troopGroupAmount l.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity, land = updateSettlementTroops l.land s.entity.name t amount }
 
@@ -131,7 +170,7 @@ takeTroops : Lord -> Troops.TroopType -> Settlement -> Lord
 takeTroops l t s =
     let
         amount =
-            getPossibleTroopAmount s.entity.army t
+            getPossibleTroopAmount troopGroupAmount s.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t amount) l.entity, land = updateSettlementTroops l.land s.entity.name t (-1 * amount) }
 
@@ -140,7 +179,7 @@ disbandTroops : Lord -> Troops.TroopType -> Lord
 disbandTroops l t =
     let
         amount =
-            getPossibleTroopAmount l.entity.army t
+            getPossibleTroopAmount troopGroupAmount l.entity.army t
     in
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity }
 
@@ -160,14 +199,14 @@ setSettlementRecruits army s =
     { s | recruitLimits = army }
 
 
-getPossibleTroopAmount : Troops.Army -> Troops.TroopType -> Int
-getPossibleTroopAmount army t =
+getPossibleTroopAmount : Int -> Troops.Army -> Troops.TroopType -> Int
+getPossibleTroopAmount maxAmount army t =
     case Dict.get (Troops.troopTypeToInt t) army of
         Nothing ->
             0
 
         Just amount ->
-            min 5 amount
+            min maxAmount amount
 
 
 swapLordTroopsWithSettlement : Lord -> Settlement -> Dict.Dict Int Int -> Lord
@@ -300,13 +339,9 @@ getSettlementByName l s =
             Just x
 
 
-sumArmyBuyCost : Settlement -> Troops.Army -> Float
-sumArmyBuyCost s a =
-    let
-        priceFactor =
-            (100.0 - Building.resolveBonusFromBuildings s.buildings Building.Fortress) / 100
-    in
-    toFloat (Dict.foldl (\k v cost -> Troops.troopCost (Troops.intToTroopType k) * v + cost) 0 a) * priceFactor
+sumArmyBuyCost : Troops.Army -> Float
+sumArmyBuyCost a =
+    toFloat (Dict.foldl (\k v cost -> Troops.troopCost (Troops.intToTroopType k) * v + cost) 0 a)
 
 
 recruitTroops : Dict.Dict Int Int -> Lord -> Settlement -> Lord
@@ -322,7 +357,7 @@ recruitTroops recruitDict l s =
                 ( l.entity.army, s.recruitLimits )
                 recruitDict
     in
-    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity, gold = l.gold - sumArmyBuyCost s recruitDict }
+    setSettlement (setSettlementRecruits newSRecruits s) <| { l | entity = updateEntitiesArmy newLArmy l.entity, gold = l.gold - sumArmyBuyCost recruitDict }
 
 
 applySettlementsNewRecruits : Lord -> List Settlement
@@ -350,7 +385,7 @@ applySettlementNewRecruits quarterLevel s =
                 (\t amount ->
                     min (settlementTroopsRecruitLimit s quarterLevel <| Troops.intToTroopType t) <|
                         amount
-                            + Basics.round (2.0 + Building.resolveBonusFromBuildings s.buildings Building.Barracks)
+                            + (settlementNewRecruitsFromTypePerRound s <| Troops.intToTroopType t)
                 )
                 s.recruitLimits
     }
@@ -359,10 +394,20 @@ applySettlementNewRecruits quarterLevel s =
 getSettlementBonus : Settlement -> List Settlement -> Float
 getSettlementBonus s l =
     if s.settlementType == Village then
-        1.1
+        1.2
 
     else
-        List.foldr (\_ y -> 0.1 + y) 1 l
+        List.foldr (\_ y -> 0.15 + y) 1 l + Building.resolveBonusFromBuildings s.buildings Building.Fortress / 100
+
+
+getAttackerBonus : Maybe Settlement -> Float
+getAttackerBonus s =
+    case s of
+        Nothing ->
+            1
+
+        Just x ->
+            1 + Building.resolveBonusFromBuildings x.buildings Building.Barracks / 100
 
 
 combineSettlementName : Settlement -> String
@@ -457,7 +502,7 @@ isLandlord s l =
 
 findLordWithSettlement : Settlement -> List Lord -> Maybe Lord
 findLordWithSettlement settlement =
-    List.foldr
+    List.foldl
         (\l r ->
             if l.entity.faction == settlement.entity.faction then
                 Just l

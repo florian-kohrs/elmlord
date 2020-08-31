@@ -7,6 +7,9 @@ import Msg
 import OperatorExt
 
 
+-- Finished game modal window
+--------------------------------------------------------
+
 winningTitle : String
 winningTitle =
     "We have won!"
@@ -14,7 +17,7 @@ winningTitle =
 
 winningDesc : String
 winningDesc =
-    "My lord we have destroyed the last enemy, the campaign is done, we showed them our supremacy."
+    "My lord you have smited your last enemy, the kingdom is yours."
 
 
 losingTitle : String
@@ -24,14 +27,9 @@ losingTitle =
 
 losingDesc : String
 losingDesc =
-    "My lord our castle was taken, the campaign is a lost cause."
+    "Your castle was taken, you are dead."
 
 
-{-| Returns the layout for the ending modal, when the player either won or lost
-
-    @param {Bool}: Takes a bool, which says if the player won (True) or lost (False) the game
-
--}
 generateEndTemplate : Bool -> Html Msg.Msg
 generateEndTemplate bool =
     div [ Html.Attributes.class "modal-background" ]
@@ -39,11 +37,6 @@ generateEndTemplate bool =
         ]
 
 
-{-| Fills the layout with the notification whether the player won or lost (somes texts and a return button)
-
-    @param {Bool}: Takes a bool, which says if the player won (True) or lost (False) the game
-
--}
 generateEndData : Bool -> List (Html Msg.Msg)
 generateEndData res =
     [ div [ Html.Attributes.class "end-modal-title" ]
@@ -54,7 +47,7 @@ generateEndData res =
         ]
     , div []
         [ button []
-            [ span [] [ Html.text "Go to the main menue" ]
+            [ span [ onClick (Msg.MenueAction Msg.ShowMenue) ] [ Html.text "Go to the main menue" ]
             ]
         ]
     ]
