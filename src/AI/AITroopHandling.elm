@@ -47,9 +47,43 @@ troopStrengthToBotherAddingToSettlement =
     0
 
 
+maxVillageTroopStrength : Int
+maxVillageTroopStrength =
+    3000
+
+
+baseTroopStrengthInVillage : Int
+baseTroopStrengthInVillage =
+    1000
+
+
+troopsInVillagePerSettlement : Int
+troopsInVillagePerSettlement =
+    550
+
+
 estimatedNormalVillageTroopStrength : AI -> Float
 estimatedNormalVillageTroopStrength ai =
-    toFloat 2500 * ai.strategy.defendMultiplier
+    let
+        x =
+            Entities.lordSettlementCount ai.lord
+    in
+    toFloat (min maxVillageTroopStrength (baseTroopStrengthInVillage + troopsInVillagePerSettlement * x)) * max 0.666 (2 * ai.strategy.defendMultiplier - 1.2)
+
+
+maxCapitalTroopStrength : Int
+maxCapitalTroopStrength =
+    5500
+
+
+troopsInCapitalPerSettlement : Int
+troopsInCapitalPerSettlement =
+    1250
+
+
+minDefendMultiplierForCapitalStrength : Float
+minDefendMultiplierForCapitalStrength =
+    0.85
 
 
 estimatedNormalCastleTroopStrength : AI -> Float
@@ -59,11 +93,22 @@ estimatedNormalCastleTroopStrength ai =
             toFloat <| Entities.lordSettlementCount ai.lord
     in
     --(400 + (50 * x)) * ai.strategy.defendMultiplier
-    (4500 * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))) * ai.strategy.defendMultiplier
+    min (toFloat maxCapitalTroopStrength)
+        (toFloat troopsInCapitalPerSettlement * x)
+        * ((1 / x) + ((1 - (1 / x)) / (x * x * 0.01 + 1)))
+        * max
+            minDefendMultiplierForCapitalStrength
+            (2 * ai.strategy.defendMultiplier - 1)
 
 
+normalPlayerTroopStrength : Int
+normalPlayerTroopStrength =
+    3500
 
---4500 * ai.strategy.defendMultiplier
+
+playerTroopStrengthBoniPerSettlement : Int
+playerTroopStrengthBoniPerSettlement =
+    400
 
 
 estimatedNormalPlayerTroopStrength : AI -> Int
@@ -72,7 +117,12 @@ estimatedNormalPlayerTroopStrength ai =
         x =
             Entities.lordSettlementCount ai.lord
     in
-    (1500 + 400 * x) * round (max ai.strategy.battleMultiplier ai.strategy.siegeMultiplier)
+    (normalPlayerTroopStrength + playerTroopStrengthBoniPerSettlement * x)
+        * round
+            ((ai.strategy.battleMultiplier + ai.strategy.siegeMultiplier)
+                / 2
+                - ai.strategy.defendMultiplier
+            )
 
 
 estimatedSettlementDefenseStrength : AI -> Entities.Model.SettlementType -> Float
@@ -85,14 +135,36 @@ estimatedSettlementDefenseStrength ai t =
             estimatedNormalCastleTroopStrength ai
 
 
+minRecruitTroopsActionValue : Float
+minRecruitTroopsActionValue =
+    0.5
+
+
 hireTroopsIfNeeded : AI -> List AiRoundActionPreference
 hireTroopsIfNeeded ai =
     let
         neededStrength =
             totalNeededTroopStrength ai identity
     in
-    if neededStrength > 0 then
+    if neededStrength > acceptedLackOfDefenseStrength then
         checkSettlementsForRecruits neededStrength ai
+
+    else if AI.AIGoldManager.goldIncomePerRound ai > 0 || ai.lord.gold > 1000 then
+        List.map
+            (\action ->
+                { action
+                    | actionValue =
+                        minRecruitTroopsActionValue
+                            + sqrt
+                                (max 0
+                                    (action.actionValue
+                                        - minRecruitTroopsActionValue
+                                    )
+                                )
+                }
+            )
+        <|
+            checkSettlementsForRecruits 2000 ai
 
     else
         []
@@ -190,8 +262,14 @@ checkSettlementForRecruits targetStrength ai s =
         Nothing
 
 
+settlementStationTroopsFactor : AI -> Entities.Model.Settlement -> Float
+settlementStationTroopsFactor ai s =
+    case s.settlementType of
+        Entities.Model.Castle ->
+            1
 
---evaluates if any settlements controlled by the current ai have insufficent defense
+        Entities.Model.Village ->
+            clamp 0.5 1 <| 0.75 * ai.strategy.defendMultiplier
 
 
 evaluateSettlementDefense : AI -> Entities.Model.Settlement -> Maybe AiRoundActionPreference

@@ -617,15 +617,21 @@ playAiTurn m =
                         | lords =
                             AI.updateAi ai other (OperatorExt.flip Map.getTerrainForPoint <| m.map) (PathAgent.moveLordOnPath m.map) m.lords
                         , event =
-                            Event.setEvents m.event
-                                (Event.appendEvent m.event.events
-                                    ai.lord.entity.name
-                                    (List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                        ++ List.foldl (\a s -> s ++ ";\n " ++ AI.showAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
-                                    )
-                                    --(AI.showAiRoundAction other)
-                                    Event.Minor
-                                )
+                            MaybeExt.foldMaybe (\event -> Event.appendEvent m.event event)
+                                m.event
+                                actionEvent
+
+                        {- Event.appendEvent
+                           m.event
+                           (Event.Event
+                               ai.lord.entity.name
+                               (List.foldl (\a s -> s ++ ";\n " ++ AI.debugAiRoundActionPreference a) "Plain Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActions ai (Entities.Lords.getLordsExcept m.lords ai.lord))
+                                   ++ List.foldl (\a s -> s ++ ";\n " ++ AI.debugAiRoundActionPreference a) "\n\nWith Distance Penalty Action Preferences" (List.sortBy (\a -> -a.actionValue) <| AI.getAiActionsWithDistancePenalty ai (PathAgent.lordsTurnToReachDestination m.map) (Entities.Lords.getLordsExcept m.lords ai.lord))
+                               )
+                               --(AI.debugAiRoundAction other)
+                               Event.Minor
+                           )
+                        -}
                     }
 
 

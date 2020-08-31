@@ -2,6 +2,7 @@ module AI exposing (..)
 
 import AI.AIActionDistanceHandler
 import AI.AIGoldManager
+import AI.AIOffsensiveActionHandler
 import AI.AISettlementHandling
 import AI.AITroopHandling
 import AI.Model exposing (..)
@@ -30,13 +31,13 @@ type alias PathLookUp =
     Dict.Dict Int Int
 
 
-showAiRoundActionPreference : AiRoundActionPreference -> String
-showAiRoundActionPreference a =
-    "Action: " ++ showAiRoundAction a.action ++ ", preference: " ++ String.fromFloat a.actionValue
+debugAiRoundActionPreference : AiRoundActionPreference -> String
+debugAiRoundActionPreference a =
+    "Action: " ++ debugAiRoundAction a.action ++ ", preference: " ++ String.fromFloat a.actionValue
 
 
-showAiRoundAction : AiRoundActions -> String
-showAiRoundAction aiRoundActions =
+debugAiRoundAction : AiRoundActions -> String
+debugAiRoundAction aiRoundActions =
     case aiRoundActions of
         EndRound ->
             "End Round"
@@ -211,7 +212,7 @@ getAiActions ai enemies =
             getSettlementDefenseActions ai enemies
 
         enemySettlementStates =
-            getSettlementAttackActions ai enemies
+            AI.AIOffsensiveActionHandler.getSettlementAttackActions ai enemies
 
         takeTroops =
             AI.AITroopHandling.takeTroopsFromSettlements ai
@@ -223,7 +224,7 @@ getAiActions ai enemies =
             getImproveBuildingActions ai
 
         attackOthers =
-            getAttackLordsActions ai enemies
+            AI.AIOffsensiveActionHandler.getAttackLordsActions ai enemies
     in
     AiRoundActionPreference EndRound 0.0
         :: (ownSettlementDefenseActions
@@ -255,73 +256,3 @@ getImproveBuildingActions ai =
 
         Just capital ->
             ListExt.justList <| List.map (AI.AIGoldManager.getBuildingBuildFactors ai capital) capital.buildings
-
-
-getSettlementAttackActions :
-    AI
-    -> List Entities.Model.Lord
-    -> List AiRoundActionPreference
-getSettlementAttackActions ai enemies =
-    ListExt.justList <|
-        List.foldl
-            (\s r -> evaluateSettlementSiegeAction ai s enemies :: r)
-            []
-            (List.concat <| List.map (\l -> l.land) enemies)
-
-
-getAttackLordsActions :
-    AI
-    -> List Entities.Model.Lord
-    -> List AiRoundActionPreference
-getAttackLordsActions ai =
-    List.foldl
-        (\l actions ->
-            let
-                strengthFactor =
-                    lordStrengthDiff ai.lord l
-
-                preference =
-                    min (2 + ai.strategy.battleMultiplier) <| strengthFactor
-            in
-            if preference >= 0 && not (Entities.isLordInOwnSettlement l) then
-                AiRoundActionPreference (DoSomething (AttackLord l)) preference :: actions
-
-            else
-                actions
-        )
-        []
-
-
-evaluateSettlementSiegeAction : AI -> Entities.Model.Settlement -> List Entities.Model.Lord -> Maybe AiRoundActionPreference
-evaluateSettlementSiegeAction ai s ls =
-    let
-        siegeStrengthDiff =
-            toFloat (Troops.sumArmyStats ai.lord.entity.army)
-                / max
-                    1
-                    (toFloat (AI.AISettlementHandling.settlementDefenseStrength s (Entities.landlordOnSettlement s ls))
-                        * MaybeExt.foldMaybe
-                            (\l ->
-                                1 + Balancing.settlementDefenseBoni s l
-                            )
-                            1
-                            (Entities.landlordOnSettlement s ls)
-                    )
-    in
-    if
-        siegeStrengthDiff
-            >= 1
-    then
-        Just
-            (AiRoundActionPreference
-                (DoSomething (SiegeSettlement s))
-                (min (2 + ai.strategy.siegeMultiplier) (logBase 10 (siegeStrengthDiff * siegeStrengthDiff)))
-            )
-
-    else
-        Nothing
-
-
-lordStrengthDiff : Entities.Model.Lord -> Entities.Model.Lord -> Float
-lordStrengthDiff attacker defender =
-    toFloat (Troops.sumArmyStats attacker.entity.army) / (max 1 <| toFloat <| Troops.sumArmyStats defender.entity.army)
