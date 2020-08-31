@@ -237,20 +237,23 @@ checkSettlementForRecruits targetStrength ai s =
         recruitOverflowFactor =
             AI.AISettlementHandling.settlementRecruitUsage ai.lord s s.recruitLimits
 
+        recruitOverflowFactorAfterPurchase =
+            recruitOverflowFactor
+                - AI.AISettlementHandling.settlementRecruitUsage
+                    ai.lord
+                    s
+                    (Troops.substractArmy
+                        s.recruitLimits
+                        recruitableTroopsDict
+                    )
+
         actionValue =
             min (2 + ai.strategy.defendMultiplier) <|
-                recruitNeedFactor
-                    * (recruitOverflowFactor
-                        - AI.AISettlementHandling.settlementRecruitUsage
-                            ai.lord
-                            s
-                            (Troops.substractArmy
-                                s.recruitLimits
-                                recruitableTroopsDict
-                            )
-                      )
+                (recruitNeedFactor
                     + clamp 0 1 (logBase 10 (recruitStrengthFactor / toFloat acceptedLackOfDefenseStrength))
                     + (max 0 <| ai.strategy.defendMultiplier - 1)
+                )
+                    * recruitOverflowFactorAfterPurchase
     in
     if recruitStrengthFactor > 0 then
         Just <|
