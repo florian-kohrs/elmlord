@@ -493,6 +493,10 @@ update msg model =
         Msg.EndGame bool ->
             emptyCmd { model | gameState = GameOver bool }
 
+
+        Msg.MenueAction mmsg ->
+            updateMenue mmsg model
+
         other ->
             let
                 ( newModel, cmd ) =
@@ -506,9 +510,6 @@ update msg model =
 
                             Msg.BattleAction bmsg ->
                                 updateBattle bmsg model
-
-                            Msg.MenueAction mmsg ->
-                                updateMenue mmsg model
 
                             Msg.SettlementAction action ->
                                 emptyCmd (updateSettlement action model)
