@@ -24,11 +24,11 @@ import Vector
 
 
 
---stores for each key (from to Vector) the needed steps to reach
-
-
-type alias PathLookUp =
-    Dict.Dict Int Int
+{-
+   There are a lot of factors and numbers in the Ai modules to
+   evaluate the value of an ai action, which weren`t specificly named, since
+   I dont think it would benefit readablilty
+-}
 
 
 debugAiRoundActionPreference : AiRoundActionPreference -> String
