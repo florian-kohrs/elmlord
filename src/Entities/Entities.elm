@@ -184,11 +184,6 @@ disbandTroops l t =
     { l | entity = updateEntitiesArmy (Troops.updateTroops l.entity.army t (-1 * amount)) l.entity }
 
 
-upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
-upgradeBuilding l b s =
-    { l | gold = l.gold - Building.upgradeBuildingInfoCost b.buildingType b.level, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
-
-
 updateEntitiesArmy : Troops.Army -> WorldEntity -> WorldEntity
 updateEntitiesArmy army e =
     { e | army = army }
@@ -259,13 +254,6 @@ updatePlayerArmy l t =
     { l | entity = updateEntitiesArmy t l.entity }
 
 
-sumLordTroops : Lord -> Troops.Army
-sumLordTroops lord =
-    Troops.mergeTroops
-        lord.entity.army
-        (sumLordSettlementTroops lord)
-
-
 sumLordSettlementTroops : Lord -> Troops.Army
 sumLordSettlementTroops lord =
     List.foldl (\s dict -> Troops.mergeTroops dict s.entity.army) Dict.empty lord.land
@@ -327,6 +315,11 @@ updateSettlementBuildings l s b =
             }
         )
         l
+
+
+upgradeBuilding : Lord -> Building.Building -> Settlement -> Lord
+upgradeBuilding l b s =
+    { l | gold = l.gold - Building.upgradeBuildingInfoCost b.buildingType b.level, land = updateSettlementBuildings l.land s.entity.name b.buildingType }
 
 
 getSettlementByName : List Settlement -> String -> Maybe Settlement
@@ -415,20 +408,6 @@ combineSettlementName settlement =
     getSettlementNameByType settlement.settlementType ++ " - " ++ settlement.entity.name
 
 
-getLordCapital : List Settlement -> Maybe Settlement
-getLordCapital l =
-    case l of
-        [] ->
-            Nothing
-
-        x :: xs ->
-            if x.settlementType == Castle then
-                Just x
-
-            else
-                getLordCapital xs
-
-
 createCapitalFor : WorldEntity -> String -> Settlement
 createCapitalFor e name =
     applySettlementNewRecruits 0
@@ -470,6 +449,27 @@ getSettlementFor info =
 
 -- functions for the handling of lords and their data
 ----------------------------------------------------------
+
+
+sumLordTroops : Lord -> Troops.Army
+sumLordTroops lord =
+    Troops.mergeTroops
+        lord.entity.army
+        (sumLordSettlementTroops lord)
+
+
+getLordCapital : List Settlement -> Maybe Settlement
+getLordCapital l =
+    case l of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            if x.settlementType == Castle then
+                Just x
+
+            else
+                getLordCapital xs
 
 
 isLordInOwnSettlement : Lord -> Bool
