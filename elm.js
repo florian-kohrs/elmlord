@@ -8251,19 +8251,19 @@ var $author$project$Troops$sumArmyStats = A2(
 				v) + r;
 		}),
 	0);
-var $author$project$AI$lordStrengthDiff = F2(
+var $author$project$AI$AIOffsensiveActionHandler$lordStrengthDiff = F2(
 	function (attacker, defender) {
 		return $author$project$Troops$sumArmyStats(attacker.entity.army) / A2(
 			$elm$core$Basics$max,
 			300,
 			$author$project$Troops$sumArmyStats(defender.entity.army));
 	});
-var $author$project$AI$getAttackLordsActions = function (ai) {
+var $author$project$AI$AIOffsensiveActionHandler$getAttackLordsActions = function (ai) {
 	return A2(
 		$elm$core$List$foldl,
 		F2(
 			function (l, actions) {
-				var strengthFactor = A2($author$project$AI$lordStrengthDiff, ai.lord, l);
+				var strengthFactor = A2($author$project$AI$AIOffsensiveActionHandler$lordStrengthDiff, ai.lord, l);
 				var preference = A2(
 					$elm$core$Basics$min,
 					2 + ai.strategy.battleMultiplier,
@@ -8426,7 +8426,7 @@ var $author$project$AI$AISettlementHandling$settlementDefenseStrength = F2(
 			return $author$project$Troops$sumArmyStats(l.entity.army) + $author$project$Troops$sumArmyStats(s.entity.army);
 		}
 	});
-var $author$project$AI$settlementSiegeBoni = F2(
+var $author$project$AI$AIOffsensiveActionHandler$settlementSiegeBoni = F2(
 	function (ai, s) {
 		var _v0 = s.settlementType;
 		if (_v0.$ === 'Castle') {
@@ -8451,11 +8451,13 @@ var $author$project$Entities$lordSettlementCount = function (l) {
 		0,
 		l.land);
 };
+var $author$project$AI$AITroopHandling$normalPlayerTroopStrength = 3500;
+var $author$project$AI$AITroopHandling$playerTroopStrengthBoniPerSettlement = 400;
 var $author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength = function (ai) {
 	var x = $author$project$Entities$lordSettlementCount(ai.lord);
-	return (3500 + (400 * x)) * $elm$core$Basics$round(((ai.strategy.battleMultiplier + ai.strategy.siegeMultiplier) / 2) - ai.strategy.defendMultiplier);
+	return ($author$project$AI$AITroopHandling$normalPlayerTroopStrength + ($author$project$AI$AITroopHandling$playerTroopStrengthBoniPerSettlement * x)) * $elm$core$Basics$round(((ai.strategy.battleMultiplier + ai.strategy.siegeMultiplier) / 2) - ai.strategy.defendMultiplier);
 };
-var $author$project$AI$settlementSiegeMultiplier = F2(
+var $author$project$AI$AIOffsensiveActionHandler$settlementSiegeMultiplier = F2(
 	function (ai, s) {
 		var _v0 = s.settlementType;
 		if (_v0.$ === 'Castle') {
@@ -8468,7 +8470,7 @@ var $author$project$AI$settlementSiegeMultiplier = F2(
 				$author$project$Troops$sumArmyStats(ai.lord.entity.army) / $author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength(ai));
 		}
 	});
-var $author$project$AI$evaluateSettlementSiegeAction = F3(
+var $author$project$AI$AIOffsensiveActionHandler$evaluateSettlementSiegeAction = F3(
 	function (ai, s, ls) {
 		var siegeStrengthDiff = $author$project$Troops$sumArmyStats(ai.lord.entity.army) / A2(
 			$elm$core$Basics$max,
@@ -8491,9 +8493,12 @@ var $author$project$AI$evaluateSettlementSiegeAction = F3(
 				A2(
 					$elm$core$Basics$min,
 					2 + ai.strategy.siegeMultiplier,
-					(ai.strategy.siegeMultiplier + A2($author$project$AI$settlementSiegeBoni, ai, s)) + A2($elm$core$Basics$logBase, 10, siegeStrengthDiff * siegeStrengthDiff)) * A2($author$project$AI$settlementSiegeMultiplier, ai, s))) : $elm$core$Maybe$Nothing;
+					(ai.strategy.siegeMultiplier + A2($author$project$AI$AIOffsensiveActionHandler$settlementSiegeBoni, ai, s)) + A2(
+						$elm$core$Basics$max,
+						0,
+						A2($elm$core$Basics$logBase, 10, siegeStrengthDiff * siegeStrengthDiff))) * A2($author$project$AI$AIOffsensiveActionHandler$settlementSiegeMultiplier, ai, s))) : $elm$core$Maybe$Nothing;
 	});
-var $author$project$AI$getSettlementAttackActions = F2(
+var $author$project$AI$AIOffsensiveActionHandler$getSettlementAttackActions = F2(
 	function (ai, enemies) {
 		return $author$project$ListExt$justList(
 			A3(
@@ -8502,7 +8507,7 @@ var $author$project$AI$getSettlementAttackActions = F2(
 					function (s, r) {
 						return A2(
 							$elm$core$List$cons,
-							A3($author$project$AI$evaluateSettlementSiegeAction, ai, s, enemies),
+							A3($author$project$AI$AIOffsensiveActionHandler$evaluateSettlementSiegeAction, ai, s, enemies),
 							r);
 					}),
 				_List_Nil,
@@ -8519,13 +8524,19 @@ var $author$project$AI$Model$SwapTroops = F2(
 		return {$: 'SwapTroops', a: a, b: b};
 	});
 var $author$project$AI$AITroopHandling$acceptedLackOfDefenseStrength = 300;
+var $author$project$AI$AITroopHandling$maxCapitalTroopStrength = 5500;
+var $author$project$AI$AITroopHandling$minDefendMultiplierForCapitalStrength = 0.85;
+var $author$project$AI$AITroopHandling$troopsInCapitalPerSettlement = 1250;
 var $author$project$AI$AITroopHandling$estimatedNormalCastleTroopStrength = function (ai) {
 	var x = $author$project$Entities$lordSettlementCount(ai.lord);
-	return (A2($elm$core$Basics$min, 5500, 1250 * x) * ((1 / x) + ((1 - (1 / x)) / (((x * x) * 0.01) + 1)))) * A2($elm$core$Basics$max, 0.85, (2 * ai.strategy.defendMultiplier) - 1);
+	return (A2($elm$core$Basics$min, $author$project$AI$AITroopHandling$maxCapitalTroopStrength, $author$project$AI$AITroopHandling$troopsInCapitalPerSettlement * x) * ((1 / x) + ((1 - (1 / x)) / (((x * x) * 0.01) + 1)))) * A2($elm$core$Basics$max, $author$project$AI$AITroopHandling$minDefendMultiplierForCapitalStrength, (2 * ai.strategy.defendMultiplier) - 1);
 };
+var $author$project$AI$AITroopHandling$baseTroopStrengthInVillage = 1000;
+var $author$project$AI$AITroopHandling$maxVillageTroopStrength = 3000;
+var $author$project$AI$AITroopHandling$troopsInVillagePerSettlement = 550;
 var $author$project$AI$AITroopHandling$estimatedNormalVillageTroopStrength = function (ai) {
 	var x = $author$project$Entities$lordSettlementCount(ai.lord);
-	return A2($elm$core$Basics$min, 3000, 1000 + (550 * x)) * A2($elm$core$Basics$max, 0.666, (2 * ai.strategy.defendMultiplier) - 1.2);
+	return A2($elm$core$Basics$min, $author$project$AI$AITroopHandling$maxVillageTroopStrength, $author$project$AI$AITroopHandling$baseTroopStrengthInVillage + ($author$project$AI$AITroopHandling$troopsInVillagePerSettlement * x)) * A2($elm$core$Basics$max, 0.666, (2 * ai.strategy.defendMultiplier) - 1.2);
 };
 var $author$project$AI$AITroopHandling$estimatedSettlementDefenseStrength = F2(
 	function (ai, t) {
@@ -9163,6 +9174,11 @@ var $author$project$AI$AITroopHandling$checkSettlementForRecruits = F3(
 			1,
 			$author$project$Troops$sumArmyStats(recruitableTroopsDict) / targetStrength);
 		var recruitOverflowFactor = A3($author$project$AI$AISettlementHandling$settlementRecruitUsage, ai.lord, s, s.recruitLimits);
+		var recruitOverflowFactorAfterPurchase = recruitOverflowFactor - A3(
+			$author$project$AI$AISettlementHandling$settlementRecruitUsage,
+			ai.lord,
+			s,
+			A2($author$project$Troops$substractArmy, s.recruitLimits, recruitableTroopsDict));
 		var recruitNeedFactor = A2(
 			$elm$core$Basics$min,
 			2 * (2 + ai.strategy.defendMultiplier),
@@ -9170,15 +9186,11 @@ var $author$project$AI$AITroopHandling$checkSettlementForRecruits = F3(
 		var actionValue = A2(
 			$elm$core$Basics$min,
 			2 + ai.strategy.defendMultiplier,
-			((recruitNeedFactor * (recruitOverflowFactor - A3(
-				$author$project$AI$AISettlementHandling$settlementRecruitUsage,
-				ai.lord,
-				s,
-				A2($author$project$Troops$substractArmy, s.recruitLimits, recruitableTroopsDict)))) + A3(
+			((recruitNeedFactor + A3(
 				$elm$core$Basics$clamp,
 				0,
 				1,
-				A2($elm$core$Basics$logBase, 10, recruitStrengthFactor / $author$project$AI$AITroopHandling$acceptedLackOfDefenseStrength))) + A2($elm$core$Basics$max, 0, ai.strategy.defendMultiplier - 1));
+				A2($elm$core$Basics$logBase, 10, recruitStrengthFactor / $author$project$AI$AITroopHandling$acceptedLackOfDefenseStrength))) + A2($elm$core$Basics$max, 0, ai.strategy.defendMultiplier - 1)) * recruitOverflowFactorAfterPurchase);
 		return (recruitStrengthFactor > 0) ? $elm$core$Maybe$Just(
 			A2(
 				$author$project$AI$Model$AiRoundActionPreference,
@@ -9194,6 +9206,7 @@ var $author$project$AI$AITroopHandling$checkSettlementsForRecruits = F2(
 				A2($author$project$AI$AITroopHandling$checkSettlementForRecruits, targetStrength, ai),
 				ai.lord.land));
 	});
+var $author$project$AI$AITroopHandling$minRecruitTroopsActionValue = 0.5;
 var $author$project$AI$AITroopHandling$maximalAcceptedPlayerStrength = function (ai) {
 	return $elm$core$Basics$round(
 		($author$project$AI$AITroopHandling$estimatedNormalPlayerTroopStrength(ai) * 6) + A2($elm$core$Basics$max, 500, ai.lord.gold / 5));
@@ -9224,13 +9237,14 @@ var $author$project$AI$AITroopHandling$totalNeededTroopStrength = F2(
 	});
 var $author$project$AI$AITroopHandling$hireTroopsIfNeeded = function (ai) {
 	var neededStrength = A2($author$project$AI$AITroopHandling$totalNeededTroopStrength, ai, $elm$core$Basics$identity);
-	return (neededStrength > 300) ? A2($author$project$AI$AITroopHandling$checkSettlementsForRecruits, neededStrength, ai) : ((($author$project$AI$AIGoldManager$goldIncomePerRound(ai) > 0) || (ai.lord.gold > 1000)) ? A2(
+	return (_Utils_cmp(neededStrength, $author$project$AI$AITroopHandling$acceptedLackOfDefenseStrength) > 0) ? A2($author$project$AI$AITroopHandling$checkSettlementsForRecruits, neededStrength, ai) : ((($author$project$AI$AIGoldManager$goldIncomePerRound(ai) > 0) || (ai.lord.gold > 1000)) ? A2(
 		$elm$core$List$map,
 		function (action) {
 			return _Utils_update(
 				action,
 				{
-					actionValue: A2($elm$core$Basics$max, 0.5, action.actionValue)
+					actionValue: $author$project$AI$AITroopHandling$minRecruitTroopsActionValue + $elm$core$Basics$sqrt(
+						A2($elm$core$Basics$max, 0, action.actionValue - $author$project$AI$AITroopHandling$minRecruitTroopsActionValue))
 				});
 		},
 		A2($author$project$AI$AITroopHandling$checkSettlementsForRecruits, 2000, ai)) : _List_Nil);
@@ -9278,8 +9292,8 @@ var $author$project$AI$getAiActions = F2(
 		var ownSettlementDefenseActions = A2($author$project$AI$getSettlementDefenseActions, ai, enemies);
 		var improveBuildingFactor = $author$project$AI$getImproveBuildingActions(ai);
 		var hireTroops = $author$project$AI$AITroopHandling$hireTroopsIfNeeded(ai);
-		var enemySettlementStates = A2($author$project$AI$getSettlementAttackActions, ai, enemies);
-		var attackOthers = A2($author$project$AI$getAttackLordsActions, ai, enemies);
+		var enemySettlementStates = A2($author$project$AI$AIOffsensiveActionHandler$getSettlementAttackActions, ai, enemies);
+		var attackOthers = A2($author$project$AI$AIOffsensiveActionHandler$getAttackLordsActions, ai, enemies);
 		return A2(
 			$elm$core$List$cons,
 			A2($author$project$AI$Model$AiRoundActionPreference, $author$project$AI$Model$EndRound, 0.0),
@@ -10824,8 +10838,8 @@ var $author$project$Entities$Lords$updatePlayer = F2(
 var $author$project$Msg$BuildingView = {$: 'BuildingView'};
 var $author$project$Msg$RecruitView = {$: 'RecruitView'};
 var $author$project$Msg$StationView = {$: 'StationView'};
-var $author$project$Entities$getPossibleTroopAmount = F2(
-	function (army, t) {
+var $author$project$Entities$getPossibleTroopAmount = F3(
+	function (maxAmount, army, t) {
 		var _v0 = A2(
 			$elm$core$Dict$get,
 			$author$project$Troops$troopTypeToInt(t),
@@ -10834,12 +10848,20 @@ var $author$project$Entities$getPossibleTroopAmount = F2(
 			return 0;
 		} else {
 			var amount = _v0.a;
-			return A2($elm$core$Basics$min, 5, amount);
+			return A2($elm$core$Basics$min, maxAmount, amount);
 		}
 	});
-var $author$project$Entities$buyTroops = F3(
-	function (l, t, s) {
-		var amount = A2($author$project$Entities$getPossibleTroopAmount, s.recruitLimits, t);
+var $author$project$Entities$buyMaxTroops = F4(
+	function (maxTroops, l, t, s) {
+		var amount = A3(
+			$author$project$Entities$getPossibleTroopAmount,
+			A2(
+				$elm$core$Basics$min,
+				maxTroops,
+				$elm$core$Basics$floor(
+					l.gold / $author$project$Troops$troopCost(t))),
+			s.recruitLimits,
+			t);
 		return A3(
 			$author$project$Entities$recruitTroops,
 			A2(
@@ -10870,8 +10892,9 @@ var $author$project$Entities$buyAllTroops = F2(
 			$elm$core$Dict$foldl,
 			F3(
 				function (k, _v0, b) {
-					return A3(
-						$author$project$Entities$buyTroops,
+					return A4(
+						$author$project$Entities$buyMaxTroops,
+						99,
 						b,
 						$author$project$Troops$intToTroopType(k),
 						A2(
@@ -10882,6 +10905,8 @@ var $author$project$Entities$buyAllTroops = F2(
 			l,
 			l.entity.army);
 	});
+var $author$project$Entities$troopGroupAmount = 5;
+var $author$project$Entities$buyTroops = $author$project$Entities$buyMaxTroops($author$project$Entities$troopGroupAmount);
 var $author$project$Entities$updateSettlementTroops = F4(
 	function (l, s, t, a) {
 		return A2(
@@ -10904,7 +10929,7 @@ var $author$project$Entities$updateSettlementTroops = F4(
 	});
 var $author$project$Entities$stationTroops = F3(
 	function (l, t, s) {
-		var amount = A2($author$project$Entities$getPossibleTroopAmount, l.entity.army, t);
+		var amount = A3($author$project$Entities$getPossibleTroopAmount, $author$project$Entities$troopGroupAmount, l.entity.army, t);
 		return _Utils_update(
 			l,
 			{
@@ -10917,7 +10942,7 @@ var $author$project$Entities$stationTroops = F3(
 	});
 var $author$project$Entities$takeTroops = F3(
 	function (l, t, s) {
-		var amount = A2($author$project$Entities$getPossibleTroopAmount, s.entity.army, t);
+		var amount = A3($author$project$Entities$getPossibleTroopAmount, $author$project$Entities$troopGroupAmount, s.entity.army, t);
 		return _Utils_update(
 			l,
 			{
@@ -11102,7 +11127,7 @@ var $author$project$Main$TroopView = function (a) {
 };
 var $author$project$Entities$disbandTroops = F2(
 	function (l, t) {
-		var amount = A2($author$project$Entities$getPossibleTroopAmount, l.entity.army, t);
+		var amount = A3($author$project$Entities$getPossibleTroopAmount, $author$project$Entities$troopGroupAmount, l.entity.army, t);
 		return _Utils_update(
 			l,
 			{
@@ -11156,6 +11181,9 @@ var $author$project$Main$update = F2(
 						{
 							gameState: $author$project$Main$GameOver(bool)
 						}));
+			case 'MenueAction':
+				var mmsg = msg.a;
+				return A2($author$project$Main$updateMenue, mmsg, model);
 			default:
 				var other = msg;
 				var _v1 = function () {
@@ -11184,9 +11212,6 @@ var $author$project$Main$update = F2(
 							case 'BattleAction':
 								var bmsg = other.a;
 								return A2($author$project$Main$updateBattle, bmsg, model);
-							case 'MenueAction':
-								var mmsg = other.a;
-								return A2($author$project$Main$updateMenue, mmsg, model);
 							case 'SettlementAction':
 								var action = other.a;
 								return $author$project$Main$emptyCmd(
@@ -12642,16 +12667,16 @@ var $author$project$Templates$EndTemplate$generateEndData = function (res) {
 				[
 					A2(
 					$elm$html$Html$button,
-					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$Events$onClick(
+							$author$project$Msg$MenueAction($author$project$Msg$ShowMenue))
+						]),
 					_List_fromArray(
 						[
 							A2(
 							$elm$html$Html$span,
-							_List_fromArray(
-								[
-									$elm$html$Html$Events$onClick(
-									$author$project$Msg$MenueAction($author$project$Msg$ShowMenue))
-								]),
+							_List_Nil,
 							_List_fromArray(
 								[
 									$elm$html$Html$text('Go to the main menue')
