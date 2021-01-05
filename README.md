@@ -1,6 +1,6 @@
 ## Elmlord
 <p align="center">
-  <img src="https://github.com/c3ai-lab/Pull-Request-Extension-Voting/blob/main/implementation/assets/deVote_architecture.png" width="450">  
+  <img src="https://github.com/flofe104/elmlord/blob/master/src/assets/images/general/logo.png" width="450">  
 </p>
 
 Elmlord is a turn-based singleplayer strategy game, which is completely developed in the programming language Elm. This project was developed as part of the university course [Functional Frontend Development](https://jan-christiansen.github.io/page/teaching/2020/functional-frontend-development.html)  at the [University of Flensburg](https://hs-flensburg.de/).
